@@ -26,8 +26,8 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Common;
-using MySql.Data.Types;
+using EVESharp.Database.MySql.Common;
+using EVESharp.Database.MySql.Types;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -37,8 +37,9 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   internal class SchemaProvider
   {
@@ -881,7 +882,7 @@ namespace MySql.Data.MySqlClient
     internal static MySqlSchemaCollection GetReservedWords()
     {
       MySqlSchemaCollection dt = new MySqlSchemaCollection("ReservedWords");
-      string resourceName = "MySql.Data.Properties.ReservedWords.txt";
+      string resourceName = "EVESharp.Database.MySql.Properties.ReservedWords.txt";
       dt.AddColumn(DbMetaDataColumnNames.ReservedWord, typeof(string));
       using (Stream str = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
       {

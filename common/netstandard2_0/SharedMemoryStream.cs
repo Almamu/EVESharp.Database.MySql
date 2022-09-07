@@ -26,14 +26,14 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   /// <summary>
   /// Helper class to encapsulate shared memory functionality

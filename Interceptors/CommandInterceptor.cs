@@ -29,8 +29,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// BaseCommandInterceptor is the base class that should be used for all userland 

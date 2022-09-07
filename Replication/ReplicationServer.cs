@@ -1,4 +1,4 @@
-// Copyright © 2014, 2020, Oracle and/or its affiliates.
+// Copyright ï¿½ 2014, 2020, Oracle and/or its affiliates.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -30,7 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MySql.Data.MySqlClient.Replication
+namespace EVESharp.Database.MySql.Replication
 {
   /// <summary>
   /// Represents a server in a Replication environment.

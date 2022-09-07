@@ -29,17 +29,17 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   internal partial class AuthenticationPluginManager
   {
     static partial void AuthenticationManagerCtorConfiguration()
     {
   //TODO: TEST (CHANGE THIS CODE TO AuthenticationManagerCtorConfiguration in 452 and 46 project)
-      Plugins["authentication_windows_client"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.MySqlWindowsAuthenticationPlugin");
+      Plugins["authentication_windows_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.MySqlWindowsAuthenticationPlugin");
       if (MySqlConfiguration.Settings != null && MySqlConfiguration.Settings.AuthenticationPlugins != null)
       {
         foreach (AuthenticationPluginConfigurationElement e in MySqlConfiguration.Settings.AuthenticationPlugins)

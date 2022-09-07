@@ -1,4 +1,4 @@
-// Copyright © 2006, 2019, Oracle and/or its affiliates. All rights reserved.
+// Copyright ï¿½ 2006, 2019, Oracle and/or its affiliates. All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -33,8 +33,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.IO;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Allows importing large amounts of data into a database with bulk loading.

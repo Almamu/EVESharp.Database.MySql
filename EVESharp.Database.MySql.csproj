@@ -7,7 +7,6 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <Version>8.0.30</Version>
     <Authors>Oracle</Authors>
-    <AssemblyName>MySql.Data</AssemblyName>
     <TargetFrameworks>net452;net48;netstandard2.0;netstandard2.1;net5.0;net6.0;</TargetFrameworks>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeThirdPartyAssemblies</TargetsForTfmSpecificBuildOutput>
     <PackageId>MySql.Data</PackageId>
@@ -110,7 +109,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Update="Framework\net452\Installer.cs" />
     <Compile Update="Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

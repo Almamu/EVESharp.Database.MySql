@@ -30,7 +30,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   internal class Utils
   {

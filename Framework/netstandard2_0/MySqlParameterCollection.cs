@@ -30,9 +30,9 @@ using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Data.Common;
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
 #if NET452
   [Editor("MySql.Data.MySqlClient.Design.DBParametersEditor,MySql.Design", typeof(System.Drawing.Design.UITypeEditor))]

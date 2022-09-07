@@ -31,7 +31,7 @@ using System;
 using System.Runtime.InteropServices;
 #endif
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   internal class Platform
   {

@@ -29,7 +29,7 @@
 
 using System.Security.Cryptography;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   /// <summary>
   /// The SCRAM-SHA-256 SASL mechanism.

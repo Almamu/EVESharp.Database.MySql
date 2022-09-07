@@ -26,15 +26,14 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.MySqlClient;
-using MySqlX.XDevAPI;
+using EVESharp.Database.MySql;
 using System;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   internal class MySqlConnectionStringOption
   {
@@ -65,20 +64,6 @@ namespace MySql.Data.Common
       IsCustomized = true;
     }
 
-    public MySqlConnectionStringOption(string keyword, string synonyms, Type baseType, object defaultValue, bool obsolete,
-     XSetterDelegate setter, XGetterDelegate getter)
-    {
-      Keyword = StringUtility.ToLowerInvariant(keyword);
-      if (synonyms != null)
-        Synonyms = StringUtility.ToLowerInvariant(synonyms).Split(',');
-      BaseType = baseType;
-      Obsolete = obsolete;
-      DefaultValue = defaultValue;
-      XSetter = setter;
-      XGetter = getter;
-      IsCustomized = true;
-    }
-
     public MySqlConnectionStringOption(string keyword, string synonyms, Type baseType, object defaultValue, bool obsolete) :
       this(keyword, synonyms, baseType, defaultValue, obsolete,
        delegate (MySqlBaseConnectionStringBuilder msb, MySqlConnectionStringOption sender, object value)
@@ -104,8 +89,6 @@ namespace MySql.Data.Common
     public GetterDelegate Getter { get; private set; }
     public ClassicSetterDelegate ClassicSetter { get; private set; }
     public ClassicGetterDelegate ClassicGetter { get; private set; }
-    public XSetterDelegate XSetter { get; private set; }
-    public XGetterDelegate XGetter { get; private set; }
 
     #endregion
 
@@ -118,11 +101,7 @@ namespace MySql.Data.Common
     public delegate void ClassicSetterDelegate(MySqlConnectionStringBuilder msb, MySqlConnectionStringOption sender, object value);
 
     public delegate object ClassicGetterDelegate(MySqlConnectionStringBuilder msb, MySqlConnectionStringOption sender);
-
-    public delegate void XSetterDelegate(MySqlXConnectionStringBuilder msb, MySqlConnectionStringOption sender, object value);
-
-    public delegate object XGetterDelegate(MySqlXConnectionStringBuilder msb, MySqlConnectionStringOption sender);
-
+    
     #endregion
 
     public bool HasKeyword(string key)

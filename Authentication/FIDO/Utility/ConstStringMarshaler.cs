@@ -29,7 +29,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace MySql.Data.Authentication.FIDO.Utility
+namespace EVESharp.Database.MySql.Authentication.FIDO.Utility
 {
   internal sealed class ConstStringMarshaler : ICustomMarshaler
   {

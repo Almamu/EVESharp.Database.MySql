@@ -27,15 +27,16 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using Microsoft.Win32.SafeHandles;
-using MySql.Data.Common;
+using EVESharp.Database.MySql.Common;
 using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient.Common
+namespace EVESharp.Database.MySql.Common
 {
   /// <summary>
   /// Summary description for API.
@@ -84,7 +85,7 @@ namespace MySql.Data.MySqlClient.Common
           throw new Win32Exception(Marshal.GetLastWin32Error(),
               "Error opening pipe");
         }
-        MySql.Data.Common.LowResolutionStopwatch sw = MySql.Data.Common.LowResolutionStopwatch.StartNew();
+        LowResolutionStopwatch sw = LowResolutionStopwatch.StartNew();
         bool success = NativeMethods.WaitNamedPipe(path, timeout);
         sw.Stop();
         if (!success)

@@ -26,12 +26,12 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Authentication.FIDO;
+using EVESharp.Database.MySql.Authentication.FIDO;
 using System;
 using System.IO;
 using System.Text;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   internal class FidoAuthenticationPlugin : MySqlAuthenticationPlugin
   {

@@ -31,9 +31,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ubiety.Dns.Core.Common;
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   /// <summary>
   /// DNS resolver that runs queries against a server.

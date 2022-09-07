@@ -28,7 +28,7 @@
 
 using System;
 
-namespace MySql.Data.MySqlClient.Memcached
+namespace EVESharp.Database.MySql.Memcached
 {
   /// <summary>
   /// The base exception class for all Memcached exceptions.

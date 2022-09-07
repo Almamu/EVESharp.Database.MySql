@@ -34,10 +34,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
+using EVESharp.Database.MySql;
 using static System.String;
-using MySql.Data.Common;
+using EVESharp.Database.MySql.Common;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Provides a class capable of executing a SQL script containing

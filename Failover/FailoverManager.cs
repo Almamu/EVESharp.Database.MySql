@@ -26,9 +26,7 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.MySqlClient;
-using MySqlX.Sessions;
-using MySqlX.XDevAPI;
+using EVESharp.Database.MySql;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -36,7 +34,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 
-namespace MySql.Data.Failover
+namespace EVESharp.Database.MySql.Failover
 {
   /// <summary>
   /// Implements common elements that allow to manage the hosts available for client side failover.
@@ -79,89 +77,6 @@ namespace MySql.Data.Failover
           FailoverGroup = new RandomFailoverGroup(hostList);
           break;
       }
-    }
-
-    /// <summary>
-    /// Attempts to establish a connection to a host specified from the list.
-    /// </summary>
-    /// <param name="originalConnectionString">The original connection string set by the user.</param>
-    /// <param name="connectionString">An out parameter that stores the updated connection string.</param>
-    /// <param name="client">A <see cref="Client"/> object in case this is a pooling scenario.</param>
-    /// <param name="isDefaultPort">A flag indicating if the default port is used in the connection.</param>
-    /// <returns>An <see cref="InternalSession"/> instance if the connection was succesfully established, a <see cref="MySqlException"/> exception is thrown otherwise.</returns>
-    internal static InternalSession AttemptConnectionXProtocol(string originalConnectionString, out string connectionString, bool isDefaultPort, Client client = null)
-    {
-      if (FailoverGroup == null || originalConnectionString == null)
-      {
-        connectionString = null;
-        return null;
-      }
-
-      if (client != null)
-      {
-        if (client.Hosts == null)
-        {
-          client.Hosts = FailoverGroup.Hosts;
-          client.DemotedHosts = new ConcurrentQueue<FailoverServer>();
-        }
-        else
-        {
-          FailoverGroup.Hosts = client.Hosts;
-        }
-      }
-
-      FailoverServer currentHost = FailoverGroup.ActiveHost;
-      FailoverServer initialHost = currentHost;
-      MySqlXConnectionStringBuilder Settings = null;
-      InternalSession internalSession = null;
-      int attempts = 0;
-
-      do
-      {
-        // Attempt to connect to each host by retrieving the next host based on the failover method being used.
-        connectionString = originalConnectionString.Contains("server") ?
-          originalConnectionString.Replace(originalConnectionString.Split(';').First(p => p.Contains("server")).Split('=')[1], currentHost.Host) :
-          "server=" + currentHost.Host + ";" + originalConnectionString;
-        if (currentHost != null && currentHost.Port != -1)
-          connectionString = connectionString.Replace(connectionString.Split(';').First(p => p.Contains("port")).Split('=')[1], currentHost.Port.ToString());
-        Settings = new MySqlXConnectionStringBuilder(connectionString, isDefaultPort);
-
-        try
-        {
-          internalSession = InternalSession.GetSession(Settings);
-        }
-        catch (Exception ex)
-        {
-          if (ex.GetType() == typeof(MySqlException) && attempts == FailoverGroup.Hosts.Count)
-            throw;
-        }
-
-        if (internalSession != null)
-          break;
-
-        var tmpHost = currentHost;
-        currentHost = FailoverGroup.GetNextHost();
-
-        if (client != null)
-        {
-          tmpHost.DemotedTime = DateTime.Now;
-          client.Hosts.Remove(tmpHost);
-          client.DemotedHosts.Enqueue(tmpHost);
-
-          if (client.DemotedServersTimer == null)
-            client.DemotedServersTimer = new Timer(new TimerCallback(client.ReleaseDemotedHosts),
-              null, Client.DEMOTED_TIMEOUT, Timeout.Infinite);
-        }
-
-        attempts++;
-      }
-      while (!currentHost.Equals(initialHost));
-
-      // All connection attempts failed.
-      if (internalSession == null)
-        throw new MySqlException(Resources.UnableToConnectToHost);
-
-      return internalSession;
     }
 
     /// <summary>
@@ -242,7 +157,7 @@ namespace MySql.Data.Failover
     /// <param name="isXProtocol"><c>true</c> if the connection is X Protocol; otherwise <c>false</c>.</param>
     /// <param name="connectionDataIsUri"><c>true</c> if the connection data is a URI; otherwise <c>false</c>.</param>
     /// <returns>The number of hosts found, -1 if an error was raised during parsing.</returns>
-    internal static int ParseHostList(string hierPart, bool isXProtocol, bool connectionDataIsUri = true)
+    internal static int ParseHostList(string hierPart, bool connectionDataIsUri = true)
     {
       if (string.IsNullOrWhiteSpace(hierPart)) return -1;
 
@@ -305,9 +220,6 @@ namespace MySql.Data.Failover
             if (priority < 0 || priority > 100)
               throw new ArgumentException(ResourcesX.PriorityOutOfLimits);
 
-            if (isXProtocol)
-              hostList.Add(ConvertToFailoverServer(BaseSession.IsUnixSocket(host) ? BaseSession.NormalizeUnixSocket(host) : host, priority, connectionDataIsUri: connectionDataIsUri));
-            else
               hostList.Add(ConvertToFailoverServer(host, priority));
           }
           else

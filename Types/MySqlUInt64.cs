@@ -28,9 +28,9 @@
 
 using System;
 using System.Globalization;
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.Types
+namespace EVESharp.Database.MySql.Types
 {
   internal struct MySqlUInt64 : IMySqlValue
   {

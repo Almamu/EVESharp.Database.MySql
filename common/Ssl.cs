@@ -26,8 +26,8 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.common;
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql.common;
+using EVESharp.Database.MySql;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,7 +37,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   /// <summary>
   /// Handles SSL connections for the Classic and X protocols.

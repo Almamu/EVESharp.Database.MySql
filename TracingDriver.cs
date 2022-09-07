@@ -31,9 +31,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
-using MySql.Data.Common;
+using EVESharp.Database.MySql;
+using EVESharp.Database.MySql.Common;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   internal class TracingDriver : Driver
   {

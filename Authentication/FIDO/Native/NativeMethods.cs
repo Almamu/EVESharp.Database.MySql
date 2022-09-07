@@ -26,11 +26,11 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Authentication.FIDO.Utility;
 using System;
 using System.Runtime.InteropServices;
+using EVESharp.Database.MySql.Authentication.FIDO.Utility;
 
-namespace MySql.Data.Authentication.FIDO.Native
+namespace EVESharp.Database.MySql.Authentication.FIDO.Native
 {
   /// <summary>
   /// P/Invoke methods

@@ -30,10 +30,11 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using MySql.Data.Common;
+using EVESharp.Database.MySql;
+using EVESharp.Database.MySql.Common;
 
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   class MySqlPacket
   {

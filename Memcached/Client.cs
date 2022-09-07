@@ -29,9 +29,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using MySql.Data.Common;
+using EVESharp.Database.MySql.Common;
 
-namespace MySql.Data.MySqlClient.Memcached
+namespace EVESharp.Database.MySql.Memcached
 {
   /// <summary>
   /// An interface of the client memcached protocol. This class is abstract for 

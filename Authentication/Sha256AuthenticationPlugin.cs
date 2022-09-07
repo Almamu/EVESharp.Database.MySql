@@ -29,8 +29,9 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   /// <summary>
   /// The implementation of the sha256_password authentication plugin.

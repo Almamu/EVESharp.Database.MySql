@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   [Serializable]
   internal class UnixEndPoint : EndPoint

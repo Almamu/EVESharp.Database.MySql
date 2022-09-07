@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Text;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Defines a replication configurarion element in the configuration file.

@@ -32,17 +32,18 @@ using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
-using MySql.Data.Common;
+using EVESharp.Database.MySql.Common;
 using IsolationLevel = System.Data.IsolationLevel;
-using MySql.Data.MySqlClient.Interceptors;
 using System.Transactions;
-using MySql.Data.MySqlClient.Replication;
-using MySql.Data.Failover;
+using EVESharp.Database.MySql.Interceptors;
+using EVESharp.Database.MySql.Replication;
+using EVESharp.Database.MySql;
+using EVESharp.Database.MySql.Failover;
 #if NET452
 using System.Drawing.Design;
 #endif
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   ///  Represents a connection to a MySQL Server database. This class cannot be inherited.
@@ -500,7 +501,7 @@ namespace MySql.Data.MySqlClient
               FailoverMethod.Sequential);
           }
           else
-            FailoverManager.ParseHostList(Settings.Server, false);
+            FailoverManager.ParseHostList(Settings.Server);
         }
 
         // Load balancing && Failover
@@ -609,7 +610,7 @@ namespace MySql.Data.MySqlClient
         //// if we are in a transaction, roll it back
         if (driver.HasStatus(ServerStatusFlags.InTransaction))
         {
-          MySqlTransaction t = new MySql.Data.MySqlClient.MySqlTransaction(this, IsolationLevel.Unspecified);
+          MySqlTransaction t = new MySqlTransaction(this, IsolationLevel.Unspecified);
           t.Rollback();
         }
 

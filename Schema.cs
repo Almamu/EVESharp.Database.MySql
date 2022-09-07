@@ -30,7 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Represents a schema and its contents.

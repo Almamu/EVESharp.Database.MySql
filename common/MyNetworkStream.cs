@@ -26,13 +26,13 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   internal class MyNetworkStream : NetworkStream
   {

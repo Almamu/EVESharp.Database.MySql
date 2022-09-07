@@ -29,7 +29,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace MySql.Data.Authentication.SSPI
+namespace EVESharp.Database.MySql.Authentication.SSPI
 {
   /// <summary>
   /// SSPI Bindings

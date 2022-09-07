@@ -29,10 +29,10 @@
 using System;
 using System.Collections;
 using System.Data.Common;
-using MySql.Data.Types;
+using EVESharp.Database.MySql.Types;
 using System.Data;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   public sealed partial class MySqlDataReader : DbDataReader, IDataReader, IDataRecord
   {

@@ -26,8 +26,8 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.MySqlClient;
-using MySql.Data.MySqlClient.Common;
+using EVESharp.Database.MySql;
+using EVESharp.Database.MySql.Common;
 using System;
 using System.IO;
 using System.Linq;
@@ -35,7 +35,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   /// <summary>
   /// Summary description for StreamCreator.

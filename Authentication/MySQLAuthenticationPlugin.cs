@@ -29,8 +29,9 @@
 using System;
 using System.Diagnostics;
 using System.Text;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   /// <summary>
   /// Defines the default behavior for an authentication plugin.

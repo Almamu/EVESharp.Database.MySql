@@ -28,7 +28,7 @@
 
 using System.Collections.Generic;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Struct that represents the response OK Packet

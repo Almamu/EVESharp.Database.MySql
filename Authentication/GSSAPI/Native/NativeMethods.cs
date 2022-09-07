@@ -28,7 +28,7 @@
 
 using System;
 
-namespace MySql.Data.Authentication.GSSAPI.Native
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
 {
   internal static class NativeMethods
   {

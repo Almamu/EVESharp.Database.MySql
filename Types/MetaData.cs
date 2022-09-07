@@ -27,10 +27,10 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using System.Globalization;
-using MySql.Data.MySqlClient;
-using MySql.Data.Common;
+using EVESharp.Database.MySql;
+using EVESharp.Database.MySql.Common;
 
-namespace MySql.Data.Types
+namespace EVESharp.Database.MySql.Types
 {
   internal class MetaData
   {

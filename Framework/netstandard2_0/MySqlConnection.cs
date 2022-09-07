@@ -35,8 +35,9 @@ using System.Security;
 using System.Drawing;
 using System.Security.Permissions;
 using System.Transactions;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
 #if NET452
   [ToolboxBitmap(typeof(MySqlConnection), "MySqlClient.resources.connection.bmp")]

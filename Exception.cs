@@ -30,7 +30,7 @@ using System;
 using System.Data.Common;
 using System.Runtime.Serialization;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// The exception that is thrown when MySQL returns an error. This class cannot be inherited.

@@ -1,4 +1,4 @@
-// Copyright © 2004, 2018, Oracle and/or its affiliates. All rights reserved.
+// Copyright ï¿½ 2004, 2018, Oracle and/or its affiliates. All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -33,7 +33,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Helper class that makes it easier to work with the provider.

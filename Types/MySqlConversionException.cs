@@ -28,7 +28,7 @@
 
 using System;
 
-namespace MySql.Data.Types
+namespace EVESharp.Database.MySql.Types
 {
   /// <summary>
   /// An exception thrown by MySQL when a type conversion does not succeed.

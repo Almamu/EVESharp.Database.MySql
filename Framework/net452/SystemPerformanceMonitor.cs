@@ -28,9 +28,9 @@
 
 using System;
 using System.Diagnostics;
+using EVESharp.Database.MySql;
 
-
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
     internal class SystemPerformanceMonitor : PerformanceMonitor
     {

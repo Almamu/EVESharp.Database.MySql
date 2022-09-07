@@ -32,7 +32,7 @@ using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   public partial class MySqlHelper
   {

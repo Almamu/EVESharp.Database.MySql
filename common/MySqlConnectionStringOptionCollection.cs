@@ -29,7 +29,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   internal class MySqlConnectionStringOptionCollection : Dictionary<string, MySqlConnectionStringOption>
   {

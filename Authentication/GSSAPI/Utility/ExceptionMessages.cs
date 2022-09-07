@@ -28,9 +28,9 @@
 
 using System;
 using System.Runtime.InteropServices;
-using MySql.Data.Authentication.GSSAPI.Native;
+using EVESharp.Database.MySql.Authentication.GSSAPI.Native;
 
-namespace MySql.Data.Authentication.GSSAPI.Utility
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility
 {
   internal static class ExceptionMessages
   {

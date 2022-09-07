@@ -27,7 +27,7 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   internal class StringUtility
   {

@@ -31,11 +31,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Security;
 using System.Text;
-using MySql.Data.Common;
-using MySql.Data.Types;
+using EVESharp.Database.MySql.Common;
+using EVESharp.Database.MySql.Types;
 using System.IO;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Summary description for BaseDriver.

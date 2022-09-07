@@ -27,10 +27,9 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using System;
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 
-
-namespace MySql.Data.Types
+namespace EVESharp.Database.MySql.Types
 {
 
   internal struct MySqlGuid : IMySqlValue

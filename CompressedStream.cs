@@ -29,10 +29,11 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using MySql.Data.Common;
+using EVESharp.Database.MySql.Common;
 using System.Net;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Summary description for CompressedStream.

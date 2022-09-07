@@ -28,9 +28,9 @@
 
 using System;
 using System.Globalization;
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.Types
+namespace EVESharp.Database.MySql.Types
 {
   /// <summary>
   /// Summary description for MySqlUInt64.

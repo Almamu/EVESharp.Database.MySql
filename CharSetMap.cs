@@ -29,9 +29,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using MySql.Data.Common;
+using EVESharp.Database.MySql.Common;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Summary description for CharSetMap.

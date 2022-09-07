@@ -30,7 +30,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   internal class Sha256MemoryAuthenticationPlugin : MySqlAuthenticationPlugin
   {

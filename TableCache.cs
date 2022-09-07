@@ -1,4 +1,4 @@
-// Copyright © 2016, 2018, Oracle and/or its affiliates. All rights reserved.
+// Copyright ï¿½ 2016, 2018, Oracle and/or its affiliates. All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -30,7 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   internal class TableCache
   {

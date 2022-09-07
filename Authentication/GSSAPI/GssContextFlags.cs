@@ -28,7 +28,7 @@
 
 using System;
 
-namespace MySql.Data.Authentication.GSSAPI
+namespace EVESharp.Database.MySql.Authentication.GSSAPI
 {
   [Flags]
   internal enum GssContextFlags

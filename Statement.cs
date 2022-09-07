@@ -26,12 +26,13 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Common;
+using EVESharp.Database.MySql.Common;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   internal abstract class Statement
   {

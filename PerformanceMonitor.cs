@@ -30,7 +30,7 @@ using System;
 using System.Diagnostics;
 
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   internal class PerformanceMonitor
   {

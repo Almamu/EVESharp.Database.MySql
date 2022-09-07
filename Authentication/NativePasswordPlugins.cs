@@ -30,7 +30,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   /// <summary>
   /// Allows connections to a user account set with the mysql_native_password authentication plugin.

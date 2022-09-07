@@ -26,14 +26,14 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Authentication.GSSAPI.Native;
-using MySql.Data.Authentication.GSSAPI.Utility;
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 using System;
 using System.Runtime.InteropServices;
-using static MySql.Data.Authentication.GSSAPI.Native.NativeMethods;
+using EVESharp.Database.MySql.Authentication.GSSAPI.Native;
+using EVESharp.Database.MySql.Authentication.GSSAPI.Utility;
+using static EVESharp.Database.MySql.Authentication.GSSAPI.Native.NativeMethods;
 
-namespace MySql.Data.Authentication.GSSAPI
+namespace EVESharp.Database.MySql.Authentication.GSSAPI
 {
   internal enum CredentialUsage
   {

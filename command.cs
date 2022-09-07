@@ -26,8 +26,7 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Common;
-using MySql.Data.MySqlClient.Replication;
+using EVESharp.Database.MySql.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -37,8 +36,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using EVESharp.Database.MySql.Replication;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Represents a SQL statement to execute against a MySQL database. This class cannot be inherited.

@@ -26,7 +26,7 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Common;
+using EVESharp.Database.MySql.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,9 +36,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Authentication;
 using System.Text;
-using static MySql.Data.Common.MySqlConnectionStringOption;
+using EVESharp.Database.MySql;
+using static EVESharp.Database.MySql.Common.MySqlConnectionStringOption;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Abstract class that provides common functionality for connection options that apply for all protocols.

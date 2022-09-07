@@ -26,10 +26,11 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Authentication.SSPI;
+using EVESharp.Database.MySql.Authentication.SSPI;
 using System;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   /// <summary>
   /// Allows connections to a user account set with the authentication_windows authentication plugin.

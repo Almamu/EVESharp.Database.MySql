@@ -26,7 +26,7 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Types;
+using EVESharp.Database.MySql.Types;
 using System;
 using System.Collections;
 using System.Data;
@@ -34,8 +34,9 @@ using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   ///  Provides a means of reading a forward-only stream of rows from a MySQL database. This class cannot be inherited.

@@ -31,7 +31,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   public sealed partial class MySqlParameter : DbParameter, IDbDataParameter, ICloneable
   {

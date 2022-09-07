@@ -30,7 +30,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace MySql.Data.Authentication.SSPI
+namespace EVESharp.Database.MySql.Authentication.SSPI
 {
   [StructLayout(LayoutKind.Sequential)]
   internal struct SecBufferDesc : IDisposable

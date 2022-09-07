@@ -26,11 +26,11 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Authentication.FIDO.Native;
-using MySql.Data.Authentication.FIDO.Utility;
 using System;
+using EVESharp.Database.MySql.Authentication.FIDO.Native;
+using EVESharp.Database.MySql.Authentication.FIDO.Utility;
 
-namespace MySql.Data.Authentication.FIDO
+namespace EVESharp.Database.MySql.Authentication.FIDO
 {
   /// <summary>
   /// A reference struct representing a statement contained within a <see cref="FidoAssertion"/> object

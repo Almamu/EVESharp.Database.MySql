@@ -32,7 +32,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.Versioning;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Summary description for ClientParam.

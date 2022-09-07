@@ -29,8 +29,9 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Summary description for Crypt.

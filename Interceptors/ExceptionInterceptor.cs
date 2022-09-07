@@ -1,4 +1,4 @@
-// Copyright © 2004, 2018, Oracle and/or its affiliates. All rights reserved.
+// Copyright ï¿½ 2004, 2018, Oracle and/or its affiliates. All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -29,10 +29,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 
 
-namespace MySql.Data.MySqlClient.Interceptors
+namespace EVESharp.Database.MySql.Interceptors
 {
   /// <summary>
   /// BaseExceptionInterceptor is the base class that should be used for all userland 

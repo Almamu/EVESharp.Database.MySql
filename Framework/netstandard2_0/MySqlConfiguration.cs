@@ -1,4 +1,4 @@
-// Copyright © 2013, 2018, Oracle and/or its affiliates. All rights reserved.
+// Copyright ï¿½ 2013, 2018, Oracle and/or its affiliates. All rights reserved.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Configuration;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Represents a section within a configuration file.

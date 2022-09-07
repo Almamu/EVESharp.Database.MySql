@@ -1,4 +1,4 @@
-// Copyright © 2014, 2020, Oracle and/or its affiliates.
+// Copyright ï¿½ 2014, 2020, Oracle and/or its affiliates.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -31,10 +31,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 
 
-namespace MySql.Data.MySqlClient.Replication
+namespace EVESharp.Database.MySql.Replication
 {
   /// <summary>
   /// Manager for Replication and Load Balancing features
@@ -86,7 +86,7 @@ namespace MySql.Data.MySqlClient.Replication
     internal static ReplicationServerGroup AddGroup(string name, string groupType, int retryTime)
     {
       if (string.IsNullOrEmpty(groupType))
-        groupType = "MySql.Data.MySqlClient.Replication.ReplicationRoundRobinServerGroup";
+        groupType = "EVESharp.Database.MySql.Replication.ReplicationRoundRobinServerGroup";
       Type t = Type.GetType(groupType);
       ReplicationServerGroup g = (ReplicationServerGroup)Activator.CreateInstance(t, name, retryTime) as ReplicationServerGroup;
       groups.Add(g);

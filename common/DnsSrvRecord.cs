@@ -29,7 +29,7 @@
 using System.Collections.Generic;
 using Ubiety.Dns.Core.Records;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   /// <summary>
   /// Class that represents a DNS SRV record.

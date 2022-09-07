@@ -28,7 +28,7 @@
 
 using System.Collections.Generic;
 
-namespace MySql.Data.Failover
+namespace EVESharp.Database.MySql.Failover
 {
     internal abstract class FailoverGroup
     {

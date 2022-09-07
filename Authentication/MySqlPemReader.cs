@@ -33,7 +33,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   /// <summary>
   /// Provides functionality to read, decode and convert PEM files to objects supported in .NET.

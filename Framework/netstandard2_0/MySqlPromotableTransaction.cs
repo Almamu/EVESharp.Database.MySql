@@ -34,7 +34,7 @@ using System.Data;
 using System.Data.Common;
 using System.Threading;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Represents a single(not nested) TransactionScope

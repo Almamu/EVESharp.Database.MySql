@@ -35,8 +35,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   /// <summary>
   /// Enables connections from a user account set with the authentication_iam authentication plugin.

@@ -29,8 +29,9 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   internal partial class AuthenticationPluginManager
   {
@@ -40,15 +41,15 @@ namespace MySql.Data.MySqlClient.Authentication
 
     static AuthenticationPluginManager()
     {
-      Plugins["mysql_native_password"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.MySqlNativePasswordPlugin");
-      Plugins["sha256_password"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.Sha256AuthenticationPlugin");
-      Plugins["authentication_windows_client"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.MySqlWindowsAuthenticationPlugin");
-      Plugins["caching_sha2_password"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.CachingSha2AuthenticationPlugin");
-      Plugins["authentication_ldap_sasl_client"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.MySqlSASLPlugin");
-      Plugins["mysql_clear_password"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.MySqlClearPasswordPlugin");
-      Plugins["authentication_kerberos_client"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.KerberosAuthenticationPlugin");
-      Plugins["authentication_oci_client"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.OciAuthenticationPlugin");
-      Plugins["authentication_fido_client"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.FidoAuthenticationPlugin");
+      Plugins["mysql_native_password"] = new PluginInfo("EVESharp.Database.MySql.Authentication.MySqlNativePasswordPlugin");
+      Plugins["sha256_password"] = new PluginInfo("EVESharp.Database.MySql.Authentication.Sha256AuthenticationPlugin");
+      Plugins["authentication_windows_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.MySqlWindowsAuthenticationPlugin");
+      Plugins["caching_sha2_password"] = new PluginInfo("EVESharp.Database.MySql.Authentication.CachingSha2AuthenticationPlugin");
+      Plugins["authentication_ldap_sasl_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.MySqlSASLPlugin");
+      Plugins["mysql_clear_password"] = new PluginInfo("EVESharp.Database.MySql.Authentication.MySqlClearPasswordPlugin");
+      Plugins["authentication_kerberos_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.KerberosAuthenticationPlugin");
+      Plugins["authentication_oci_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.OciAuthenticationPlugin");
+      Plugins["authentication_fido_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.FidoAuthenticationPlugin");
 
       AuthenticationManagerCtorConfiguration();
     }

@@ -1,7 +1,293 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="305805f0-8e79-428b-9d36-255d84f0dda3" name="Changes" comment="" />
+    <list default="true" id="305805f0-8e79-428b-9d36-255d84f0dda3" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.EVESharp.Database.MySql.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.EVESharp.Database.MySql.dir/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/AuthenticationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/AuthenticationManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/CachingSha2AuthenticationPlugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/CachingSha2AuthenticationPlugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/ClearPasswordPlugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/ClearPasswordPlugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FIDO/FidoAssertion.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FIDO/FidoAssertion.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FIDO/FidoDevice.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FIDO/FidoDevice.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FIDO/FidoDeviceInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FIDO/FidoDeviceInfo.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FIDO/Native/NativeMethods.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FIDO/Native/NativeMethods.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FIDO/Native/Structs.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FIDO/Native/Structs.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FIDO/Utility/ConstStringMarshaler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FIDO/Utility/ConstStringMarshaler.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FIDO/Utility/Enums.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FIDO/Utility/Enums.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FIDO/Utility/Extensions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FIDO/Utility/Extensions.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FIDO/Utility/FidoExceptions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FIDO/Utility/FidoExceptions.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FIDO/Utility/Init.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FIDO/Utility/Init.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/FidoAuthenticationPlugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/FidoAuthenticationPlugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/Const.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/Const.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/GssContext.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/GssContext.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/GssContextFlags.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/GssContextFlags.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/GssCredentials.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/GssCredentials.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/Native/GssBufferDescStruct.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/Native/GssBufferDescStruct.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/Native/GssOidStruct.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/Native/GssOidStruct.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/Native/NativeMethods.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/Native/NativeMethods.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/Native/NativeMethodsLinux.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/Native/NativeMethodsLinux.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/Utility/Disposable.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/Utility/Disposable.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/Utility/ExceptionMessages.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/Utility/ExceptionMessages.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/Utility/GssType.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/Utility/GssType.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/Utility/KerberosConfig.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/Utility/KerberosConfig.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GSSAPI/Utility/Pinned.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GSSAPI/Utility/Pinned.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/GssapiMechanism.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/GssapiMechanism.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/KerberosAuthenticationPlugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/KerberosAuthenticationPlugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/MySQLAuthenticationPlugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/MySQLAuthenticationPlugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/MySqlPemReader.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/MySqlPemReader.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/MySqlSASLPlugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/MySqlSASLPlugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/NativePasswordPlugins.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/NativePasswordPlugins.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/OciAuthenticationPlugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/OciAuthenticationPlugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/SSPI/Const.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/SSPI/Const.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/SSPI/NativeMethods.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/SSPI/NativeMethods.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/SSPI/SspiCredentials.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/SSPI/SspiCredentials.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/SSPI/SspiSecurityContext.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/SSPI/SspiSecurityContext.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/SSPI/Structs.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/SSPI/Structs.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/ScramBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/ScramBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/ScramSha1Mechanism.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/ScramSha1Mechanism.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/ScramSha256Mechanism.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/ScramSha256Mechanism.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/Sha256AuthenticationPlugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/Sha256AuthenticationPlugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/Sha256MemoryAuthenticationPlugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/Sha256MemoryAuthenticationPlugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Authentication/WindowsAuthenticationPlugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Authentication/WindowsAuthenticationPlugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BulkLoader.cs" beforeDir="false" afterPath="$PROJECT_DIR$/BulkLoader.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CharSetMap.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CharSetMap.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CompressedStream.cs" beforeDir="false" afterPath="$PROJECT_DIR$/CompressedStream.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Connection.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Connection.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Crypt.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Crypt.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Driver.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Driver.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EVESharp.Database.MySql.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/EVESharp.Database.MySql.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Exception.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Exception.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Failover/FailoverGroup.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Failover/FailoverGroup.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Failover/FailoverManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Failover/FailoverManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Failover/FailoverServer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Failover/FailoverServer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Failover/RandomFailoverGroup.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Failover/RandomFailoverGroup.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Failover/SequentialFailoverGroup.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Failover/SequentialFailoverGroup.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Field.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Field.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/net452/Installer.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/net452/SystemPerformanceMonitor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/net452/SystemPerformanceMonitor.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/AuthenticationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/AuthenticationManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/CommandBuilder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/CommandBuilder.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlClientPermission.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlClientPermission.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlClientPermissionAttribute.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlClientPermissionAttribute.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlConfiguration.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlConfiguration.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlConnection.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlConnection.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlDataReader.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlDataReader.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlHelper.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlHelper.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlParameter.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlParameter.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlParameterCollection.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlParameterCollection.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlPromotableTransaction.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlPromotableTransaction.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlSecurityPermission.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/MySqlSecurityPermission.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Framework/netstandard2_0/dataadapter.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Framework/netstandard2_0/dataadapter.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ISSchemaProvider.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ISSchemaProvider.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Interceptors/CommandInterceptor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Interceptors/CommandInterceptor.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Interceptors/ExceptionInterceptor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Interceptors/ExceptionInterceptor.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Interceptors/Interceptor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Interceptors/Interceptor.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Memcached/BinaryClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Memcached/BinaryClient.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Memcached/Client.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Memcached/Client.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Memcached/MemcachedException.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Memcached/MemcachedException.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Memcached/TextClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Memcached/TextClient.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlAttribute.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlAttribute.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlAttributeCollection.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlAttributeCollection.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlBaseConnectionStringBuilder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlBaseConnectionStringBuilder.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlClientFactory.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlClientFactory.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlConnectionStringBuilder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlConnectionStringBuilder.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlError.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlError.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlHelper.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlHelper.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlPacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlPacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlPool.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlPool.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlPoolManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlPoolManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlScript.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlScript.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlStream.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlStream.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MySqlTrace.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MySqlTrace.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MysqlDefs.cs" beforeDir="false" afterPath="$PROJECT_DIR$/MysqlDefs.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NativeDriver.cs" beforeDir="false" afterPath="$PROJECT_DIR$/NativeDriver.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/OkPacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/OkPacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PerformanceMonitor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/PerformanceMonitor.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PreparableStatement.cs" beforeDir="false" afterPath="$PROJECT_DIR$/PreparableStatement.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProcedureCache.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ProcedureCache.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Properties/AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Properties/AssemblyInfo.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Replication/ReplicationConfiguration.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Replication/ReplicationConfiguration.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Replication/ReplicationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Replication/ReplicationManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Replication/ReplicationRoundRobinServerGroup.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Replication/ReplicationRoundRobinServerGroup.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Replication/ReplicationServer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Replication/ReplicationServer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Replication/ReplicationServerGroup.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Replication/ReplicationServerGroup.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Resources.Designer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Resources.Designer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ResourcesX.Designer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ResourcesX.Designer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ResultSet.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ResultSet.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Schema.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Schema.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SchemaProvider.cs" beforeDir="false" afterPath="$PROJECT_DIR$/SchemaProvider.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Statement.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Statement.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/StoredProcedure.cs" beforeDir="false" afterPath="$PROJECT_DIR$/StoredProcedure.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TableCache.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TableCache.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TimedStream.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TimedStream.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TracingDriver.cs" beforeDir="false" afterPath="$PROJECT_DIR$/TracingDriver.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MetaData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MetaData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlBinary.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlBinary.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlBit.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlBit.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlByte.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlByte.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlConversionException.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlConversionException.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlDateTime.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlDateTime.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlDecimal.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlDecimal.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlDouble.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlDouble.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlGeometry.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlGeometry.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlGuid.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlGuid.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlInt16.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlInt16.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlInt32.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlInt32.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlInt64.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlInt64.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlSingle.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlSingle.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlString.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlString.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlTime.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlTime.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlUByte.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlUByte.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlUInt16.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlUInt16.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlUInt32.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlUInt32.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlUInt64.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlUInt64.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Types/MySqlValue.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Types/MySqlValue.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utils.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Utils.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Authentication/ExternalAuthenticationPlugin.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Authentication/MySQL41AuthenticationPlugin.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Authentication/PlainAuthenticationPlugin.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Common/Tools.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Common/UnmanagedLibraryLoader.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Communication/CommunicationPacket.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Communication/XCompressionController.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Communication/XPacketProcessor.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Communication/XPacketReaderWriter.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Data/CollationMap.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Data/Enums.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/ProtocolBase.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/ValueDecoder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/BitDecoder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/ByteDecoder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/DecimalDecoder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Enum.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/ExpUnparser.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/ExprParser.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/ExprUtil.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/FloatDecoder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/IntegerDecoder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/Mysqlx.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxConnection.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxCrud.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxCursor.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxDatatypes.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxExpect.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxExpr.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxNotice.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxPrepare.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxResultset.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxSession.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/Protobuf/MysqlxSql.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/SetDecoder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/XDateTimeDecoder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/XProtocol.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/XTimeDecoder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Protocol/X/XValueDecoderFactory.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/RoutingServices/DefaultRoutingService.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/RoutingServices/RoutingServiceBase.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Serialization/JsonParser.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Sessions/InternalSession.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Sessions/QueueTaskScheduler.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/Sessions/XInternalSession.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/BaseSession.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/CRUD/AddStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/CRUD/CreateCollectionIndexStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/CRUD/CreateIndexParams.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/CRUD/CrudStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/CRUD/DocResult.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/CRUD/FindParams.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/CRUD/FindStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/CRUD/ModifyStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/CRUD/RemoveStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/CRUD/UpdateSpec.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Client.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Collection.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/BaseResult.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/BaseStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/BufferingResult.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/CollectionOptions.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/ColumnType.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/ErrorInfo.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/FilterParams.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/FilterableStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/QueryStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/Result.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/TargetedBaseStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Common/WarningInfo.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/DatabaseObject.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/DbDoc.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/GenericCollection.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Iterator.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/MySqlExpression.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/MySqlX.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/MySqlXConnectionStringBuilder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/Column.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/InternalRowResult.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/Row.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/RowResult.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/SqlResult.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/SqlStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/Table.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/TableDeleteStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/TableInsertStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/TableSelectStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Relational/TableUpdateStatement.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Schema.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/X/XDevAPI/Session.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/command.cs" beforeDir="false" afterPath="$PROJECT_DIR$/command.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/Cache.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/Cache.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/ContextString.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/ContextString.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/DnsResolver.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/DnsResolver.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/DnsSrvRecord.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/DnsSrvRecord.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/LowResolutionStopwatch.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/LowResolutionStopwatch.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/MyNetworkStream.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/MyNetworkStream.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/MySqlConnectionStringOption.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/MySqlConnectionStringOption.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/MySqlConnectionStringOptionCollection.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/MySqlConnectionStringOptionCollection.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/MySqlTokenizer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/MySqlTokenizer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/NativeMethods.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/NativeMethods.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/Platform.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/Platform.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/QueryNormalizer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/QueryNormalizer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/Ssl.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/Ssl.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/SslPemCertificateValidator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/SslPemCertificateValidator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/StreamCreator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/StreamCreator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/StringUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/StringUtility.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/UnixEndPoint.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/UnixEndPoint.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/Version.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/Version.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/netstandard2_0/NamedPipeStream.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/netstandard2_0/NamedPipeStream.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/netstandard2_0/SharedMemoryStream.cs" beforeDir="false" afterPath="$PROJECT_DIR$/common/netstandard2_0/SharedMemoryStream.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datareader.cs" beforeDir="false" afterPath="$PROJECT_DIR$/datareader.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net452/EVESharp.Database.MySql.AssemblyInfo.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net452/EVESharp.Database.MySql.AssemblyInfoInputs.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net452/EVESharp.Database.MySql.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net452/EVESharp.Database.MySql.assets.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net452/EVESharp.Database.MySql.assets.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net452/EVESharp.Database.MySql.csproj.AssemblyReference.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net48/EVESharp.Database.MySql.AssemblyInfo.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net48/EVESharp.Database.MySql.AssemblyInfoInputs.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net48/EVESharp.Database.MySql.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net48/EVESharp.Database.MySql.assets.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net48/EVESharp.Database.MySql.assets.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net48/EVESharp.Database.MySql.csproj.AssemblyReference.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net5.0/EVESharp.Database.MySql.AssemblyInfo.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net5.0/EVESharp.Database.MySql.AssemblyInfoInputs.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net5.0/EVESharp.Database.MySql.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net5.0/EVESharp.Database.MySql.assets.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net5.0/EVESharp.Database.MySql.assets.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net5.0/EVESharp.Database.MySql.csproj.AssemblyReference.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net6.0/EVESharp.Database.MySql.AssemblyInfo.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net6.0/EVESharp.Database.MySql.AssemblyInfoInputs.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net6.0/EVESharp.Database.MySql.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net6.0/EVESharp.Database.MySql.assets.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net6.0/EVESharp.Database.MySql.assets.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net6.0/EVESharp.Database.MySql.csproj.AssemblyReference.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/netstandard2.0/EVESharp.Database.MySql.AssemblyInfo.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/netstandard2.0/EVESharp.Database.MySql.AssemblyInfoInputs.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/netstandard2.0/EVESharp.Database.MySql.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/netstandard2.0/EVESharp.Database.MySql.assets.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/netstandard2.0/EVESharp.Database.MySql.assets.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/netstandard2.0/EVESharp.Database.MySql.csproj.AssemblyReference.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/netstandard2.1/EVESharp.Database.MySql.AssemblyInfo.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/netstandard2.1/EVESharp.Database.MySql.AssemblyInfoInputs.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/netstandard2.1/EVESharp.Database.MySql.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/netstandard2.1/EVESharp.Database.MySql.assets.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/netstandard2.1/EVESharp.Database.MySql.assets.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/netstandard2.1/EVESharp.Database.MySql.csproj.AssemblyReference.cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/parameter.cs" beforeDir="false" afterPath="$PROJECT_DIR$/parameter.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/parameter_collection.cs" beforeDir="false" afterPath="$PROJECT_DIR$/parameter_collection.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction.cs" beforeDir="false" afterPath="$PROJECT_DIR$/transaction.cs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -34,6 +320,7 @@
       <updated>1662551901136</updated>
       <workItem from="1662551904932" duration="29000" />
       <workItem from="1662552014612" duration="1313000" />
+      <workItem from="1662554448373" duration="1479000" />
     </task>
     <servers />
   </component>

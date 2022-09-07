@@ -32,8 +32,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient.Replication
+namespace EVESharp.Database.MySql.Replication
 {
   /// <summary>
   /// Base class used to implement load balancing features.

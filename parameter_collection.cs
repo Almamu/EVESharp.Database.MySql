@@ -30,8 +30,9 @@ using System;
 using System.Data.Common;
 using System.Collections.Generic;
 using System.Collections;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Represents a collection of parameters relevant to a <see cref="MySqlCommand"/> 

@@ -26,13 +26,13 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.MySqlClient;
+using EVESharp.Database.MySql;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace MySql.Data.Authentication.GSSAPI.Utility
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility
 {
   /// <summary>
   /// Gets the Kerberos configuration from the "krb5.conf/krb5.ini" file

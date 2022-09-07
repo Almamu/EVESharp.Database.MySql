@@ -26,11 +26,11 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Authentication.GSSAPI;
-using MySql.Data.Authentication.GSSAPI.Utility;
+using EVESharp.Database.MySql.Authentication.GSSAPI;
+using EVESharp.Database.MySql.Authentication.GSSAPI.Utility;
 using System;
 
-namespace MySql.Data.MySqlClient.Authentication
+namespace EVESharp.Database.MySql.Authentication
 {
   /// <summary>
   /// The GSSAPI mechanism.

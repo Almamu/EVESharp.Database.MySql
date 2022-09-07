@@ -29,7 +29,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace MySql.Data.Authentication.GSSAPI.Native
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
 {
   /// <summary>
   /// MIT Kerberos 5 GSS Bindings Linux

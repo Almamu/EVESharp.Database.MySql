@@ -28,7 +28,7 @@
 
 using System;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   /// <summary>
   /// This class is modeled after .NET Stopwatch. It provides better

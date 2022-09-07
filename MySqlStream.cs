@@ -30,8 +30,9 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Summary description for MySqlStream.

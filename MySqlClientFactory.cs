@@ -31,7 +31,7 @@ using System.Data.Common;
 using System.Reflection;
 using System.Security.Permissions;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Represents a set of methods for creating instances of the MySQL client implementation of the data source classes.

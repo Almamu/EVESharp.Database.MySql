@@ -28,7 +28,7 @@
 
 using System;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   /// Interceptor is the base class for the "manager" classes such as ExceptionInterceptor,

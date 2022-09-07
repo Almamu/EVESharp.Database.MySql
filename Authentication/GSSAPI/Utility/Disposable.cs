@@ -28,7 +28,7 @@
 
 using System;
 
-namespace MySql.Data.Authentication.GSSAPI.Utility
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility
 {
   /// <summary>
   /// Automatic dynamic disposable

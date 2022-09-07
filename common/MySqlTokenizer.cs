@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   internal class MySqlTokenizer
   {

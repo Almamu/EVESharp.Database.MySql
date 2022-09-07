@@ -30,7 +30,7 @@ using System;
 using System.Data;
 using System.Data.Common;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   ///  Represents a SQL transaction to be made in a MySQL database. This class cannot be inherited.

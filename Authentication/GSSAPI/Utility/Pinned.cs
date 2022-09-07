@@ -29,7 +29,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace MySql.Data.Authentication.GSSAPI.Utility
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility
 {
   /// <summary>
   /// Memory pinned object

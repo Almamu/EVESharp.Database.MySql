@@ -35,7 +35,7 @@ using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   ///  Represents a set of data commands and a database connection that are used to fill a dataset and update a MySQL database. 

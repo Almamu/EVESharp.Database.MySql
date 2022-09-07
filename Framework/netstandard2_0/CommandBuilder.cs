@@ -26,8 +26,8 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.Common;
-using MySql.Data.Types;
+using EVESharp.Database.MySql.Common;
+using EVESharp.Database.MySql.Types;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,8 +35,9 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Text;
+using EVESharp.Database.MySql;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   /// <summary>
   ///  Automatically generates single-table commands used to reconcile changes made to a <see cref="DataSet"/> with the associated MySQL database.

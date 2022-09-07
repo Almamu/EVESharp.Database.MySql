@@ -30,9 +30,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using MySql.Data.Types;
+using EVESharp.Database.MySql;
+using EVESharp.Database.MySql.Types;
 
-namespace MySql.Data.MySqlClient
+namespace EVESharp.Database.MySql
 {
   internal class ResultSet
   {

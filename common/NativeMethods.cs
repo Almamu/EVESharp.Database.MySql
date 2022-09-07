@@ -29,7 +29,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   internal class NativeMethods
   {

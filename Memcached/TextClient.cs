@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace MySql.Data.MySqlClient.Memcached
+namespace EVESharp.Database.MySql.Memcached
 {
   /// <summary>
   /// Implementation of the Memcached text client protocol.

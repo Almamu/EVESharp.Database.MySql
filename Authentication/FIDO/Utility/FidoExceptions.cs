@@ -28,7 +28,7 @@
 
 using System;
 
-namespace MySql.Data.Authentication.FIDO.Utility
+namespace EVESharp.Database.MySql.Authentication.FIDO.Utility
 {
   /// <summary>
   /// An exception representing a return status that is non-successful according to the CTAP specification

@@ -28,7 +28,7 @@
 
 using System.Collections.Generic;
 
-namespace MySql.Data.Common
+namespace EVESharp.Database.MySql.Common
 {
   internal class Cache<TKeyType, TValueType>
   {
