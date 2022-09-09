@@ -33,6 +33,7 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading;
 using EVESharp.Database.MySql;
 
@@ -1285,6 +1286,18 @@ namespace EVESharp.Database.MySql
       return v;
     }
 
+    /// <summary>
+    /// Returns the field's encoding
+    /// </summary>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    public Encoding GetEncoding (int index)
+    {
+      if (index < 0 || index >= FieldCount)
+        Throw(new ArgumentException(Resources.InvalidColumnOrdinal));
+      
+      return ResultSet.Fields [index].Encoding;
+    }
 
     private void ClearKillFlag()
     {
