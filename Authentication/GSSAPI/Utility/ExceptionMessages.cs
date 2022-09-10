@@ -30,39 +30,39 @@ using System;
 using System.Runtime.InteropServices;
 using EVESharp.Database.MySql.Authentication.GSSAPI.Native;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility;
+
+internal static class ExceptionMessages
 {
-  internal static class ExceptionMessages
-  {
-    private const int GssCGssCode = 1;
+    private const int GssCGssCode  = 1;
     private const int GssCMechCode = 2;
 
-    internal static string FormatGssMessage(string message, uint majorStatus, uint minorStatus, GssOidDescStruct oid)
+    internal static string FormatGssMessage (string message, uint majorStatus, uint minorStatus, GssOidDescStruct oid)
     {
-      var majorMessage = TranslateMajorStatusCode(majorStatus);
-      var minorMessage = TranslateMinorStatusCode(minorStatus, oid);
-      return $"{message}{Environment.NewLine}" +
-             $"GSS Major: ({majorStatus:x8}) {majorMessage}{Environment.NewLine}" +
-             $"GSS Minor: ({minorStatus:x8}) {minorMessage}";
+        string majorMessage = TranslateMajorStatusCode (majorStatus);
+        string minorMessage = TranslateMinorStatusCode (minorStatus, oid);
+
+        return $"{message}{Environment.NewLine}" +
+               $"GSS Major: ({majorStatus:x8}) {majorMessage}{Environment.NewLine}" +
+               $"GSS Minor: ({minorStatus:x8}) {minorMessage}";
     }
 
-    private static string TranslateMajorStatusCode(uint status)
+    private static string TranslateMajorStatusCode (uint status)
     {
-      var context = IntPtr.Zero;
-      var buffer = default(GssBufferDescStruct);
-      var oid = default(GssOidDescStruct);
+        IntPtr              context = IntPtr.Zero;
+        GssBufferDescStruct buffer  = default (GssBufferDescStruct);
+        GssOidDescStruct    oid     = default (GssOidDescStruct);
 
-      NativeMethods.gss_display_status(out var _, status, GssCGssCode, ref oid, ref context, ref buffer);
-      return buffer.value == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAnsi(buffer.value);
+        NativeMethods.gss_display_status (out uint _, status, GssCGssCode, ref oid, ref context, ref buffer);
+        return buffer.value == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAnsi (buffer.value);
     }
 
-    private static string TranslateMinorStatusCode(uint status, GssOidDescStruct oid)
+    private static string TranslateMinorStatusCode (uint status, GssOidDescStruct oid)
     {
-      var context = IntPtr.Zero;
-      var buffer = default(GssBufferDescStruct);
+        IntPtr              context = IntPtr.Zero;
+        GssBufferDescStruct buffer  = default (GssBufferDescStruct);
 
-      NativeMethods.gss_display_status(out var _, status, GssCMechCode, ref oid, ref context, ref buffer);
-      return buffer.value == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAnsi(buffer.value);
+        NativeMethods.gss_display_status (out uint _, status, GssCMechCode, ref oid, ref context, ref buffer);
+        return buffer.value == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAnsi (buffer.value);
     }
-  }
 }

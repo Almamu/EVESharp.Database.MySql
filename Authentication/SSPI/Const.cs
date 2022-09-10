@@ -26,28 +26,27 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-namespace EVESharp.Database.MySql.Authentication.SSPI
-{
-  /// <summary>
-  /// SSPI constants
-  /// </summary>
-  internal static class Const
-  {
-    internal const int SECPKG_CRED_BOTH = 0x00000003;
-    internal const int SECURITY_NETWORK_DREP = 0;
-    internal const int SECURITY_NATIVE_DREP = 0x10;
-    internal const int SECPKG_CRED_INBOUND = 1;
-    internal const int MAX_TOKEN_SIZE = 12288;
-    internal const int SECPKG_ATTR_SIZES = 0;
-    internal const int STANDARD_CONTEXT_ATTRIBUTES = 0;
-    internal const uint SEC_WINNT_AUTH_IDENTITY_UNICODE = 2;
-  }
+namespace EVESharp.Database.MySql.Authentication.SSPI;
 
-  internal enum SecStatus : uint
-  {
-    SEC_E_OK = 0,
-    SEC_I_CONTINUE_NEEDED = 0x90312,
-    SEC_I_COMPLETE_NEEDED = 0x1013,
-    SEC_I_COMPLETE_AND_CONTINUE = 0x1014,
-  }
+/// <summary>
+/// SSPI constants
+/// </summary>
+internal static class Const
+{
+    internal const int  SECPKG_CRED_BOTH                = 0x00000003;
+    internal const int  SECURITY_NETWORK_DREP           = 0;
+    internal const int  SECURITY_NATIVE_DREP            = 0x10;
+    internal const int  SECPKG_CRED_INBOUND             = 1;
+    internal const int  MAX_TOKEN_SIZE                  = 12288;
+    internal const int  SECPKG_ATTR_SIZES               = 0;
+    internal const int  STANDARD_CONTEXT_ATTRIBUTES     = 0;
+    internal const uint SEC_WINNT_AUTH_IDENTITY_UNICODE = 2;
+}
+
+internal enum SecStatus : uint
+{
+    SEC_E_OK                    = 0,
+    SEC_I_CONTINUE_NEEDED       = 0x90312,
+    SEC_I_COMPLETE_NEEDED       = 0x1013,
+    SEC_I_COMPLETE_AND_CONTINUE = 0x1014
 }

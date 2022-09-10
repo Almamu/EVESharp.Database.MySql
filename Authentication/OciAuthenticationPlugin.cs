@@ -37,138 +37,135 @@ using System.Reflection;
 using System.Text;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Authentication
+namespace EVESharp.Database.MySql.Authentication;
+
+/// <summary>
+/// Enables connections from a user account set with the authentication_iam authentication plugin.
+/// </summary>
+internal class OciAuthenticationPlugin : MySqlAuthenticationPlugin
 {
-  /// <summary>
-  /// Enables connections from a user account set with the authentication_iam authentication plugin.
-  /// </summary>
-  internal class OciAuthenticationPlugin : MySqlAuthenticationPlugin
-  {
-    public override string PluginName => "authentication_oci_client";
-    private Assembly _ociAssembly;
+    public override string   PluginName => "authentication_oci_client";
+    private         Assembly _ociAssembly;
 
     private const string DEFAULT_PROFILE = "DEFAULT";
-    private const string KEY_FILE = "key_file";
-    private const string FINGERPRINT = "fingerprint";
+    private const string KEY_FILE        = "key_file";
+    private const string FINGERPRINT     = "fingerprint";
 
     /// <summary>
     /// Verify that OCI .NET SDK is referenced.
     /// </summary>
-    protected override void CheckConstraints()
+    protected override void CheckConstraints ()
     {
-      try
-      {
-        _ociAssembly = Assembly.Load("OCI.DotNetSDK.Common");
-      }
-      catch (Exception ex)
-      {
-        throw new MySqlException(Resources.OciSDKNotFound, ex);
-      }
+        try
+        {
+            this._ociAssembly = Assembly.Load ("OCI.DotNetSDK.Common");
+        }
+        catch (Exception ex)
+        {
+            throw new MySqlException (Resources.OciSDKNotFound, ex);
+        }
     }
 
-    protected override void SetAuthData(byte[] data)
+    protected override void SetAuthData (byte [] data)
     {
-      base.SetAuthData(data);
+        base.SetAuthData (data);
     }
 
-    protected override byte[] MoreData(byte[] data)
+    protected override byte [] MoreData (byte [] data)
     {
-      string ociConfigPath = Settings.OciConfigFile;
-      var configFileReaderType = _ociAssembly.GetType("Oci.Common.ConfigFileReader");
-      Dictionary<string, Dictionary<string, string>> profiles;
+        string                                           ociConfigPath        = this.Settings.OciConfigFile;
+        Type                                             configFileReaderType = this._ociAssembly.GetType ("Oci.Common.ConfigFileReader");
+        Dictionary <string, Dictionary <string, string>> profiles;
 
-      if (string.IsNullOrWhiteSpace(ociConfigPath))
-      {
-        FieldInfo pathField = configFileReaderType.GetField("DEFAULT_FILE_PATH");
-        ociConfigPath = (string)pathField.GetValue(null);
-      }
+        if (string.IsNullOrWhiteSpace (ociConfigPath))
+        {
+            FieldInfo pathField = configFileReaderType.GetField ("DEFAULT_FILE_PATH");
+            ociConfigPath = (string) pathField.GetValue (null);
+        }
 
-      try
-      {
-        MethodInfo methodInfo = configFileReaderType.GetMethod("Parse", new Type[] { typeof(string) });
-        var configFile = methodInfo.Invoke(null, new object[] { ociConfigPath });
-        profiles = (Dictionary<string, Dictionary<string, string>>)configFile.GetType().GetMethod("GetConfiguration").Invoke(configFile, null);
-      }
-      catch (Exception ex)
-      {
-        throw new MySqlException(Resources.OciConfigFileNotFound, ex);
-      }
+        try
+        {
+            MethodInfo methodInfo = configFileReaderType.GetMethod ("Parse", new Type [] {typeof (string)});
+            object     configFile = methodInfo.Invoke (null, new object [] {ociConfigPath});
+            profiles = (Dictionary <string, Dictionary <string, string>>) configFile.GetType ().GetMethod ("GetConfiguration").Invoke (configFile, null);
+        }
+        catch (Exception ex)
+        {
+            throw new MySqlException (Resources.OciConfigFileNotFound, ex);
+        }
 
-      GetValues(profiles, out string keyFilePath, out string fingerprint);
-      byte[] signedToken = SignData(AuthenticationData, keyFilePath, fingerprint);
+        this.GetValues (profiles, out string keyFilePath, out string fingerprint);
+        byte [] signedToken = this.SignData (this.AuthenticationData, keyFilePath, fingerprint);
 
-      return signedToken;
+        return signedToken;
     }
 
     /// <summary>
     /// Get the values for the key_file and fingerprint entries.
     /// </summary>
-    internal void GetValues(Dictionary<string, Dictionary<string, string>> profiles, out string keyFilePath, out string fingerprint)
+    internal void GetValues (Dictionary <string, Dictionary <string, string>> profiles, out string keyFilePath, out string fingerprint)
     {
-      keyFilePath = string.Empty;
-      fingerprint = string.Empty;
+        keyFilePath = string.Empty;
+        fingerprint = string.Empty;
 
-      if (profiles.ContainsKey(DEFAULT_PROFILE) && profiles[DEFAULT_PROFILE].ContainsKey(KEY_FILE)
-        && profiles[DEFAULT_PROFILE].ContainsKey(FINGERPRINT))
-      {
-        keyFilePath = profiles[DEFAULT_PROFILE][KEY_FILE];
-        fingerprint = profiles[DEFAULT_PROFILE][FINGERPRINT];
-      }
-      else
-      {
-        foreach (var profile in profiles)
+        if (profiles.ContainsKey (DEFAULT_PROFILE) && profiles [DEFAULT_PROFILE].ContainsKey (KEY_FILE)
+                                                   && profiles [DEFAULT_PROFILE].ContainsKey (FINGERPRINT))
         {
-          if (profile.Value.ContainsKey(KEY_FILE) && profile.Value.ContainsKey(FINGERPRINT))
-          {
-            keyFilePath = profile.Value[KEY_FILE];
-            fingerprint = profile.Value[FINGERPRINT];
-          }
+            keyFilePath = profiles [DEFAULT_PROFILE] [KEY_FILE];
+            fingerprint = profiles [DEFAULT_PROFILE] [FINGERPRINT];
         }
-      }
+        else
+        {
+            foreach (KeyValuePair <string, Dictionary <string, string>> profile in profiles)
+                if (profile.Value.ContainsKey (KEY_FILE) && profile.Value.ContainsKey (FINGERPRINT))
+                {
+                    keyFilePath = profile.Value [KEY_FILE];
+                    fingerprint = profile.Value [FINGERPRINT];
+                }
+        }
 
-      if (string.IsNullOrEmpty(keyFilePath) || string.IsNullOrEmpty(fingerprint))
-        throw new MySqlException(Resources.OciEntryNotFound);
+        if (string.IsNullOrEmpty (keyFilePath) || string.IsNullOrEmpty (fingerprint))
+            throw new MySqlException (Resources.OciEntryNotFound);
     }
 
     /// <summary>
     /// Sign nonce sent by server using SHA256 algorithm and the private key provided by the user.
     /// </summary>
-    internal byte[] SignData(byte[] data, string keyFilePath, string fingerprint)
+    internal byte [] SignData (byte [] data, string keyFilePath, string fingerprint)
     {
-      // Init algorithm
-      RsaDigestSigner signer256 = new RsaDigestSigner(new Sha256Digest());
-      RsaPrivateCrtKeyParameters rsaPrivate;
+        // Init algorithm
+        RsaDigestSigner            signer256 = new RsaDigestSigner (new Sha256Digest ());
+        RsaPrivateCrtKeyParameters rsaPrivate;
 
-      // Read key file
-      try
-      {
-        using (var reader = File.OpenText(keyFilePath))
+        // Read key file
+        try
         {
-          PemReader pemReader = new PemReader(reader);
-          rsaPrivate = (RsaPrivateCrtKeyParameters)pemReader.ReadObject();
+            using (StreamReader reader = File.OpenText (keyFilePath))
+            {
+                PemReader pemReader = new PemReader (reader);
+                rsaPrivate = (RsaPrivateCrtKeyParameters) pemReader.ReadObject ();
+            }
         }
-      }
-      catch (Exception ex)
-      {
-        throw new MySqlException(Resources.OciKeyFileDoesNotExists, ex);
-      }
+        catch (Exception ex)
+        {
+            throw new MySqlException (Resources.OciKeyFileDoesNotExists, ex);
+        }
 
-      if (rsaPrivate == null)
-        throw new MySqlException(Resources.OciInvalidKeyFile);
+        if (rsaPrivate == null)
+            throw new MySqlException (Resources.OciInvalidKeyFile);
 
-      // Populate with key 
-      signer256.Init(true, rsaPrivate);
-      // Calculate the signature
-      signer256.BlockUpdate(data, 0, data.Length);
-      // Generates signature
-      byte[] sig = signer256.GenerateSignature();
-      // Base 64 encode the sig so its 8-bit clean
-      string signedString = Convert.ToBase64String(sig);
+        // Populate with key 
+        signer256.Init (true, rsaPrivate);
+        // Calculate the signature
+        signer256.BlockUpdate (data, 0, data.Length);
+        // Generates signature
+        byte [] sig = signer256.GenerateSignature ();
+        // Base 64 encode the sig so its 8-bit clean
+        string signedString = Convert.ToBase64String (sig);
 
-      string payload = "{ \"fingerprint\" : \"" + fingerprint + "\" , \"signature\": \"" + signedString + "\" }";
-      byte[] result = Encoding.UTF8.GetBytes(payload);
+        string  payload = "{ \"fingerprint\" : \"" + fingerprint + "\" , \"signature\": \"" + signedString + "\" }";
+        byte [] result  = Encoding.UTF8.GetBytes (payload);
 
-      return result;
+        return result;
     }
-  }
 }

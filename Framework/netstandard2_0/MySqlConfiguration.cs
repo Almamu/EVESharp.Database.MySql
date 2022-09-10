@@ -31,175 +31,134 @@ using System.Collections.Generic;
 using System.Text;
 using System.Configuration;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Represents a section within a configuration file.
+/// </summary>
+public sealed class MySqlConfiguration : ConfigurationSection
 {
-  /// <summary>
-  /// Represents a section within a configuration file.
-  /// </summary>
-  public sealed class MySqlConfiguration : ConfigurationSection
-  {
     private static MySqlConfiguration settings
-      = ConfigurationManager.GetSection("MySQL") as MySqlConfiguration;
+        = ConfigurationManager.GetSection ("MySQL") as MySqlConfiguration;
 
     /// <summary>
     /// Gets the MySQL configuations associated to the current configuration.
     /// </summary>
-    public static MySqlConfiguration Settings
-    {
-      get { return settings; }
-    }
+    public static MySqlConfiguration Settings => settings;
 
     /// <summary>
     /// Gets a collection of the exception interceptors available in the current configuration.
     /// </summary>
-    [ConfigurationProperty("ExceptionInterceptors", IsRequired = false)]
-    [ConfigurationCollection(typeof(InterceptorConfigurationElement), AddItemName = "add", ClearItemsName = "clear", RemoveItemName = "remove")]
-    public GenericConfigurationElementCollection<InterceptorConfigurationElement> ExceptionInterceptors
-    {
-      get { return (GenericConfigurationElementCollection<InterceptorConfigurationElement>)this["ExceptionInterceptors"]; }
-    }
+    [ConfigurationProperty ("ExceptionInterceptors", IsRequired = false)]
+    [ConfigurationCollection (typeof (InterceptorConfigurationElement), AddItemName = "add", ClearItemsName = "clear", RemoveItemName = "remove")]
+    public GenericConfigurationElementCollection <InterceptorConfigurationElement> ExceptionInterceptors =>
+        (GenericConfigurationElementCollection <InterceptorConfigurationElement>) this ["ExceptionInterceptors"];
 
     /// <summary>
     /// Gets a collection of the command interceptors available in the current configuration.
     /// </summary>
-    [ConfigurationProperty("CommandInterceptors", IsRequired = false)]
-    [ConfigurationCollection(typeof(InterceptorConfigurationElement), AddItemName = "add", ClearItemsName = "clear", RemoveItemName = "remove")]
-    public GenericConfigurationElementCollection<InterceptorConfigurationElement> CommandInterceptors
-    {
-      get { return (GenericConfigurationElementCollection<InterceptorConfigurationElement>)this["CommandInterceptors"]; }
-    }
+    [ConfigurationProperty ("CommandInterceptors", IsRequired = false)]
+    [ConfigurationCollection (typeof (InterceptorConfigurationElement), AddItemName = "add", ClearItemsName = "clear", RemoveItemName = "remove")]
+    public GenericConfigurationElementCollection <InterceptorConfigurationElement> CommandInterceptors =>
+        (GenericConfigurationElementCollection <InterceptorConfigurationElement>) this ["CommandInterceptors"];
 
     /// <summary>
     /// Gets a collection of the authentication plugins available in the current configuration.
     /// </summary>
-    [ConfigurationProperty("AuthenticationPlugins", IsRequired = false)]
-    [ConfigurationCollection(typeof(AuthenticationPluginConfigurationElement), AddItemName = "add", ClearItemsName = "clear", RemoveItemName = "remove")]
-    public GenericConfigurationElementCollection<AuthenticationPluginConfigurationElement> AuthenticationPlugins
-    {
-      get { return (GenericConfigurationElementCollection<AuthenticationPluginConfigurationElement>)this["AuthenticationPlugins"]; }
-    }
+    [ConfigurationProperty ("AuthenticationPlugins", IsRequired = false)]
+    [ConfigurationCollection (typeof (AuthenticationPluginConfigurationElement), AddItemName = "add", ClearItemsName = "clear", RemoveItemName = "remove")]
+    public GenericConfigurationElementCollection <AuthenticationPluginConfigurationElement> AuthenticationPlugins =>
+        (GenericConfigurationElementCollection <AuthenticationPluginConfigurationElement>) this ["AuthenticationPlugins"];
 
     /// <summary>
     /// Gets or sets the replication configurations.
     /// </summary>
-    [ConfigurationProperty("Replication", IsRequired = true)]
+    [ConfigurationProperty ("Replication", IsRequired = true)]
     public ReplicationConfigurationElement Replication
     {
-      get
-      {
-        return (ReplicationConfigurationElement)this["Replication"];
-      }
-      set
-      {
-        this["Replication"] = value;
-      }
+        get => (ReplicationConfigurationElement) this ["Replication"];
+        set => this ["Replication"] = value;
     }
+}
 
-  }
-
-  /// <summary>
-  /// Defines the configurations allowed for an authentication plugin.
-  /// </summary>
-  public sealed class AuthenticationPluginConfigurationElement : ConfigurationElement
-  {
+/// <summary>
+/// Defines the configurations allowed for an authentication plugin.
+/// </summary>
+public sealed class AuthenticationPluginConfigurationElement : ConfigurationElement
+{
     /// <summary>
     /// Gets or sets the name of the authentication plugin.
     /// </summary>
-    [ConfigurationProperty("name", IsRequired = true)]
+    [ConfigurationProperty ("name", IsRequired = true)]
     public string Name
     {
-      get
-      {
-        return (string)this["name"];
-      }
-      set
-      {
-        this["name"] = value;
-      }
+        get => (string) this ["name"];
+        set => this ["name"] = value;
     }
 
     /// <summary>
     /// Gets or sets the type of the authentication plugin.
     /// </summary>
-    [ConfigurationProperty("type", IsRequired = true)]
+    [ConfigurationProperty ("type", IsRequired = true)]
     public string Type
     {
-      get
-      {
-        return (string)this["type"];
-      }
-      set
-      {
-        this["type"] = value;
-      }
+        get => (string) this ["type"];
+        set => this ["type"] = value;
     }
-  }
+}
 
-  /// <summary>
-  /// Defines the configurations allowed for an interceptor.
-  /// </summary>
-  public sealed class InterceptorConfigurationElement : ConfigurationElement
-  {
+/// <summary>
+/// Defines the configurations allowed for an interceptor.
+/// </summary>
+public sealed class InterceptorConfigurationElement : ConfigurationElement
+{
     /// <summary>
     /// Gets or sets the name of the interceptor.
     /// </summary>
-    [ConfigurationProperty("name", IsRequired = true)]
+    [ConfigurationProperty ("name", IsRequired = true)]
     public string Name
     {
-      get
-      {
-        return (string)this["name"];
-      }
-      set
-      {
-        this["name"] = value;
-      }
+        get => (string) this ["name"];
+        set => this ["name"] = value;
     }
 
     /// <summary>
     /// Gets or sets the type of the interceptor.
     /// </summary>
-    [ConfigurationProperty("type", IsRequired = true)]
+    [ConfigurationProperty ("type", IsRequired = true)]
     public string Type
     {
-      get
-      {
-        return (string)this["type"];
-      }
-      set
-      {
-        this["type"] = value;
-      }
+        get => (string) this ["type"];
+        set => this ["type"] = value;
     }
-  }
+}
 
-  /// <summary>
-  /// Represents a generic configuration element.
-  /// </summary>
-  /// <typeparam name="T"></typeparam>
-  public sealed class GenericConfigurationElementCollection<T> : ConfigurationElementCollection, IEnumerable<T> where T : ConfigurationElement, new()
-  {
-    List<T> _elements = new List<T>();
+/// <summary>
+/// Represents a generic configuration element.
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public sealed class GenericConfigurationElementCollection <T> : ConfigurationElementCollection, IEnumerable <T> where T : ConfigurationElement, new ()
+{
+    private List <T> _elements = new List <T> ();
 
-    protected override ConfigurationElement CreateNewElement()
+    protected override ConfigurationElement CreateNewElement ()
     {
-      T newElement = new T();
-      _elements.Add(newElement);
-      return newElement;
+        T newElement = new T ();
+        this._elements.Add (newElement);
+        return newElement;
     }
 
-    protected override object GetElementKey(ConfigurationElement element)
+    protected override object GetElementKey (ConfigurationElement element)
     {
-      return _elements.Find(e => e.Equals(element));
+        return this._elements.Find (e => e.Equals (element));
     }
 
     /// <summary>
     /// Gets an enumerator that iterates through the returned list.
     /// </summary>
     /// <returns>An enumerator that iterates through the returned list.</returns>
-    public new IEnumerator<T> GetEnumerator()
+    public new IEnumerator <T> GetEnumerator ()
     {
-      return _elements.GetEnumerator();
+        return this._elements.GetEnumerator ();
     }
-  }
 }

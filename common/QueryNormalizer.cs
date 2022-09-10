@@ -32,342 +32,397 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace EVESharp.Database.MySql.Common
+namespace EVESharp.Database.MySql.Common;
+
+internal class QueryNormalizer
 {
-  internal class QueryNormalizer
-  {
-    private static readonly List<string> Keywords = new List<string>();
-    private readonly List<Token> _tokens = new List<Token>();
-    private int _pos;
-    private string _fullSql;
-    private string _queryType;
+    private static readonly List <string> Keywords = new List <string> ();
+    private readonly        List <Token>  _tokens  = new List <Token> ();
+    private                 int           _pos;
+    private                 string        _fullSql;
+    private                 string        _queryType;
 
-    static QueryNormalizer()
+    static QueryNormalizer ()
     {
-      Keywords = SchemaProvider.GetReservedWords().AsDataTable().
-        Select().
-        Select(x => x[0].ToString()).ToList();
+        Keywords = SchemaProvider.GetReservedWords ().AsDataTable ().Select ().Select (x => x [0].ToString ()).ToList ();
     }
 
-    public string QueryType => _queryType;
+    public string QueryType => this._queryType;
 
-    public string Normalize(string sql)
+    public string Normalize (string sql)
     {
-      _tokens.Clear();
-      StringBuilder newSql = new StringBuilder();
-      _fullSql = sql;
+        this._tokens.Clear ();
+        StringBuilder newSql = new StringBuilder ();
+        this._fullSql = sql;
 
-      TokenizeSql(sql);
-      DetermineStatementType(_tokens);
-      ProcessMathSymbols(_tokens);
-      CollapseValueLists(_tokens);
-      CollapseInLists(_tokens);
-      CollapseWhitespace(_tokens);
+        this.TokenizeSql (sql);
+        this.DetermineStatementType (this._tokens);
+        ProcessMathSymbols (this._tokens);
+        this.CollapseValueLists (this._tokens);
+        this.CollapseInLists (this._tokens);
+        CollapseWhitespace (this._tokens);
 
-      foreach (Token t in _tokens.Where(t => t.Output))
-        newSql.Append(t.Text);
+        foreach (Token t in this._tokens.Where (t => t.Output))
+            newSql.Append (t.Text);
 
-      return newSql.ToString();
+        return newSql.ToString ();
     }
 
-    private void DetermineStatementType(List<Token> tok)
+    private void DetermineStatementType (List <Token> tok)
     {
-      foreach (Token t in tok.Where(t => t.Type == TokenType.Keyword))
-      {
-        _queryType = t.Text.ToUpperInvariant();
-        break;
-      }
+        foreach (Token t in tok.Where (t => t.Type == TokenType.Keyword))
+        {
+            this._queryType = t.Text.ToUpperInvariant ();
+            break;
+        }
     }
 
     /// <summary>
     /// Mark - or + signs that are unary ops as no output
     /// </summary>
     /// <param name="tok"></param>
-    private static void ProcessMathSymbols(List<Token> tok)
+    private static void ProcessMathSymbols (List <Token> tok)
     {
-      Token lastToken = null;
+        Token lastToken = null;
 
-      foreach (Token t in tok)
-      {
-        if (t.Type == TokenType.Symbol &&
-            (t.Text == "-" || t.Text == "+"))
+        foreach (Token t in tok)
         {
-          if (lastToken != null &&
-              lastToken.Type != TokenType.Number &&
-              lastToken.Type != TokenType.Identifier &&
-              (lastToken.Type != TokenType.Symbol || lastToken.Text != ")"))
-            t.Output = false;
+            if (t.Type == TokenType.Symbol &&
+                (t.Text == "-" || t.Text == "+"))
+                if (lastToken != null &&
+                    lastToken.Type != TokenType.Number &&
+                    lastToken.Type != TokenType.Identifier &&
+                    (lastToken.Type != TokenType.Symbol || lastToken.Text != ")"))
+                    t.Output = false;
+
+            if (t.IsRealToken)
+                lastToken = t;
         }
-        if (t.IsRealToken)
-          lastToken = t;
-      }
     }
 
-    private static void CollapseWhitespace(List<Token> tok)
+    private static void CollapseWhitespace (List <Token> tok)
     {
-      Token lastToken = null;
+        Token lastToken = null;
 
-      foreach (Token t in tok)
-      {
-        if (t.Output &&
-            t.Type == TokenType.Whitespace &&
-            lastToken != null &&
-            lastToken.Type == TokenType.Whitespace)
+        foreach (Token t in tok)
         {
-          t.Output = false;
+            if (t.Output &&
+                t.Type == TokenType.Whitespace &&
+                lastToken != null &&
+                lastToken.Type == TokenType.Whitespace)
+                t.Output = false;
+
+            if (t.Output)
+                lastToken = t;
         }
-        if (t.Output)
-          lastToken = t;
-      }
     }
 
-    private void CollapseValueLists(List<Token> tok)
+    private void CollapseValueLists (List <Token> tok)
     {
-      int pos = -1;
-      while (++pos < tok.Count)
-      {
-        Token t = tok[pos];
-        if (t.Type != TokenType.Keyword) continue;
-        if (!t.Text.StartsWith("VALUE", StringComparison.OrdinalIgnoreCase)) continue;
-        CollapseValueList(tok, ref pos);
-      }
-    }
+        int pos = -1;
 
-    private void CollapseValueList(List<Token> tok, ref int pos)
-    {
-      List<int> parenIndices = new List<int>();
-
-      // this while loop will find all closing parens in this value list
-      while (true)
-      {
-        // find the close ')'
         while (++pos < tok.Count)
         {
-          if (tok[pos].Type == TokenType.Symbol && tok[pos].Text == ")")
-            break;
-          if (pos == tok.Count - 1)
+            Token t = tok [pos];
+
+            if (t.Type != TokenType.Keyword)
+                continue;
+
+            if (!t.Text.StartsWith ("VALUE", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            this.CollapseValueList (tok, ref pos);
+        }
+    }
+
+    private void CollapseValueList (List <Token> tok, ref int pos)
+    {
+        List <int> parenIndices = new List <int> ();
+
+        // this while loop will find all closing parens in this value list
+        while (true)
+        {
+            // find the close ')'
+            while (++pos < tok.Count)
+            {
+                if (tok [pos].Type == TokenType.Symbol && tok [pos].Text == ")")
+                    break;
+
+                if (pos == tok.Count - 1)
+                    break;
+            }
+
+            parenIndices.Add (pos);
+
+            // now find the next "real" token
+            while (++pos < tok.Count)
+                if (tok [pos].IsRealToken)
+                    break;
+
+            if (pos == tok.Count)
+                break;
+
+            if (tok [pos].Text == ",")
+                continue;
+
+            pos--;
             break;
         }
-        parenIndices.Add(pos);
 
-        // now find the next "real" token
+        // if we only have 1 value then we don't collapse
+        if (parenIndices.Count < 2)
+            return;
+
+        int index = parenIndices [0];
+        tok [++index] = new Token (TokenType.Whitespace, " ");
+        tok [++index] = new Token (TokenType.Comment,    "/* , ... */");
+        index++;
+
+        // now mark all the other tokens as no output
+        while (index <= parenIndices [parenIndices.Count - 1])
+            tok [index++].Output = false;
+    }
+
+    private void CollapseInLists (List <Token> tok)
+    {
+        int pos = -1;
+
         while (++pos < tok.Count)
-          if (tok[pos].IsRealToken) break;
-        if (pos == tok.Count) break;
+        {
+            Token t = tok [pos];
 
-        if (tok[pos].Text == ",") continue;
-        pos--;
-        break;
-      }
+            if (t.Type != TokenType.Keyword)
+                continue;
 
-      // if we only have 1 value then we don't collapse
-      if (parenIndices.Count < 2) return;
-      int index = parenIndices[0];
-      tok[++index] = new Token(TokenType.Whitespace, " ");
-      tok[++index] = new Token(TokenType.Comment, "/* , ... */");
-      index++;
+            if (t.Text != "IN")
+                continue;
 
-      // now mark all the other tokens as no output
-      while (index <= parenIndices[parenIndices.Count - 1])
-        tok[index++].Output = false;
+            CollapseInList (tok, ref pos);
+        }
     }
 
-    private void CollapseInLists(List<Token> tok)
+    private static Token GetNextRealToken (List <Token> tok, ref int pos)
     {
-      int pos = -1;
-      while (++pos < tok.Count)
-      {
-        Token t = tok[pos];
-        if (t.Type != TokenType.Keyword) continue;
-        if (t.Text != "IN") continue;
-        CollapseInList(tok, ref pos);
-      }
+        while (++pos < tok.Count)
+            if (tok [pos].IsRealToken)
+                return tok [pos];
+
+        return null;
     }
 
-    private static Token GetNextRealToken(List<Token> tok, ref int pos)
+    private static void CollapseInList (List <Token> tok, ref int pos)
     {
-      while (++pos < tok.Count)
-      {
-        if (tok[pos].IsRealToken) return tok[pos];
-      }
-      return null;
+        Token t = GetNextRealToken (tok, ref pos);
+
+        // Debug.Assert(t.Text == "(");
+        if (t == null)
+            return;
+
+        // if the first token is a keyword then we likely have a 
+        // SELECT .. IN (SELECT ...)
+        t = GetNextRealToken (tok, ref pos);
+
+        if (t == null || t.Type == TokenType.Keyword)
+            return;
+
+        int start = pos;
+
+        // first find all the tokens that make up the in list
+        while (++pos < tok.Count)
+        {
+            t = tok [pos];
+
+            if (t.Type == TokenType.CommandComment)
+                return;
+
+            if (!t.IsRealToken)
+                continue;
+
+            if (t.Text == "(")
+                return;
+
+            if (t.Text == ")")
+                break;
+        }
+
+        int stop = pos;
+
+        for (int i = stop; i > start; i--)
+            tok.RemoveAt (i);
+
+        tok.Insert (++start, new Token (TokenType.Whitespace, " "));
+        tok.Insert (++start, new Token (TokenType.Comment,    "/* , ... */"));
+        tok.Insert (++start, new Token (TokenType.Whitespace, " "));
+        tok.Insert (++start, new Token (TokenType.Symbol,     ")"));
     }
 
-    private static void CollapseInList(List<Token> tok, ref int pos)
+    private void TokenizeSql (string sql)
     {
-      Token t = GetNextRealToken(tok, ref pos);
-      // Debug.Assert(t.Text == "(");
-      if (t == null)
-        return;
+        this._pos = 0;
 
-      // if the first token is a keyword then we likely have a 
-      // SELECT .. IN (SELECT ...)
-      t = GetNextRealToken(tok, ref pos);
-      if (t == null || t.Type == TokenType.Keyword) return;
+        while (this._pos < sql.Length)
+        {
+            char c = sql [this._pos];
 
-      int start = pos;
-      // first find all the tokens that make up the in list
-      while (++pos < tok.Count)
-      {
-        t = tok[pos];
-        if (t.Type == TokenType.CommandComment) return;
-        if (!t.IsRealToken) continue;
-        if (t.Text == "(") return;
-        if (t.Text == ")") break;
-      }
-      int stop = pos;
+            if (this.LetterStartsComment (c) && this.ConsumeComment ())
+                continue;
 
-      for (int i = stop; i > start; i--)
-        tok.RemoveAt(i);
-      tok.Insert(++start, new Token(TokenType.Whitespace, " "));
-      tok.Insert(++start, new Token(TokenType.Comment, "/* , ... */"));
-      tok.Insert(++start, new Token(TokenType.Whitespace, " "));
-      tok.Insert(++start, new Token(TokenType.Symbol, ")"));
+            if (char.IsWhiteSpace (c))
+                this.ConsumeWhitespace ();
+            else if (c == '\'' || c == '\"' || c == '`')
+                this.ConsumeQuotedToken (c);
+            else if (!this.IsSpecialCharacter (c))
+                this.ConsumeUnquotedToken ();
+            else
+                this.ConsumeSymbol ();
+        }
     }
 
-    private void TokenizeSql(string sql)
+    private bool LetterStartsComment (char c)
     {
-      _pos = 0;
+        return c == '#' || c == '/' || c == '-';
+    }
 
-      while (_pos < sql.Length)
-      {
-        char c = sql[_pos];
-        if (LetterStartsComment(c) && ConsumeComment())
-          continue;
-        if (Char.IsWhiteSpace(c))
-          ConsumeWhitespace();
-        else if (c == '\'' || c == '\"' || c == '`')
-          ConsumeQuotedToken(c);
-        else if (!IsSpecialCharacter(c))
-          ConsumeUnquotedToken();
+    private bool IsSpecialCharacter (char c)
+    {
+        return !char.IsLetterOrDigit (c) && c != '$' && c != '_' && c != '.';
+    }
+
+    private bool ConsumeComment ()
+    {
+        char c = this._fullSql [this._pos];
+
+        // make sure the comment starts correctly
+        if (c == '/' && (this._pos + 1 >= this._fullSql.Length || this._fullSql [this._pos + 1] != '*'))
+            return false;
+
+        if (c == '-' && (this._pos + 2 >= this._fullSql.Length || this._fullSql [this._pos + 1] != '-' || this._fullSql [this._pos + 2] != ' '))
+            return false;
+
+        string endingPattern = "\n";
+
+        if (c == '/')
+            endingPattern = "*/";
+
+        int startingIndex = this._pos;
+
+        int index = this._fullSql.IndexOf (endingPattern, this._pos);
+
+        if (index == -1)
+            index = this._fullSql.Length - 1;
         else
-          ConsumeSymbol();
-      }
+            index += endingPattern.Length;
+
+        string comment = this._fullSql.Substring (this._pos, index - this._pos);
+
+        if (comment.StartsWith ("/*!", StringComparison.Ordinal))
+            this._tokens.Add (new Token (TokenType.CommandComment, comment));
+
+        this._pos = index;
+        return true;
     }
 
-    private bool LetterStartsComment(char c)
+    private void ConsumeSymbol ()
     {
-      return c == '#' || c == '/' || c == '-';
+        char c = this._fullSql [this._pos++];
+        this._tokens.Add (new Token (TokenType.Symbol, c.ToString ()));
     }
 
-    private bool IsSpecialCharacter(char c)
+    private void ConsumeQuotedToken (char c)
     {
-      return !Char.IsLetterOrDigit(c) && c != '$' && c != '_' && c != '.';
-    }
+        bool escaped = false;
+        int  start   = this._pos;
+        this._pos++;
 
-    private bool ConsumeComment()
-    {
-      char c = _fullSql[_pos];
-      // make sure the comment starts correctly
-      if (c == '/' && ((_pos + 1) >= _fullSql.Length || _fullSql[_pos + 1] != '*')) return false;
-      if (c == '-' && ((_pos + 2) >= _fullSql.Length || _fullSql[_pos + 1] != '-' || _fullSql[_pos + 2] != ' ')) return false;
-
-      string endingPattern = "\n";
-      if (c == '/')
-        endingPattern = "*/";
-
-      int startingIndex = _pos;
-
-      int index = _fullSql.IndexOf(endingPattern, _pos);
-      if (index == -1)
-        index = _fullSql.Length - 1;
-      else
-        index += endingPattern.Length;
-      string comment = _fullSql.Substring(_pos, index - _pos);
-      if (comment.StartsWith("/*!", StringComparison.Ordinal))
-        _tokens.Add(new Token(TokenType.CommandComment, comment));
-      _pos = index;
-      return true;
-    }
-
-    private void ConsumeSymbol()
-    {
-      char c = _fullSql[_pos++];
-      _tokens.Add(new Token(TokenType.Symbol, c.ToString()));
-    }
-
-    private void ConsumeQuotedToken(char c)
-    {
-      bool escaped = false;
-      int start = _pos;
-      _pos++;
-      while (_pos < _fullSql.Length)
-      {
-        char x = _fullSql[_pos];
-
-        if (x == c && !escaped) break;
-
-        if (escaped)
-          escaped = false;
-        else if (x == '\\')
-          escaped = true;
-        _pos++;
-      }
-      _pos++;
-      _tokens.Add(c == '\''
-        ? new Token(TokenType.String, "?")
-        : new Token(TokenType.Identifier, _fullSql.Substring(start, _pos - start)));
-    }
-
-    private void ConsumeUnquotedToken()
-    {
-      int startPos = _pos;
-      while (_pos < _fullSql.Length && !IsSpecialCharacter(_fullSql[_pos]))
-        _pos++;
-      string word = _fullSql.Substring(startPos, _pos - startPos);
-      double v;
-      if (double.TryParse(
-        word,
-        System.Globalization.NumberStyles.Any,
-        System.Globalization.CultureInfo.InvariantCulture,
-        out v))
-        _tokens.Add(new Token(TokenType.Number, "?"));
-      else
-      {
-        Token t = new Token(TokenType.Identifier, word);
-        if (IsKeyword(word))
+        while (this._pos < this._fullSql.Length)
         {
-          t.Type = TokenType.Keyword;
-          t.Text = t.Text.ToUpperInvariant();
+            char x = this._fullSql [this._pos];
+
+            if (x == c && !escaped)
+                break;
+
+            if (escaped)
+                escaped = false;
+            else if (x == '\\')
+                escaped = true;
+
+            this._pos++;
         }
-        _tokens.Add(t);
-      }
+
+        this._pos++;
+
+        this._tokens.Add (
+            c == '\''
+                ? new Token (TokenType.String,     "?")
+                : new Token (TokenType.Identifier, this._fullSql.Substring (start, this._pos - start))
+        );
     }
 
-    private void ConsumeWhitespace()
+    private void ConsumeUnquotedToken ()
     {
-      _tokens.Add(new Token(TokenType.Whitespace, " "));
-      while (_pos < _fullSql.Length && Char.IsWhiteSpace(_fullSql[_pos]))
-        _pos++;
+        int startPos = this._pos;
+
+        while (this._pos < this._fullSql.Length && !this.IsSpecialCharacter (this._fullSql [this._pos]))
+            this._pos++;
+
+        string word = this._fullSql.Substring (startPos, this._pos - startPos);
+        double v;
+
+        if (double.TryParse (
+                word,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out v
+            ))
+        {
+            this._tokens.Add (new Token (TokenType.Number, "?"));
+        }
+        else
+        {
+            Token t = new Token (TokenType.Identifier, word);
+
+            if (IsKeyword (word))
+            {
+                t.Type = TokenType.Keyword;
+                t.Text = t.Text.ToUpperInvariant ();
+            }
+
+            this._tokens.Add (t);
+        }
     }
 
-    private static bool IsKeyword(string word)
+    private void ConsumeWhitespace ()
     {
-      return Keywords.Contains(word.ToUpperInvariant());
-    }
-  }
+        this._tokens.Add (new Token (TokenType.Whitespace, " "));
 
-  internal class Token
-  {
+        while (this._pos < this._fullSql.Length && char.IsWhiteSpace (this._fullSql [this._pos]))
+            this._pos++;
+    }
+
+    private static bool IsKeyword (string word)
+    {
+        return Keywords.Contains (word.ToUpperInvariant ());
+    }
+}
+
+internal class Token
+{
     public TokenType Type;
-    public string Text;
-    public bool Output;
+    public string    Text;
+    public bool      Output;
 
-    public Token(TokenType type, string text)
+    public Token (TokenType type, string text)
     {
-      Type = type;
-      Text = text;
-      Output = true;
+        this.Type   = type;
+        this.Text   = text;
+        this.Output = true;
     }
 
-    public bool IsRealToken => Type != TokenType.Comment &&
-                               Type != TokenType.CommandComment &&
-                               Type != TokenType.Whitespace &&
-                               Output;
-  }
+    public bool IsRealToken => this.Type != TokenType.Comment && this.Type != TokenType.CommandComment && this.Type != TokenType.Whitespace && this.Output;
+}
 
-  internal enum TokenType
-  {
+internal enum TokenType
+{
     Keyword,
     String,
     Number,
@@ -376,5 +431,4 @@ namespace EVESharp.Database.MySql.Common
     Comment,
     CommandComment,
     Whitespace
-  }
 }

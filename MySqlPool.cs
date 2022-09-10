@@ -35,50 +35,51 @@ using System.Diagnostics;
 using System.Threading;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Summary description for MySqlPool.
+/// </summary>
+internal sealed class MySqlPool
 {
-  /// <summary>
-  /// Summary description for MySqlPool.
-  /// </summary>
-  internal sealed class MySqlPool
-  {
-    private readonly List<Driver> _inUsePool;
-    private readonly LinkedList<Driver> _idlePool;
-    private readonly uint _minSize;
-    private readonly uint _maxSize;
-    private readonly AutoResetEvent _autoEvent;
-    private int _available;
+    private readonly List <Driver>       _inUsePool;
+    private readonly LinkedList <Driver> _idlePool;
+    private readonly uint                _minSize;
+    private readonly uint                _maxSize;
+    private readonly AutoResetEvent      _autoEvent;
+    private          int                 _available;
     // Object used to lock the list of host obtained from DNS SRV lookup.
-    private readonly object _dnsSrvLock = new object();
+    private readonly object _dnsSrvLock = new object ();
 
-    private void EnqueueIdle(Driver driver)
+    private void EnqueueIdle (Driver driver)
     {
-      driver.IdleSince = DateTime.Now;
-      _idlePool.AddLast(driver);
+        driver.IdleSince = DateTime.Now;
+        this._idlePool.AddLast (driver);
     }
 
-    public MySqlPool(MySqlConnectionStringBuilder settings)
+    public MySqlPool (MySqlConnectionStringBuilder settings)
     {
-      _minSize = settings.MinimumPoolSize;
-      _maxSize = settings.MaximumPoolSize;
+        this._minSize = settings.MinimumPoolSize;
+        this._maxSize = settings.MaximumPoolSize;
 
-      _available = (int)_maxSize;
-      _autoEvent = new AutoResetEvent(false);
+        this._available = (int) this._maxSize;
+        this._autoEvent = new AutoResetEvent (false);
 
-      if (_minSize > _maxSize)
-        _minSize = _maxSize;
-      this.Settings = settings;
-      _inUsePool = new List<Driver>((int)_maxSize);
-      _idlePool = new LinkedList<Driver>();
+        if (this._minSize > this._maxSize)
+            this._minSize = this._maxSize;
 
-      // prepopulate the idle pool to minSize
-      for (int i = 0; i < _minSize; i++)
-        EnqueueIdle(CreateNewPooledConnection());
+        this.Settings   = settings;
+        this._inUsePool = new List <Driver> ((int) this._maxSize);
+        this._idlePool  = new LinkedList <Driver> ();
 
-      ProcedureCache = new ProcedureCache((int)settings.ProcedureCacheSize);
+        // prepopulate the idle pool to minSize
+        for (int i = 0; i < this._minSize; i++)
+            this.EnqueueIdle (this.CreateNewPooledConnection ());
+
+        this.ProcedureCache = new ProcedureCache ((int) settings.ProcedureCacheSize);
     }
 
-    #region Properties
+#region Properties
 
     public MySqlConnectionStringBuilder Settings { get; set; }
 
@@ -88,132 +89,141 @@ namespace EVESharp.Database.MySql
     /// It is assumed that this property will only be used from inside an active
     /// lock.
     /// </summary>
-    private bool HasIdleConnections => _idlePool.Count > 0;
+    private bool HasIdleConnections => this._idlePool.Count > 0;
 
-    private int NumConnections => _idlePool.Count + _inUsePool.Count;
+    private int NumConnections => this._idlePool.Count + this._inUsePool.Count;
 
     /// <summary>
     /// Indicates whether this pool is being cleared.
     /// </summary>
     public bool BeingCleared { get; private set; }
 
-    internal Dictionary<string, string> ServerProperties { get; set; }
+    internal Dictionary <string, string> ServerProperties { get; set; }
 
-    #endregion
-
-    /// <summary>
-    /// It is assumed that this method is only called from inside an active lock.
-    /// </summary>
-    private Driver GetPooledConnection()
-    {
-      Driver driver = null;
-
-      // if we don't have an idle connection but we have room for a new
-      // one, then create it here.
-      lock ((_idlePool as ICollection).SyncRoot)
-      {
-        if (HasIdleConnections)
-        {
-          driver = _idlePool.Last.Value;
-          _idlePool.RemoveLast();
-        }
-      }
-
-      // Obey the connection timeout
-      if (driver != null)
-      {
-        try
-        {
-          driver.ResetTimeout((int)Settings.ConnectionTimeout * 1000);
-        }
-        catch (Exception)
-        {
-          driver.Close();
-          driver = null;
-        }
-      }
-
-      if (driver != null)
-      {
-        // first check to see that the server is still alive
-        if (!driver.Ping())
-        {
-          driver.Close();
-          driver = null;
-        }
-        else if (Settings.ConnectionReset)
-        {
-          // if the user asks us to ping/reset pooled connections
-          // do so now
-          try { driver.Reset(); }
-          catch (Exception) { Clear(); }
-        }
-      }
-      if (driver == null)
-        driver = CreateNewPooledConnection();
-
-      Debug.Assert(driver != null);
-      lock ((_inUsePool as ICollection).SyncRoot)
-      {
-        _inUsePool.Add(driver);
-      }
-      return driver;
-    }
+#endregion
 
     /// <summary>
     /// It is assumed that this method is only called from inside an active lock.
     /// </summary>
-    private Driver CreateNewPooledConnection()
+    private Driver GetPooledConnection ()
     {
-      Debug.Assert((_maxSize - NumConnections) > 0, "Pool out of sync.");
+        Driver driver = null;
 
-      Driver driver = Driver.Create(Settings);
-      driver.Pool = this;
-      return driver;
-    }
-
-    public void ReleaseConnection(Driver driver)
-    {
-      lock ((_inUsePool as ICollection).SyncRoot)
-      {
-        if (_inUsePool.Contains(driver))
-          _inUsePool.Remove(driver);
-      }
-
-      if (driver.ConnectionLifetimeExpired() || BeingCleared)
-      {
-        driver.Close();
-        Debug.Assert(!_idlePool.Contains(driver));
-      }
-      else
-      {
-        lock ((_idlePool as ICollection).SyncRoot)
+        // if we don't have an idle connection but we have room for a new
+        // one, then create it here.
+        lock ((this._idlePool as ICollection).SyncRoot)
         {
-          EnqueueIdle(driver);
-        }
-      }
-
-      lock (_dnsSrvLock)
-      {
-        if (driver.Settings.DnsSrv)
-        {
-          var dnsSrvRecords = DnsResolver.GetDnsSrvRecords(DnsResolver.ServiceName);
-          FailoverManager.SetHostList(dnsSrvRecords.ConvertAll(r => new FailoverServer(r.Target, r.Port, null)),
-            FailoverMethod.Sequential);
-
-          foreach (var idleConnection in _idlePool)
-          {
-            string idleServer = idleConnection.Settings.Server;
-            if (!FailoverManager.FailoverGroup.Hosts.Exists(h => h.Host == idleServer) && !idleConnection.IsInActiveUse)
+            if (this.HasIdleConnections)
             {
-              idleConnection.Close();
+                driver = this._idlePool.Last.Value;
+                this._idlePool.RemoveLast ();
             }
-          }
         }
-      }
 
-      Interlocked.Increment(ref _available);
-      _autoEvent.Set();
+        // Obey the connection timeout
+        if (driver != null)
+            try
+            {
+                driver.ResetTimeout ((int) this.Settings.ConnectionTimeout * 1000);
+            }
+            catch (Exception)
+            {
+                driver.Close ();
+                driver = null;
+            }
+
+        if (driver != null)
+        {
+            // first check to see that the server is still alive
+            if (!driver.Ping ())
+            {
+                driver.Close ();
+                driver = null;
+            }
+            else if (this.Settings.ConnectionReset)
+            {
+                // if the user asks us to ping/reset pooled connections
+                // do so now
+                try
+                {
+                    driver.Reset ();
+                }
+                catch (Exception)
+                {
+                    this.Clear ();
+                }
+            }
+        }
+
+        if (driver == null)
+            driver = this.CreateNewPooledConnection ();
+
+        Debug.Assert (driver != null);
+
+        lock ((this._inUsePool as ICollection).SyncRoot)
+        {
+            this._inUsePool.Add (driver);
+        }
+
+        return driver;
+    }
+
+    /// <summary>
+    /// It is assumed that this method is only called from inside an active lock.
+    /// </summary>
+    private Driver CreateNewPooledConnection ()
+    {
+        Debug.Assert (this._maxSize - this.NumConnections > 0, "Pool out of sync.");
+
+        Driver driver = Driver.Create (this.Settings);
+        driver.Pool = this;
+        return driver;
+    }
+
+    public void ReleaseConnection (Driver driver)
+    {
+        lock ((this._inUsePool as ICollection).SyncRoot)
+        {
+            if (this._inUsePool.Contains (driver))
+                this._inUsePool.Remove (driver);
+        }
+
+        if (driver.ConnectionLifetimeExpired () || this.BeingCleared)
+        {
+            driver.Close ();
+            Debug.Assert (!this._idlePool.Contains (driver));
+        }
+        else
+        {
+            lock ((this._idlePool as ICollection).SyncRoot)
+            {
+                this.EnqueueIdle (driver);
+            }
+        }
+
+        lock (this._dnsSrvLock)
+        {
+            if (driver.Settings.DnsSrv)
+            {
+                List <DnsSrvRecord> dnsSrvRecords = DnsResolver.GetDnsSrvRecords (DnsResolver.ServiceName);
+
+                FailoverManager.SetHostList (
+                    dnsSrvRecords.ConvertAll (r => new FailoverServer (r.Target, r.Port, null)),
+                    FailoverMethod.Sequential
+                );
+
+                foreach (Driver idleConnection in this._idlePool)
+                {
+                    string idleServer = idleConnection.Settings.Server;
+
+                    if (!FailoverManager.FailoverGroup.Hosts.Exists (h => h.Host == idleServer) && !idleConnection.IsInActiveUse)
+                        idleConnection.Close ();
+                }
+            }
+        }
+
+        Interlocked.Increment (ref this._available);
+        this._autoEvent.Set ();
     }
 
     /// <summary>
@@ -223,89 +233,95 @@ namespace EVESharp.Database.MySql
     /// returned.
     /// </summary>
     /// <param name="driver"></param>
-    public void RemoveConnection(Driver driver)
+    public void RemoveConnection (Driver driver)
     {
-      lock ((_inUsePool as ICollection).SyncRoot)
-      {
-        if (_inUsePool.Contains(driver))
+        lock ((this._inUsePool as ICollection).SyncRoot)
         {
-          _inUsePool.Remove(driver);
-          Interlocked.Increment(ref _available);
-          _autoEvent.Set();
+            if (this._inUsePool.Contains (driver))
+            {
+                this._inUsePool.Remove (driver);
+                Interlocked.Increment (ref this._available);
+                this._autoEvent.Set ();
+            }
         }
-      }
 
-      // if we are being cleared and we are out of connections then have
-      // the manager destroy us.
-      if (BeingCleared && NumConnections == 0)
-        MySqlPoolManager.RemoveClearedPool(this);
+        // if we are being cleared and we are out of connections then have
+        // the manager destroy us.
+        if (this.BeingCleared && this.NumConnections == 0)
+            MySqlPoolManager.RemoveClearedPool (this);
     }
 
-    private Driver TryToGetDriver()
+    private Driver TryToGetDriver ()
     {
-      int count = Interlocked.Decrement(ref _available);
-      if (count < 0)
-      {
-        Interlocked.Increment(ref _available);
-        return null;
-      }
-      try
-      {
-        Driver driver = GetPooledConnection();
-        return driver;
-      }
-      catch (Exception ex)
-      {
-        MySqlTrace.LogError(-1, ex.Message);
-        Interlocked.Increment(ref _available);
-        throw;
-      }
+        int count = Interlocked.Decrement (ref this._available);
+
+        if (count < 0)
+        {
+            Interlocked.Increment (ref this._available);
+            return null;
+        }
+
+        try
+        {
+            Driver driver = this.GetPooledConnection ();
+            return driver;
+        }
+        catch (Exception ex)
+        {
+            MySqlTrace.LogError (-1, ex.Message);
+            Interlocked.Increment (ref this._available);
+            throw;
+        }
     }
 
-    public Driver GetConnection()
+    public Driver GetConnection ()
     {
-      int fullTimeOut = (int)Settings.ConnectionTimeout * 1000;
-      int timeOut = fullTimeOut;
+        int fullTimeOut = (int) this.Settings.ConnectionTimeout * 1000;
+        int timeOut     = fullTimeOut;
 
-      DateTime start = DateTime.Now;
+        DateTime start = DateTime.Now;
 
-      while (timeOut > 0)
-      {
-        Driver driver = TryToGetDriver();
-        if (driver != null) return driver;
+        while (timeOut > 0)
+        {
+            Driver driver = this.TryToGetDriver ();
 
-        // We have no tickets right now, lets wait for one.
-        if (!_autoEvent.WaitOne(timeOut, false)) break;
+            if (driver != null)
+                return driver;
 
-        timeOut = fullTimeOut - (int)DateTime.Now.Subtract(start).TotalMilliseconds;
-      }
-      throw new MySqlException(Resources.TimeoutGettingConnection);
+            // We have no tickets right now, lets wait for one.
+            if (!this._autoEvent.WaitOne (timeOut, false))
+                break;
+
+            timeOut = fullTimeOut - (int) DateTime.Now.Subtract (start).TotalMilliseconds;
+        }
+
+        throw new MySqlException (Resources.TimeoutGettingConnection);
     }
 
     /// <summary>
     /// Clears this pool of all idle connections and marks this pool and being cleared
     /// so all other connections are closed when they are returned.
     /// </summary>
-    internal void Clear()
+    internal void Clear ()
     {
-      lock ((_idlePool as ICollection).SyncRoot)
-      {
-        // first, mark ourselves as being cleared
-        BeingCleared = true;
-
-        // then we remove all connections sitting in the idle pool
-        while (_idlePool.Count > 0)
+        lock ((this._idlePool as ICollection).SyncRoot)
         {
-          Driver d = _idlePool.Last.Value;
-          d.Close();
-          _idlePool.RemoveLast();
-        }
+            // first, mark ourselves as being cleared
+            this.BeingCleared = true;
 
-        // there is nothing left to do here.  Now we just wait for all
-        // in use connections to be returned to the pool.  When they are
-        // they will be closed.  When the last one is closed, the pool will
-        // be destroyed.
-      }
+            // then we remove all connections sitting in the idle pool
+            while (this._idlePool.Count > 0)
+            {
+                Driver d = this._idlePool.Last.Value;
+                d.Close ();
+                this._idlePool.RemoveLast ();
+            }
+
+            // there is nothing left to do here.  Now we just wait for all
+            // in use connections to be returned to the pool.  When they are
+            // they will be closed.  When the last one is closed, the pool will
+            // be destroyed.
+        }
     }
 
     /// <summary>
@@ -319,29 +335,30 @@ namespace EVESharp.Database.MySql
     /// queue and return them to the caller. The caller will need to close 
     /// them (or let GC close them)
     /// </remarks>
-    internal List<Driver> RemoveOldIdleConnections()
+    internal List <Driver> RemoveOldIdleConnections ()
     {
-      var connectionsToClose = new List<Driver>();
-      DateTime now = DateTime.Now;
+        List <Driver> connectionsToClose = new List <Driver> ();
+        DateTime      now                = DateTime.Now;
 
-      lock ((_idlePool as ICollection).SyncRoot)
-      {
-        while (_idlePool.Count > _minSize)
+        lock ((this._idlePool as ICollection).SyncRoot)
         {
-          var iddleConnection = _idlePool.First.Value;
-          DateTime expirationTime = iddleConnection.IdleSince.Add(
-            new TimeSpan(0, 0, MySqlPoolManager.maxConnectionIdleTime));
+            while (this._idlePool.Count > this._minSize)
+            {
+                Driver   iddleConnection = this._idlePool.First.Value;
+                DateTime expirationTime  = iddleConnection.IdleSince.Add (new TimeSpan (0, 0, MySqlPoolManager.maxConnectionIdleTime));
 
-          if (expirationTime.CompareTo(now) < 0)
-          {
-            connectionsToClose.Add(iddleConnection);
-            _idlePool.RemoveFirst();
-          }
-          else
-            break;
+                if (expirationTime.CompareTo (now) < 0)
+                {
+                    connectionsToClose.Add (iddleConnection);
+                    this._idlePool.RemoveFirst ();
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
-      }
-      return connectionsToClose;
+
+        return connectionsToClose;
     }
-  }
 }

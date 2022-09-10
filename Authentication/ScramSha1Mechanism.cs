@@ -29,44 +29,42 @@
 
 using System.Security.Cryptography;
 
-namespace EVESharp.Database.MySql.Authentication
+namespace EVESharp.Database.MySql.Authentication;
+
+/// <summary>
+/// The SCRAM-SHA-1 SASL mechanism.
+/// </summary>
+/// <remarks>
+/// A salted challenge/response SASL mechanism that uses the HMAC SHA-1 algorithm.
+/// </remarks>
+internal class ScramSha1Mechanism : ScramBase
 {
-  /// <summary>
-  /// The SCRAM-SHA-1 SASL mechanism.
-  /// </summary>
-  /// <remarks>
-  /// A salted challenge/response SASL mechanism that uses the HMAC SHA-1 algorithm.
-  /// </remarks>
-  internal class ScramSha1Mechanism : ScramBase
-  {
     /// <summary>
-		/// Initializes a new instance of the <see cref="ScramSha1Mechanism"/> class.
-		/// </summary>
-		/// <remarks>
-		/// Creates a new SCRAM-SHA-1 SASL context.
-		/// </remarks>
-		/// <param name="username">The user name.</param>
-		/// <param name="password">The password.</param>
+    /// Initializes a new instance of the <see cref="ScramSha1Mechanism"/> class.
+    /// </summary>
+    /// <remarks>
+    /// Creates a new SCRAM-SHA-1 SASL context.
+    /// </remarks>
+    /// <param name="username">The user name.</param>
+    /// <param name="password">The password.</param>
     /// <param name="host">The host.</param>
-    internal ScramSha1Mechanism(string username, string password, string host) : base(username, password, host) { }
+    internal ScramSha1Mechanism (string username, string password, string host) : base (username, password, host) { }
 
     /// <summary>
     /// Gets the name of the method.
     /// </summary>
-    internal override string MechanismName
+    internal override string MechanismName => "SCRAM-SHA-1";
+
+    protected override KeyedHashAlgorithm CreateHMAC (byte [] key)
     {
-      get { return "SCRAM-SHA-1"; }
+        return new HMACSHA1 (key);
     }
 
-    protected override KeyedHashAlgorithm CreateHMAC(byte[] key)
+    protected override byte [] Hash (byte [] str)
     {
-      return new HMACSHA1(key);
+        using (SHA1 sha1 = SHA1.Create ())
+        {
+            return sha1.ComputeHash (str);
+        }
     }
-
-    protected override byte[] Hash(byte[] str)
-    {
-      using (var sha1 = SHA1.Create())
-        return sha1.ComputeHash(str);
-    }
-  }
 }

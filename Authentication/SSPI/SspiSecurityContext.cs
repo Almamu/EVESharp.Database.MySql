@@ -30,20 +30,20 @@ using EVESharp.Database.MySql;
 using System;
 using static EVESharp.Database.MySql.Authentication.SSPI.NativeMethods;
 
-namespace EVESharp.Database.MySql.Authentication.SSPI
+namespace EVESharp.Database.MySql.Authentication.SSPI;
+
+internal class SspiSecurityContext : IDisposable
 {
-  internal class SspiSecurityContext : IDisposable
-  {
-    private SECURITY_HANDLE securityContext = default;
+    private SECURITY_HANDLE securityContext = default (SECURITY_HANDLE);
     private SspiCredentials credentials;
 
     /// <summary>
     /// Creates an instance of SspiSecurityContext with credentials provided.
     /// </summary>
     /// <param name="credentials">Credentials to be used with the Security Context</param>
-    internal SspiSecurityContext(SspiCredentials credentials)
+    internal SspiSecurityContext (SspiCredentials credentials)
     {
-      this.credentials = credentials;
+        this.credentials = credentials;
     }
 
     /// <summary>
@@ -52,97 +52,94 @@ namespace EVESharp.Database.MySql.Authentication.SSPI
     /// <param name="clientBlob">Byte array to be sent to the server.</param>
     /// <param name="serverBlob">Byte array received by the server.</param>
     /// <param name="continueProcessing"><see langword="true"/> if should continue processing; otherwise, <see langword="false"/>.</param>
-    internal ContextStatus InitializeSecurityContext(out byte[] clientBlob, byte[] serverBlob, string targetName)
+    internal ContextStatus InitializeSecurityContext (out byte [] clientBlob, byte [] serverBlob, string targetName)
     {
-      clientBlob = null;
-      SecBufferDesc clientBufferDesc = new SecBufferDesc(Const.MAX_TOKEN_SIZE);
-      SECURITY_INTEGER initLifetime = new SECURITY_INTEGER(0);
-      SecStatus result = 0;
+        clientBlob = null;
+        SecBufferDesc    clientBufferDesc = new SecBufferDesc (Const.MAX_TOKEN_SIZE);
+        SECURITY_INTEGER initLifetime     = new SECURITY_INTEGER (0);
+        SecStatus        result           = 0;
 
-      try
-      {
-        uint ContextAttributes = 0;
-
-        if (serverBlob == null)
+        try
         {
-          result = InitializeSecurityContext_0(
-            ref credentials.credentialsHandle,
-            IntPtr.Zero,
-            targetName,
-            Const.STANDARD_CONTEXT_ATTRIBUTES,
-            0,
-            Const.SECURITY_NETWORK_DREP,
-            IntPtr.Zero, /* always zero first time around */
-            0,
-            out securityContext,
-            out clientBufferDesc,
-            out ContextAttributes,
-            out initLifetime);
+            uint ContextAttributes = 0;
+
+            if (serverBlob == null)
+            {
+                result = InitializeSecurityContext_0 (
+                    ref this.credentials.credentialsHandle,
+                    IntPtr.Zero,
+                    targetName,
+                    Const.STANDARD_CONTEXT_ATTRIBUTES,
+                    0,
+                    Const.SECURITY_NETWORK_DREP,
+                    IntPtr.Zero, /* always zero first time around */
+                    0,
+                    out this.securityContext,
+                    out clientBufferDesc,
+                    out ContextAttributes,
+                    out initLifetime
+                );
+            }
+            else
+            {
+                SecBufferDesc serverBufferDesc = new SecBufferDesc (serverBlob);
+
+                try
+                {
+                    result = InitializeSecurityContext_1 (
+                        ref this.credentials.credentialsHandle,
+                        ref this.securityContext,
+                        targetName,
+                        Const.STANDARD_CONTEXT_ATTRIBUTES,
+                        0,
+                        Const.SECURITY_NETWORK_DREP,
+                        ref serverBufferDesc,
+                        0,
+                        out this.securityContext,
+                        out clientBufferDesc,
+                        out ContextAttributes,
+                        out initLifetime
+                    );
+                }
+                finally
+                {
+                    serverBufferDesc.Dispose ();
+                }
+            }
+
+            if (SecStatus.SEC_I_COMPLETE_NEEDED == result
+                || SecStatus.SEC_I_COMPLETE_AND_CONTINUE == result)
+                CompleteAuthToken (ref this.securityContext, ref clientBufferDesc);
+
+            if (result != SecStatus.SEC_E_OK &&
+                result != SecStatus.SEC_I_CONTINUE_NEEDED &&
+                result != SecStatus.SEC_I_COMPLETE_NEEDED &&
+                result != SecStatus.SEC_I_COMPLETE_AND_CONTINUE)
+                throw new MySqlException ("InitializeSecurityContext() failed  with errorcode " + result);
+
+            clientBlob = clientBufferDesc.GetSecBufferByteArray ();
         }
-        else
+        finally
         {
-          SecBufferDesc serverBufferDesc = new SecBufferDesc(serverBlob);
-
-          try
-          {
-            result = InitializeSecurityContext_1(
-              ref credentials.credentialsHandle,
-              ref securityContext,
-              targetName,
-              Const.STANDARD_CONTEXT_ATTRIBUTES,
-              0,
-              Const.SECURITY_NETWORK_DREP,
-              ref serverBufferDesc,
-              0,
-              out securityContext,
-              out clientBufferDesc,
-              out ContextAttributes,
-              out initLifetime);
-          }
-          finally
-          {
-            serverBufferDesc.Dispose();
-          }
+            clientBufferDesc.Dispose ();
         }
 
-        if ((SecStatus.SEC_I_COMPLETE_NEEDED == result)
-            || (SecStatus.SEC_I_COMPLETE_AND_CONTINUE == result))
-        {
-          CompleteAuthToken(ref securityContext, ref clientBufferDesc);
-        }
+        if (result == SecStatus.SEC_I_CONTINUE_NEEDED)
+            return ContextStatus.RequiresContinuation;
 
-        if (result != SecStatus.SEC_E_OK &&
-            result != SecStatus.SEC_I_CONTINUE_NEEDED &&
-            result != SecStatus.SEC_I_COMPLETE_NEEDED &&
-            result != SecStatus.SEC_I_COMPLETE_AND_CONTINUE)
-        {
-          throw new MySqlException("InitializeSecurityContext() failed  with errorcode " + result);
-        }
-
-        clientBlob = clientBufferDesc.GetSecBufferByteArray();
-      }
-      finally
-      {
-        clientBufferDesc.Dispose();
-      }
-
-      if (result == SecStatus.SEC_I_CONTINUE_NEEDED)
-        return ContextStatus.RequiresContinuation;
-
-      return ContextStatus.Accepted;
+        return ContextStatus.Accepted;
     }
 
-    public void Dispose()
+    public void Dispose ()
     {
-      FreeCredentialsHandle(ref credentials.credentialsHandle);
-      DeleteSecurityContext(ref securityContext);
+        FreeCredentialsHandle (ref this.credentials.credentialsHandle);
+        DeleteSecurityContext (ref this.securityContext);
     }
-  }
+}
 
-  internal enum ContextStatus
-  {
+internal enum ContextStatus
+{
     RequiresContinuation,
     Accepted,
     Error
-  }
 }

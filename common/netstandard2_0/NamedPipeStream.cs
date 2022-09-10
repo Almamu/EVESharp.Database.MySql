@@ -36,216 +36,189 @@ using System.Security;
 using System.Threading;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Common
+namespace EVESharp.Database.MySql.Common;
+
+/// <summary>
+/// Summary description for API.
+/// </summary>
+[SuppressUnmanagedCodeSecurity ()]
+internal class NamedPipeStream : Stream
 {
-  /// <summary>
-  /// Summary description for API.
-  /// </summary>
-  [SuppressUnmanagedCodeSecurity()]
-  internal class NamedPipeStream : Stream
-  {
-    SafeFileHandle handle;
-    Stream fileStream;
-    int readTimeout = Timeout.Infinite;
-    int writeTimeout = Timeout.Infinite;
-    const int ERROR_PIPE_BUSY = 231;
-    const int ERROR_SEM_TIMEOUT = 121;
+    private       SafeFileHandle handle;
+    private       Stream         fileStream;
+    private       int            readTimeout       = Timeout.Infinite;
+    private       int            writeTimeout      = Timeout.Infinite;
+    private const int            ERROR_PIPE_BUSY   = 231;
+    private const int            ERROR_SEM_TIMEOUT = 121;
 
-    public NamedPipeStream(string path, FileAccess mode, uint timeout)
+    public NamedPipeStream (string path, FileAccess mode, uint timeout)
     {
-      Open(path, mode, timeout);
+        this.Open (path, mode, timeout);
     }
 
-    void CancelIo()
+    private void CancelIo ()
     {
-      bool ok = NativeMethods.CancelIo(handle.DangerousGetHandle());
-      if (!ok)
-        throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+        bool ok = NativeMethods.CancelIo (this.handle.DangerousGetHandle ());
+
+        if (!ok)
+            throw new Win32Exception (Marshal.GetLastWin32Error ());
     }
 
-    public void Open(string path, FileAccess mode, uint timeout)
+    public void Open (string path, FileAccess mode, uint timeout)
     {
-      IntPtr nativeHandle;
+        IntPtr nativeHandle;
 
-      for (; ; )
-      {
-        NativeMethods.SecurityAttributes security = new NativeMethods.SecurityAttributes();
-        security.inheritHandle = true;
-        security.Length = Marshal.SizeOf(security);
-
-        nativeHandle = NativeMethods.CreateFile(path, NativeMethods.FILE_READ_ATTRIBUTES | NativeMethods.FILE_READ_DATA |
-          NativeMethods.FILE_WRITE_ATTRIBUTES | NativeMethods.FILE_WRITE_DATA,
-          0, security, NativeMethods.OPEN_EXISTING, NativeMethods.FILE_FLAG_OVERLAPPED, 0);
-
-        if (nativeHandle != IntPtr.Zero)
-          break;
-
-        if (Marshal.GetLastWin32Error() != ERROR_PIPE_BUSY)
+        for (;;)
         {
-          throw new Win32Exception(Marshal.GetLastWin32Error(),
-              "Error opening pipe");
+            NativeMethods.SecurityAttributes security = new NativeMethods.SecurityAttributes ();
+            security.inheritHandle = true;
+            security.Length        = Marshal.SizeOf (security);
+
+            nativeHandle = NativeMethods.CreateFile (
+                path, NativeMethods.FILE_READ_ATTRIBUTES | NativeMethods.FILE_READ_DATA |
+                      NativeMethods.FILE_WRITE_ATTRIBUTES | NativeMethods.FILE_WRITE_DATA,
+                0, security, NativeMethods.OPEN_EXISTING, NativeMethods.FILE_FLAG_OVERLAPPED, 0
+            );
+
+            if (nativeHandle != IntPtr.Zero)
+                break;
+
+            if (Marshal.GetLastWin32Error () != ERROR_PIPE_BUSY)
+                throw new Win32Exception (
+                    Marshal.GetLastWin32Error (),
+                    "Error opening pipe"
+                );
+
+            LowResolutionStopwatch sw      = LowResolutionStopwatch.StartNew ();
+            bool                   success = NativeMethods.WaitNamedPipe (path, timeout);
+            sw.Stop ();
+
+            if (!success)
+            {
+                if (timeout < sw.ElapsedMilliseconds ||
+                    Marshal.GetLastWin32Error () == ERROR_SEM_TIMEOUT)
+                    throw new TimeoutException ("Timeout waiting for named pipe");
+                else
+                    throw new Win32Exception (
+                        Marshal.GetLastWin32Error (),
+                        "Error waiting for pipe"
+                    );
+            }
+
+            timeout -= (uint) sw.ElapsedMilliseconds;
         }
-        LowResolutionStopwatch sw = LowResolutionStopwatch.StartNew();
-        bool success = NativeMethods.WaitNamedPipe(path, timeout);
-        sw.Stop();
-        if (!success)
-        {
-          if (timeout < sw.ElapsedMilliseconds ||
-              Marshal.GetLastWin32Error() == ERROR_SEM_TIMEOUT)
-          {
-            throw new TimeoutException("Timeout waiting for named pipe");
-          }
-          else
-          {
-            throw new Win32Exception(Marshal.GetLastWin32Error(),
-                "Error waiting for pipe");
-          }
-        }
-        timeout -= (uint)sw.ElapsedMilliseconds;
-      }
-      handle = new SafeFileHandle(nativeHandle, true);
-      fileStream = new FileStream(handle, mode, 4096, true);
+
+        this.handle     = new SafeFileHandle (nativeHandle, true);
+        this.fileStream = new FileStream (this.handle, mode, 4096, true);
     }
 
-    public override bool CanRead
-    {
-      get { return fileStream.CanRead; }
-    }
+    public override bool CanRead => this.fileStream.CanRead;
 
-    public override bool CanWrite
-    {
-      get { return fileStream.CanWrite; }
-    }
+    public override bool CanWrite => this.fileStream.CanWrite;
 
-    public override bool CanSeek
-    {
-      get { throw new NotSupportedException(Resources.NamedPipeNoSeek); }
-    }
+    public override bool CanSeek => throw new NotSupportedException (Resources.NamedPipeNoSeek);
 
-    public override long Length
-    {
-      get { throw new NotSupportedException(Resources.NamedPipeNoSeek); }
-    }
+    public override long Length => throw new NotSupportedException (Resources.NamedPipeNoSeek);
 
     public override long Position
     {
-      get { throw new NotSupportedException(Resources.NamedPipeNoSeek); }
-      set { }
+        get => throw new NotSupportedException (Resources.NamedPipeNoSeek);
+        set { }
     }
 
-    public override void Flush()
+    public override void Flush ()
     {
-      fileStream.Flush();
+        this.fileStream.Flush ();
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
+    public override int Read (byte [] buffer, int offset, int count)
     {
-      if (readTimeout == Timeout.Infinite)
-      {
-        return fileStream.Read(buffer, offset, count);
-      }
-      IAsyncResult result = fileStream.BeginRead(buffer, offset, count, null, null);
-      if (result.CompletedSynchronously)
-        return fileStream.EndRead(result);
+        if (this.readTimeout == Timeout.Infinite)
+            return this.fileStream.Read (buffer, offset, count);
 
-      if (!result.AsyncWaitHandle.WaitOne(readTimeout))
-      {
-        CancelIo();
-        throw new TimeoutException("Timeout in named pipe read");
-      }
-      return fileStream.EndRead(result);
-    }
+        IAsyncResult result = this.fileStream.BeginRead (buffer, offset, count, null, null);
 
+        if (result.CompletedSynchronously)
+            return this.fileStream.EndRead (result);
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
-      if (writeTimeout == Timeout.Infinite)
-      {
-        fileStream.Write(buffer, offset, count);
-        return;
-      }
-      IAsyncResult result = fileStream.BeginWrite(buffer, offset, count, null, null);
-      if (result.CompletedSynchronously)
-      {
-        fileStream.EndWrite(result);
-      }
-
-      if (!result.AsyncWaitHandle.WaitOne(readTimeout))
-      {
-        CancelIo();
-        throw new TimeoutException("Timeout in named pipe write");
-      }
-      fileStream.EndWrite(result);
-    }
-
-    public override void Close()
-    {
-      if (handle != null && !handle.IsInvalid && !handle.IsClosed)
-      {
-        fileStream.Close();
-        try
+        if (!result.AsyncWaitHandle.WaitOne (this.readTimeout))
         {
-          handle.Close();
+            this.CancelIo ();
+            throw new TimeoutException ("Timeout in named pipe read");
         }
-        catch (Exception)
+
+        return this.fileStream.EndRead (result);
+    }
+
+    public override void Write (byte [] buffer, int offset, int count)
+    {
+        if (this.writeTimeout == Timeout.Infinite)
         {
+            this.fileStream.Write (buffer, offset, count);
+            return;
         }
-      }
+
+        IAsyncResult result = this.fileStream.BeginWrite (buffer, offset, count, null, null);
+
+        if (result.CompletedSynchronously)
+            this.fileStream.EndWrite (result);
+
+        if (!result.AsyncWaitHandle.WaitOne (this.readTimeout))
+        {
+            this.CancelIo ();
+            throw new TimeoutException ("Timeout in named pipe write");
+        }
+
+        this.fileStream.EndWrite (result);
     }
 
-    public override void SetLength(long length)
+    public override void Close ()
     {
-      throw new NotSupportedException(Resources.NamedPipeNoSetLength);
+        if (this.handle != null && !this.handle.IsInvalid && !this.handle.IsClosed)
+        {
+            this.fileStream.Close ();
+
+            try
+            {
+                this.handle.Close ();
+            }
+            catch (Exception) { }
+        }
     }
 
-
-    public override bool CanTimeout
+    public override void SetLength (long length)
     {
-      get
-      {
-        return true;
-      }
+        throw new NotSupportedException (Resources.NamedPipeNoSetLength);
     }
+
+    public override bool CanTimeout => true;
 
     public override int ReadTimeout
     {
-      get
-      {
-        return readTimeout;
-      }
-      set
-      {
-        readTimeout = value;
-      }
+        get => this.readTimeout;
+        set => this.readTimeout = value;
     }
 
     public override int WriteTimeout
     {
-      get
-      {
-        return writeTimeout;
-      }
-      set
-      {
-        writeTimeout = value;
-      }
+        get => this.writeTimeout;
+        set => this.writeTimeout = value;
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
+    public override long Seek (long offset, SeekOrigin origin)
     {
-      throw new NotSupportedException(Resources.NamedPipeNoSeek);
+        throw new NotSupportedException (Resources.NamedPipeNoSeek);
     }
 
-    internal static Stream Create(string pipeName, string hostname, uint timeout)
+    internal static Stream Create (string pipeName, string hostname, uint timeout)
     {
-      string pipePath;
-      if (0 == String.Compare(hostname, "localhost", true))
-        pipePath = @"\\.\pipe\" + pipeName;
-      else
-        pipePath = String.Format(@"\\{0}\pipe\{1}", hostname, pipeName);
-      return new NamedPipeStream(pipePath, FileAccess.ReadWrite, timeout);
+        string pipePath;
+
+        if (0 == string.Compare (hostname, "localhost", true))
+            pipePath = @"\\.\pipe\" + pipeName;
+        else
+            pipePath = string.Format (@"\\{0}\pipe\{1}", hostname, pipeName);
+
+        return new NamedPipeStream (pipePath, FileAccess.ReadWrite, timeout);
     }
-  }
 }
-
-

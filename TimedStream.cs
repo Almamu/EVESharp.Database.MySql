@@ -30,44 +30,42 @@ using EVESharp.Database.MySql.Common;
 using System;
 using System.IO;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Stream that supports timeout of IO operations.
+/// This class is used is used to support timeouts for SQL command, where a 
+/// typical operation involves several network reads/writes. 
+/// Timeout here is defined as the accumulated duration of all IO operations.
+/// </summary>
+internal class TimedStream : Stream
 {
-  /// <summary>
-  /// Stream that supports timeout of IO operations.
-  /// This class is used is used to support timeouts for SQL command, where a 
-  /// typical operation involves several network reads/writes. 
-  /// Timeout here is defined as the accumulated duration of all IO operations.
-  /// </summary>
+    private readonly Stream _baseStream;
 
-  internal class TimedStream : Stream
-  {
-    readonly Stream _baseStream;
-
-    int _timeout;
-    int _lastReadTimeout;
-    int _lastWriteTimeout;
-    readonly LowResolutionStopwatch _stopwatch;
+    private          int                    _timeout;
+    private          int                    _lastReadTimeout;
+    private          int                    _lastWriteTimeout;
+    private readonly LowResolutionStopwatch _stopwatch;
 
     internal bool IsClosed { get; private set; }
 
-    enum IOKind
+    private enum IOKind
     {
-      Read,
-      Write
+        Read,
+        Write
     };
 
     /// <summary>
     /// Construct a TimedStream
     /// </summary>
     /// <param name="baseStream"> Undelying stream</param>
-    public TimedStream(Stream baseStream)
+    public TimedStream (Stream baseStream)
     {
-      this._baseStream = baseStream;
-      _timeout = baseStream.CanTimeout ? baseStream.ReadTimeout : System.Threading.Timeout.Infinite;
-      IsClosed = false;
-      _stopwatch = new LowResolutionStopwatch();
+        this._baseStream = baseStream;
+        this._timeout    = baseStream.CanTimeout ? baseStream.ReadTimeout : System.Threading.Timeout.Infinite;
+        this.IsClosed    = false;
+        this._stopwatch  = new LowResolutionStopwatch ();
     }
-
 
     /// <summary>
     /// Figure out whether it is necessary to reset timeout on stream.
@@ -78,190 +76,190 @@ namespace EVESharp.Database.MySql
     /// reset timeout if current value is slightly greater than the requested
     /// one (within 0.1 second).
     /// </summary>
-
-    private bool ShouldResetStreamTimeout(int currentValue, int newValue)
+    private bool ShouldResetStreamTimeout (int currentValue, int newValue)
     {
-      if (!_baseStream.CanTimeout) return false;
-      if (newValue == System.Threading.Timeout.Infinite
-          && currentValue != newValue)
-        return true;
-      if (newValue > currentValue)
-        return true;
-      return currentValue >= newValue + 100;
+        if (!this._baseStream.CanTimeout)
+            return false;
+
+        if (newValue == System.Threading.Timeout.Infinite
+            && currentValue != newValue)
+            return true;
+
+        if (newValue > currentValue)
+            return true;
+
+        return currentValue >= newValue + 100;
     }
-    private void StartTimer(IOKind op)
+
+    private void StartTimer (IOKind op)
     {
+        int streamTimeout;
 
-      int streamTimeout;
+        if (this._timeout == System.Threading.Timeout.Infinite)
+            streamTimeout = System.Threading.Timeout.Infinite;
+        else
+            streamTimeout = this._timeout - (int) this._stopwatch.ElapsedMilliseconds;
 
-      if (_timeout == System.Threading.Timeout.Infinite)
-        streamTimeout = System.Threading.Timeout.Infinite;
-      else
-        streamTimeout = _timeout - (int)_stopwatch.ElapsedMilliseconds;
-
-      if (op == IOKind.Read)
-      {
-        if (ShouldResetStreamTimeout(_lastReadTimeout, streamTimeout))
+        if (op == IOKind.Read)
         {
-          _baseStream.ReadTimeout = streamTimeout;
-          _lastReadTimeout = streamTimeout;
+            if (this.ShouldResetStreamTimeout (this._lastReadTimeout, streamTimeout))
+            {
+                this._baseStream.ReadTimeout = streamTimeout;
+                this._lastReadTimeout        = streamTimeout;
+            }
         }
-      }
-      else
-      {
-        if (ShouldResetStreamTimeout(_lastWriteTimeout, streamTimeout))
+        else
         {
-          _baseStream.WriteTimeout = streamTimeout;
-          _lastWriteTimeout = streamTimeout;
+            if (this.ShouldResetStreamTimeout (this._lastWriteTimeout, streamTimeout))
+            {
+                this._baseStream.WriteTimeout = streamTimeout;
+                this._lastWriteTimeout        = streamTimeout;
+            }
         }
-      }
 
-      if (_timeout == System.Threading.Timeout.Infinite)
-        return;
+        if (this._timeout == System.Threading.Timeout.Infinite)
+            return;
 
-      _stopwatch.Start();
+        this._stopwatch.Start ();
     }
-    private void StopTimer()
+
+    private void StopTimer ()
     {
-      if (_timeout == System.Threading.Timeout.Infinite)
-        return;
+        if (this._timeout == System.Threading.Timeout.Infinite)
+            return;
 
-      _stopwatch.Stop();
+        this._stopwatch.Stop ();
 
-      // Normally, a timeout exception would be thrown  by stream itself, 
-      // since we set the read/write timeout  for the stream.  However 
-      // there is a gap between  end of IO operation and stopping the 
-      // stop watch,  and it makes it possible for timeout to exceed 
-      // even after IO completed successfully.
-      if (_stopwatch.ElapsedMilliseconds > _timeout)
-      {
-        ResetTimeout(System.Threading.Timeout.Infinite);
-        throw new TimeoutException("Timeout in IO operation");
-      }
+        // Normally, a timeout exception would be thrown  by stream itself, 
+        // since we set the read/write timeout  for the stream.  However 
+        // there is a gap between  end of IO operation and stopping the 
+        // stop watch,  and it makes it possible for timeout to exceed 
+        // even after IO completed successfully.
+        if (this._stopwatch.ElapsedMilliseconds > this._timeout)
+        {
+            this.ResetTimeout (System.Threading.Timeout.Infinite);
+            throw new TimeoutException ("Timeout in IO operation");
+        }
     }
-    public override bool CanRead => _baseStream.CanRead;
 
-    public override bool CanSeek => _baseStream.CanSeek;
+    public override bool CanRead => this._baseStream.CanRead;
 
-    public override bool CanWrite => _baseStream.CanWrite;
+    public override bool CanSeek => this._baseStream.CanSeek;
 
-    public override void Flush()
+    public override bool CanWrite => this._baseStream.CanWrite;
+
+    public override void Flush ()
     {
-      try
-      {
-        StartTimer(IOKind.Write);
-        _baseStream.Flush();
-        StopTimer();
-      }
-      catch (Exception e)
-      {
-        HandleException(e);
-        throw;
-      }
+        try
+        {
+            this.StartTimer (IOKind.Write);
+            this._baseStream.Flush ();
+            this.StopTimer ();
+        }
+        catch (Exception e)
+        {
+            this.HandleException (e);
+            throw;
+        }
     }
 
-    public override long Length => _baseStream.Length;
+    public override long Length => this._baseStream.Length;
 
     public override long Position
     {
-      get
-      {
-        return _baseStream.Position;
-      }
-      set
-      {
-        _baseStream.Position = value;
-      }
+        get => this._baseStream.Position;
+        set => this._baseStream.Position = value;
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
+    public override int Read (byte [] buffer, int offset, int count)
     {
-      try
-      {
-        StartTimer(IOKind.Read);
-        int retval = _baseStream.Read(buffer, offset, count);
-        StopTimer();
-        return retval;
-      }
-      catch (Exception e)
-      {
-        HandleException(e);
-        throw;
-      }
+        try
+        {
+            this.StartTimer (IOKind.Read);
+            int retval = this._baseStream.Read (buffer, offset, count);
+            this.StopTimer ();
+            return retval;
+        }
+        catch (Exception e)
+        {
+            this.HandleException (e);
+            throw;
+        }
     }
 
-    public override int ReadByte()
+    public override int ReadByte ()
     {
-      try
-      {
-        StartTimer(IOKind.Read);
-        int retval = _baseStream.ReadByte();
-        StopTimer();
-        return retval;
-      }
-      catch (Exception e)
-      {
-        HandleException(e);
-        throw;
-      }
+        try
+        {
+            this.StartTimer (IOKind.Read);
+            int retval = this._baseStream.ReadByte ();
+            this.StopTimer ();
+            return retval;
+        }
+        catch (Exception e)
+        {
+            this.HandleException (e);
+            throw;
+        }
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
+    public override long Seek (long offset, SeekOrigin origin)
     {
-      return _baseStream.Seek(offset, origin);
+        return this._baseStream.Seek (offset, origin);
     }
 
-    public override void SetLength(long value)
+    public override void SetLength (long value)
     {
-      _baseStream.SetLength(value);
+        this._baseStream.SetLength (value);
     }
 
-    public override void Write(byte[] buffer, int offset, int count)
+    public override void Write (byte [] buffer, int offset, int count)
     {
-      try
-      {
-        StartTimer(IOKind.Write);
-        _baseStream.Write(buffer, offset, count);
-        StopTimer();
-      }
-      catch (Exception e)
-      {
-        HandleException(e);
-        throw;
-      }
+        try
+        {
+            this.StartTimer (IOKind.Write);
+            this._baseStream.Write (buffer, offset, count);
+            this.StopTimer ();
+        }
+        catch (Exception e)
+        {
+            this.HandleException (e);
+            throw;
+        }
     }
 
-    public override bool CanTimeout => _baseStream.CanTimeout;
+    public override bool CanTimeout => this._baseStream.CanTimeout;
 
     public override int ReadTimeout
     {
-      get { return _baseStream.ReadTimeout; }
-      set { _baseStream.ReadTimeout = value; }
+        get => this._baseStream.ReadTimeout;
+        set => this._baseStream.ReadTimeout = value;
     }
     public override int WriteTimeout
     {
-      get { return _baseStream.WriteTimeout; }
-      set { _baseStream.WriteTimeout = value; }
+        get => this._baseStream.WriteTimeout;
+        set => this._baseStream.WriteTimeout = value;
     }
 
-    public override void Close()
+    public override void Close ()
     {
-      if (IsClosed)
-        return;
-      IsClosed = true;
-      _baseStream.Close();
-      _baseStream.Dispose();
+        if (this.IsClosed)
+            return;
+
+        this.IsClosed = true;
+        this._baseStream.Close ();
+        this._baseStream.Dispose ();
     }
 
-    public void ResetTimeout(int newTimeout)
+    public void ResetTimeout (int newTimeout)
     {
-      if (newTimeout == System.Threading.Timeout.Infinite || newTimeout == 0)
-        _timeout = System.Threading.Timeout.Infinite;
-      else
-        _timeout = newTimeout;
-      _stopwatch.Reset();
-    }
+        if (newTimeout == System.Threading.Timeout.Infinite || newTimeout == 0)
+            this._timeout = System.Threading.Timeout.Infinite;
+        else
+            this._timeout = newTimeout;
 
+        this._stopwatch.Reset ();
+    }
 
     /// <summary>
     /// Common handler for IO exceptions.
@@ -269,10 +267,9 @@ namespace EVESharp.Database.MySql
     /// detected and stops the times.
     /// </summary>
     /// <param name="e">original exception</param>
-    void HandleException(Exception e)
+    private void HandleException (Exception e)
     {
-      _stopwatch.Stop();
-      ResetTimeout(-1);
+        this._stopwatch.Stop ();
+        this.ResetTimeout (-1);
     }
-  }
 }

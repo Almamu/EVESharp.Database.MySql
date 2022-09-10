@@ -30,42 +30,40 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace EVESharp.Database.MySql.Authentication
+namespace EVESharp.Database.MySql.Authentication;
+
+internal class Sha256MemoryAuthenticationPlugin : MySqlAuthenticationPlugin
 {
-  internal class Sha256MemoryAuthenticationPlugin : MySqlAuthenticationPlugin
-  {
     public override string PluginName => "SHA256_MEMORY";
 
-    public byte[] GetClientHash(string data, byte[] nonce)
+    public byte [] GetClientHash (string data, byte [] nonce)
     {
-      if (string.IsNullOrEmpty(data))
-        return new byte[0];
+        if (string.IsNullOrEmpty (data))
+            return new byte[0];
 
-      SHA256 sha = SHA256.Create();
-      byte[] dataBytes = Encoding.UTF8.GetBytes(data);
-      byte[] firstHash = sha.ComputeHash(dataBytes);
-      byte[] secondHash = sha.ComputeHash(firstHash);
-      byte[] thirdHash = new byte[secondHash.Length + nonce.Length];
-      secondHash.CopyTo(thirdHash, 0);
-      nonce.CopyTo(thirdHash, secondHash.Length);
-      thirdHash = sha.ComputeHash(thirdHash);
-      byte[] xor = GetXOr(thirdHash, firstHash);
+        SHA256  sha        = SHA256.Create ();
+        byte [] dataBytes  = Encoding.UTF8.GetBytes (data);
+        byte [] firstHash  = sha.ComputeHash (dataBytes);
+        byte [] secondHash = sha.ComputeHash (firstHash);
+        byte [] thirdHash  = new byte[secondHash.Length + nonce.Length];
+        secondHash.CopyTo (thirdHash, 0);
+        nonce.CopyTo (thirdHash, secondHash.Length);
+        thirdHash = sha.ComputeHash (thirdHash);
+        byte [] xor = this.GetXOr (thirdHash, firstHash);
 
-      return Encoding.UTF8.GetBytes(BitConverter.ToString(xor).Replace("-", ""));
+        return Encoding.UTF8.GetBytes (BitConverter.ToString (xor).Replace ("-", ""));
     }
 
-    protected byte[] GetXOr(byte[] left, byte[] right)
+    protected byte [] GetXOr (byte [] left, byte [] right)
     {
-      if (left.Length != right.Length)
-        throw new ArrayTypeMismatchException();
+        if (left.Length != right.Length)
+            throw new ArrayTypeMismatchException ();
 
-      byte[] result = new byte[left.Length];
-      for (int i = 0; i < left.Length; i++)
-      {
-        result[i] = (byte)(left[i] ^ right[i]);
-      }
+        byte [] result = new byte[left.Length];
 
-      return result;
+        for (int i = 0; i < left.Length; i++)
+            result [i] = (byte) (left [i] ^ right [i]);
+
+        return result;
     }
-  }
 }

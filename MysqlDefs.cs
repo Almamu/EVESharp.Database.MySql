@@ -29,117 +29,120 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
+#if NET452
+using System.Management;
+#endif
 using System.Reflection;
 using System.Runtime.Versioning;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Summary description for ClientParam.
+/// </summary>
+[Flags]
+internal enum ClientFlags : ulong
 {
-  /// <summary>
-  /// Summary description for ClientParam.
-  /// </summary>
-  [Flags]
-  internal enum ClientFlags : ulong
-  {
-    LONG_PASSWORD = 1, // New more secure passwords
-    FOUND_ROWS = 2, // Found instead of affected rows
-    LONG_FLAG = 4, // Get all column flags
-    CONNECT_WITH_DB = 8, // One can specify db on connect
-    NO_SCHEMA = 16, // Don't allow db.table.column
-    COMPRESS = 32, // Client can use compression protocol
-    ODBC = 64, // ODBC client
-    LOCAL_FILES = 128, // Can use LOAD DATA LOCAL
-    IGNORE_SPACE = 256, // Ignore spaces before '('
-    PROTOCOL_41 = 512, // Support new 4.1 protocol
-    INTERACTIVE = 1024, // This is an interactive client
-    SSL = 2048, // Switch to SSL after handshake
-    IGNORE_SIGPIPE = 4096, // IGNORE sigpipes
-    TRANSACTIONS = 8192, // Client knows about transactions
-    RESERVED = 16384, // Old 4.1 protocol flag
-    SECURE_CONNECTION = 32768, // New 4.1 authentication
-    MULTI_STATEMENTS = 65536, // Allow multi-stmt support
-    MULTI_RESULTS = 131072, // Allow multiple resultsets    
-    PS_MULTI_RESULTS = 1UL << 18, // Allow multi results using PS protocol
-    PLUGIN_AUTH = (1UL << 19), // Client supports plugin authentication
-    CONNECT_ATTRS = (1UL << 20), // Allows client connection attributes
-    CAN_HANDLE_EXPIRED_PASSWORD = (1UL << 22), // Support for password expiration > 5.6.6
-    CLIENT_SESSION_TRACK = (1UL << 23), // Support fo sending session tracker vars
-    CLIENT_QUERY_ATTRIBUTES = (1UL << 27), // Support for query attributes
-    CLIENT_SSL_VERIFY_SERVER_CERT = (1UL << 30), // Verify server certificate
-    CLIENT_REMEMBER_OPTIONS = (1UL << 31), // Don't reset the options after an unsuccessful connect
-    MULTI_FACTOR_AUTHENTICATION = (1UL << 28) // Support for Multi Factor Authentication (MFA)
-  }
+    LONG_PASSWORD                 = 1, // New more secure passwords
+    FOUND_ROWS                    = 2, // Found instead of affected rows
+    LONG_FLAG                     = 4, // Get all column flags
+    CONNECT_WITH_DB               = 8, // One can specify db on connect
+    NO_SCHEMA                     = 16, // Don't allow db.table.column
+    COMPRESS                      = 32, // Client can use compression protocol
+    ODBC                          = 64, // ODBC client
+    LOCAL_FILES                   = 128, // Can use LOAD DATA LOCAL
+    IGNORE_SPACE                  = 256, // Ignore spaces before '('
+    PROTOCOL_41                   = 512, // Support new 4.1 protocol
+    INTERACTIVE                   = 1024, // This is an interactive client
+    SSL                           = 2048, // Switch to SSL after handshake
+    IGNORE_SIGPIPE                = 4096, // IGNORE sigpipes
+    TRANSACTIONS                  = 8192, // Client knows about transactions
+    RESERVED                      = 16384, // Old 4.1 protocol flag
+    SECURE_CONNECTION             = 32768, // New 4.1 authentication
+    MULTI_STATEMENTS              = 65536, // Allow multi-stmt support
+    MULTI_RESULTS                 = 131072, // Allow multiple resultsets    
+    PS_MULTI_RESULTS              = 1UL << 18, // Allow multi results using PS protocol
+    PLUGIN_AUTH                   = 1UL << 19, // Client supports plugin authentication
+    CONNECT_ATTRS                 = 1UL << 20, // Allows client connection attributes
+    CAN_HANDLE_EXPIRED_PASSWORD   = 1UL << 22, // Support for password expiration > 5.6.6
+    CLIENT_SESSION_TRACK          = 1UL << 23, // Support fo sending session tracker vars
+    CLIENT_QUERY_ATTRIBUTES       = 1UL << 27, // Support for query attributes
+    CLIENT_SSL_VERIFY_SERVER_CERT = 1UL << 30, // Verify server certificate
+    CLIENT_REMEMBER_OPTIONS       = 1UL << 31, // Don't reset the options after an unsuccessful connect
+    MULTI_FACTOR_AUTHENTICATION   = 1UL << 28 // Support for Multi Factor Authentication (MFA)
+}
 
-  [Flags]
-  internal enum ServerStatusFlags
-  {
-    InTransaction = 1, // Transaction has started
-    AutoCommitMode = 2, // Server in auto_commit mode 
-    MoreResults = 4, // More results on server
-    AnotherQuery = 8, // Multi query - next query exists
-    BadIndex = 16,
-    NoIndex = 32,
-    CursorExists = 64,
-    LastRowSent = 128,
-    DbDropped = 256,
-    NoBackslashEscapes = 512,
-    MetadataChanged = 1024,
-    WasSlow = 2048,
-    OutputParameters = 4096,
+[Flags]
+internal enum ServerStatusFlags
+{
+    InTransaction         = 1, // Transaction has started
+    AutoCommitMode        = 2, // Server in auto_commit mode 
+    MoreResults           = 4, // More results on server
+    AnotherQuery          = 8, // Multi query - next query exists
+    BadIndex              = 16,
+    NoIndex               = 32,
+    CursorExists          = 64,
+    LastRowSent           = 128,
+    DbDropped             = 256,
+    NoBackslashEscapes    = 512,
+    MetadataChanged       = 1024,
+    WasSlow               = 2048,
+    OutputParameters      = 4096,
     InTransactionReadOnly = 8192, // In a read-only transaction
-    SessionStateChanged = 16384 // Connection state information has changed
-  }
+    SessionStateChanged   = 16384 // Connection state information has changed
+}
 
-  internal enum SessionTrackType
-  {
-    SystemVariables = 0,
-    Schema = 1,
-    StateChange = 2,
-    GTIDS = 3,
+internal enum SessionTrackType
+{
+    SystemVariables            = 0,
+    Schema                     = 1,
+    StateChange                = 2,
+    GTIDS                      = 3,
     TransactionCharacteristics = 4,
-    TransactionState = 5
-  }
+    TransactionState           = 5
+}
 
-  /// <summary>
-  /// DB Operations Code
-  /// </summary>
-  internal enum DBCmd : byte
-  {
-    SLEEP = 0,
-    QUIT = 1,
-    INIT_DB = 2,
-    QUERY = 3,
-    FIELD_LIST = 4,
-    CREATE_DB = 5,
-    DROP_DB = 6,
-    RELOAD = 7,
-    SHUTDOWN = 8,
-    STATISTICS = 9,
-    PROCESS_INFO = 10,
-    CONNECT = 11,
-    PROCESS_KILL = 12,
-    DEBUG = 13,
-    PING = 14,
-    TIME = 15,
-    DELAYED_INSERT = 16,
-    CHANGE_USER = 17,
-    BINLOG_DUMP = 18,
-    TABLE_DUMP = 19,
-    CONNECT_OUT = 20,
+/// <summary>
+/// DB Operations Code
+/// </summary>
+internal enum DBCmd : byte
+{
+    SLEEP            = 0,
+    QUIT             = 1,
+    INIT_DB          = 2,
+    QUERY            = 3,
+    FIELD_LIST       = 4,
+    CREATE_DB        = 5,
+    DROP_DB          = 6,
+    RELOAD           = 7,
+    SHUTDOWN         = 8,
+    STATISTICS       = 9,
+    PROCESS_INFO     = 10,
+    CONNECT          = 11,
+    PROCESS_KILL     = 12,
+    DEBUG            = 13,
+    PING             = 14,
+    TIME             = 15,
+    DELAYED_INSERT   = 16,
+    CHANGE_USER      = 17,
+    BINLOG_DUMP      = 18,
+    TABLE_DUMP       = 19,
+    CONNECT_OUT      = 20,
     REGISTER_REPLICA = 21,
-    PREPARE = 22,
-    EXECUTE = 23,
-    LONG_DATA = 24,
-    CLOSE_STMT = 25,
-    RESET_STMT = 26,
-    SET_OPTION = 27,
-    FETCH = 28
-  }
+    PREPARE          = 22,
+    EXECUTE          = 23,
+    LONG_DATA        = 24,
+    CLOSE_STMT       = 25,
+    RESET_STMT       = 26,
+    SET_OPTION       = 27,
+    FETCH            = 28
+}
 
-  /// <summary>
-  /// Specifies MySQL specific data type of a field, property, for use in a <see cref="MySqlParameter"/>.
-  /// </summary>
-  public enum MySqlDbType
-  {
+/// <summary>
+/// Specifies MySQL specific data type of a field, property, for use in a <see cref="MySqlParameter"/>.
+/// </summary>
+public enum MySqlDbType
+{
     /// <summary>
     /// <see cref="Decimal"/>
     /// <para>A fixed precision and scale numeric value between -1038 
@@ -203,7 +206,7 @@ namespace EVESharp.Database.MySql
     ///Datetime The supported range is '1000-01-01 00:00:00' to 
     ///'9999-12-31 23:59:59'.
     ///</summary>
-    [Obsolete("The Datetime enum value is obsolete.  Please use DateTime.")]
+    [Obsolete ("The Datetime enum value is obsolete.  Please use DateTime.")]
     Datetime = 12,
     /// <summary>
     /// A year in 2- or 4-digit format (default is 4-digit). The 
@@ -323,41 +326,41 @@ namespace EVESharp.Database.MySql
     /// A guid column.
     /// </summary>
     Guid = 854
-  };
+};
 
-  internal enum Field_Type : byte
-  {
-    DECIMAL = 0,
-    BYTE = 1,
-    SHORT = 2,
-    LONG = 3,
-    FLOAT = 4,
-    DOUBLE = 5,
-    NULL = 6,
-    TIMESTAMP = 7,
-    LONGLONG = 8,
-    INT24 = 9,
-    DATE = 10,
-    TIME = 11,
-    DATETIME = 12,
-    YEAR = 13,
-    NEWDATE = 14,
-    ENUM = 247,
-    SET = 248,
-    TINY_BLOB = 249,
+internal enum Field_Type : byte
+{
+    DECIMAL     = 0,
+    BYTE        = 1,
+    SHORT       = 2,
+    LONG        = 3,
+    FLOAT       = 4,
+    DOUBLE      = 5,
+    NULL        = 6,
+    TIMESTAMP   = 7,
+    LONGLONG    = 8,
+    INT24       = 9,
+    DATE        = 10,
+    TIME        = 11,
+    DATETIME    = 12,
+    YEAR        = 13,
+    NEWDATE     = 14,
+    ENUM        = 247,
+    SET         = 248,
+    TINY_BLOB   = 249,
     MEDIUM_BLOB = 250,
-    LONG_BLOB = 251,
-    BLOB = 252,
-    VAR_STRING = 253,
-    STRING = 254,
-  }
+    LONG_BLOB   = 251,
+    BLOB        = 252,
+    VAR_STRING  = 253,
+    STRING      = 254
+}
 
-  /// <summary>
-  /// Allows the user to specify the type of connection that should
-  /// be used.
-  /// </summary>
-  public enum MySqlConnectionProtocol
-  {
+/// <summary>
+/// Allows the user to specify the type of connection that should
+/// be used.
+/// </summary>
+public enum MySqlConnectionProtocol
+{
     /// <summary>
     /// TCP/IP style connection. Works everywhere.
     /// </summary>
@@ -394,17 +397,17 @@ namespace EVESharp.Database.MySql
     /// Shared memory connection. Currently works only with Windows systems.
     /// </summary>
     Memory = SharedMemory
-  }
+}
 
-  /// <summary>
-  /// SSL options for connection.
-  /// </summary>
-  public enum MySqlSslMode
-  {
+/// <summary>
+/// SSL options for connection.
+/// </summary>
+public enum MySqlSslMode
+{
     /// <summary>
     /// Do not use SSL.
     /// </summary>
-    [Obsolete("Use 'MySqlSslMode.Disabled' instead.")]
+    [Obsolete ("Use 'MySqlSslMode.Disabled' instead.")]
     None,
     /// <summary>
     /// Do not use SSL.
@@ -432,13 +435,13 @@ namespace EVESharp.Database.MySql
     /// Always use SSL and perform full certificate validation.
     /// </summary>
     VerifyFull
-  }
+}
 
-  /// <summary>
-  /// Specifies the connection types supported
-  /// </summary>
-  public enum MySqlDriverType
-  {
+/// <summary>
+/// Specifies the connection types supported
+/// </summary>
+public enum MySqlDriverType
+{
     /// <summary>
     /// Use TCP/IP sockets.
     /// </summary>
@@ -451,13 +454,13 @@ namespace EVESharp.Database.MySql
     /// Use MySQL embedded server.
     /// </summary>
     Embedded
-  }
+}
 
-  /// <summary>
-  /// Defines the location of the certificate store.
-  /// </summary>
-  public enum MySqlCertificateStoreLocation
-  {
+/// <summary>
+/// Defines the location of the certificate store.
+/// </summary>
+public enum MySqlCertificateStoreLocation
+{
     /// <summary>
     /// Do not use certificate store.
     /// </summary>
@@ -470,13 +473,13 @@ namespace EVESharp.Database.MySql
     /// User certificate store for the machine.
     /// </summary>
     LocalMachine
-  }
+}
 
-  /// <summary>
-  /// Specifies the authentication mechanism that should be used.
-  /// </summary>
-  public enum MySqlAuthenticationMode
-  {
+/// <summary>
+/// Specifies the authentication mechanism that should be used.
+/// </summary>
+public enum MySqlAuthenticationMode
+{
     /// <summary>
     /// If SSL is enabled or Unix sockets are being used, sets PLAIN as the authentication mechanism;
     /// otherwise, it tries to use MYSQL41 and then SHA256_MEMORY.
@@ -499,13 +502,13 @@ namespace EVESharp.Database.MySql
     /// Authenticate using SHA256_MEMORY.
     /// </summary>
     SHA256_MEMORY = 4
-  }
+}
 
-  /// <summary>
-  /// Defines waiting options that may be used with row locking options.
-  /// </summary>
-  public enum LockContention
-  {
+/// <summary>
+/// Defines waiting options that may be used with row locking options.
+/// </summary>
+public enum LockContention
+{
     /// <summary>
     /// Waits until the blocking transaction releases the row lock.
     /// </summary>
@@ -520,13 +523,13 @@ namespace EVESharp.Database.MySql
     /// removing locked rows from the result set.
     /// </summary>
     SkipLocked = 2
-  }
+}
 
-  /// <summary>
-  /// Defines the type of compression used when data is exchanged between client and server.
-  /// </summary>
-  public enum CompressionType
-  {
+/// <summary>
+/// Defines the type of compression used when data is exchanged between client and server.
+/// </summary>
+public enum CompressionType
+{
     /// <summary>
     /// Uses compression if client and server are able to reach a concensus. Otherwise, compression
     /// is not used.
@@ -540,36 +543,36 @@ namespace EVESharp.Database.MySql
     /// Disables compression.
     /// </summary>
     Disabled
-  }
+}
 
-  /// <summary>
-  /// Defines the compression algorithms that can be used.
-  /// </summary>
-  public enum CompressionAlgorithms
-  {
+/// <summary>
+/// Defines the compression algorithms that can be used.
+/// </summary>
+public enum CompressionAlgorithms
+{
     zstd_stream,
     lz4_message,
     // deflate_stream is not supported in .NET Framework.
 #if !NETFRAMEWORK
     deflate_stream
 #endif
-  }
+}
 
-  /// <summary>
-  /// The warnings that cause a connection to close.
-  /// </summary>
-  public enum CloseNotification
-  {
-    IDLE = 1810,
+/// <summary>
+/// The warnings that cause a connection to close.
+/// </summary>
+public enum CloseNotification
+{
+    IDLE     = 1810,
     SHUTDOWN = 1053,
-    KILLED = 3169
-  }
+    KILLED   = 3169
+}
 
-  /// <summary>
-  ///     Controls which column type should be read as type System.Guid.
-  /// </summary>
-  public enum MySqlGuidFormat
-  {
+/// <summary>
+///     Controls which column type should be read as type System.Guid.
+/// </summary>
+public enum MySqlGuidFormat
+{
     /// <summary>
     ///     Same as Char36 when OldGuids equals False, otherwise, the same as LittleEndianBinary16.
     /// </summary>
@@ -600,239 +603,224 @@ namespace EVESharp.Database.MySql
     ///     that is, the byte order used by System.Guid.ToByteArray and System.Guid.#ctor(System.Byte[]).
     /// </summary>
     LittleEndianBinary16 = 6
-  }
+}
 
-  internal class MySqlConnectAttrs
-  {
-    static string _version;
-    static string _os;
-    static string _platform;
-    static string _osName;
-    static string _framework;
+internal class MySqlConnectAttrs
+{
+    private static string _version;
+    private static string _os;
+    private static string _platform;
+    private static string _osName;
+    private static string _framework;
 #if NET452
-    static string _osDetails;
+    private static string _osDetails;
 #endif
 
-    static MySqlConnectAttrs()
+    static MySqlConnectAttrs ()
     {
-      InitVersion();
-      InitOS();
-      InitPlatform();
-      InitOSName();
-      InitFramework();
+        InitVersion ();
+        InitOS ();
+        InitPlatform ();
+        InitOSName ();
+        InitFramework ();
 #if NET452
-      InitOSDetails();
+        InitOSDetails ();
 #endif
     }
 
-    [DisplayName("_client_name")]
-    public string ClientName => "mysql-connector-net";
+    [DisplayName ("_client_name")] public string ClientName => "mysql-connector-net";
 
-    [DisplayName("_client_licence")]
+    [DisplayName ("_client_licence")]
     public string ClientLicence
     {
-      get
-      {
+        get
+        {
 #if COMMERCIAL
         return "Commercial";
 #endif
-        return "GPL-2.0";
-      }
+            return "GPL-2.0";
+        }
     }
 
-    [DisplayName("_pid")]
+    [DisplayName ("_pid")]
     public string PID
     {
-      get
-      {
-        string pid = string.Empty;
+        get
+        {
+            string pid = string.Empty;
+
+            try
+            {
+                pid = System.Diagnostics.Process.GetCurrentProcess ().Id.ToString (CultureInfo.InvariantCulture);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine (ex.ToString ());
+            }
+
+            return pid;
+        }
+    }
+
+    [DisplayName ("_client_version")] public string ClientVersion => _version;
+
+    [DisplayName ("_os")] public string OS => _os;
+
+    [DisplayName ("_thread")]
+    public string Thread
+    {
+        get
+        {
+            string thread = string.Empty;
+
+            try
+            {
+                thread = System.Diagnostics.Process.GetCurrentProcess ().Threads [0].Id.ToString (CultureInfo.InvariantCulture);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine (ex.ToString ());
+            }
+
+            return thread;
+        }
+    }
+
+    [DisplayName ("_platform")] public string Platform => _platform;
+
+#if NET452
+    [DisplayName ("_os_details")] public string OSDetails => _osDetails;
+#endif
+
+    [DisplayName ("_os")] public string OSName => _osName;
+
+    [DisplayName ("_framework")] public string Framework => _framework;
+
+    private static void InitVersion ()
+    {
+        _version = string.Empty;
+
         try
         {
-          pid = System.Diagnostics.Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture);
+            _version = typeof (MySqlConnectAttrs).GetTypeInfo ().Assembly.GetName ().Version.ToString ();
         }
         catch (Exception ex)
         {
-          System.Diagnostics.Debug.WriteLine(ex.ToString());
+            System.Diagnostics.Debug.WriteLine (ex.ToString ());
         }
-
-        return pid;
-      }
     }
 
-    [DisplayName("_client_version")]
-    public string ClientVersion
+    private static void InitOS ()
     {
-      get { return _version; }
-    }
+        _os = string.Empty;
 
-    [DisplayName("_os")]
-    public string OS
-    {
-      get { return _os; }
-    }
-
-    [DisplayName("_thread")]
-    public string Thread
-    {
-      get
-      {
-        string thread = string.Empty;
         try
         {
-          thread = System.Diagnostics.Process.GetCurrentProcess().Threads[0].Id.ToString(CultureInfo.InvariantCulture);
-        }
-        catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex.ToString()); }
+            _os = Environment.OSVersion.Platform.ToString ();
 
-        return thread;
-      }
+            if (_os == "Win32NT")
+            {
+                _os =  "Win";
+                _os += Is64BitOS () ? "64" : "32";
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine (ex.ToString ());
+        }
     }
 
-    [DisplayName("_platform")]
-    public string Platform
+    private static void InitPlatform ()
     {
-      get { return _platform; }
+        _platform = Is64BitOS () ? "x86_64" : "x86_32";
     }
 
 #if NET452
-    [DisplayName("_os_details")]
-    public string OSDetails
+    private static void InitOSDetails ()
     {
-      get { return _osDetails; }
+        _osDetails = string.Empty;
+
+        try
+        {
+            ManagementObjectSearcher   searcher   = new System.Management.ManagementObjectSearcher ("SELECT Caption FROM Win32_OperatingSystem");
+            ManagementObjectCollection collection = searcher.Get ();
+
+            foreach (ManagementBaseObject mgtObj in collection)
+            {
+                _osDetails = mgtObj.GetPropertyValue ("Caption").ToString ();
+                break;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine (ex.ToString ());
+        }
     }
 #endif
 
-    [DisplayName("_os")]
-    public string OSName
-    {
-      get { return _osName; }
-    }
-
-    [DisplayName("_framework")]
-    public string Framework
-    {
-      get { return _framework; }
-    }
-
-    private static void InitVersion()
-    {
-      _version = string.Empty;
-      try
-      {
-        _version = typeof(MySqlConnectAttrs).GetTypeInfo().Assembly.GetName().Version.ToString();
-      }
-      catch (Exception ex)
-      {
-        System.Diagnostics.Debug.WriteLine(ex.ToString());
-      }
-    }
-
-    private static void InitOS()
-    {
-      _os = string.Empty;
-      try
-      {
-        _os = Environment.OSVersion.Platform.ToString();
-        if (_os == "Win32NT")
-        {
-          _os = "Win";
-          _os += Is64BitOS() ? "64" : "32";
-        }
-      }
-      catch (Exception ex)
-      {
-        System.Diagnostics.Debug.WriteLine(ex.ToString());
-      }
-    }
-
-    private static void InitPlatform()
-    {
-      _platform = Is64BitOS() ? "x86_64" : "x86_32";
-    }
-
-#if NET452
-    private static void InitOSDetails()
-    {
-      _osDetails = string.Empty;
-
-      try
-      {
-        var searcher = new System.Management.ManagementObjectSearcher("SELECT Caption FROM Win32_OperatingSystem");
-        var collection = searcher.Get();
-        foreach (var mgtObj in collection)
-        {
-          _osDetails = mgtObj.GetPropertyValue("Caption").ToString();
-          break;
-        }
-      }
-      catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex.ToString()); }
-    }
-#endif
-
-
-    private static bool Is64BitOS()
+    private static bool Is64BitOS ()
     {
 #if CLR4
       return Environment.Is64BitOperatingSystem;
 #else
-      return Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE") == "AMD64";
+        return Environment.GetEnvironmentVariable ("PROCESSOR_ARCHITECTURE") == "AMD64";
 #endif
     }
 
-    private static void InitOSName()
+    private static void InitOSName ()
     {
-      _osName = _os;
+        _osName = _os;
 
-      var osInfo = Environment.OSVersion;
-      var major = osInfo.Version.Major;
-      var minor = osInfo.Version.Minor;
+        OperatingSystem osInfo = Environment.OSVersion;
+        int             major  = osInfo.Version.Major;
+        int             minor  = osInfo.Version.Minor;
 
-      if (osInfo.Platform.ToString().StartsWith("Win"))
-      {
-        switch (major)
-        {
-          case 5:
-            _osName = "Windows-XP-" + major + "." + minor;
-            break;
-          case 6:
-            switch (minor)
+        if (osInfo.Platform.ToString ().StartsWith ("Win"))
+            switch (major)
             {
-              case 0:
-                _osName = "Windows-2008-" + major + "." + minor;
-                break;
-              case 1:
-                _osName = "Windows-7-" + major + "." + minor;
-                break;
-              case 2:
-                _osName = "Windows-8-" + major + "." + minor;
-                break;
-              case 3:
-                _osName = "Windows-8.1-" + major + "." + minor;
-                break;
+                case 5:
+                    _osName = "Windows-XP-" + major + "." + minor;
+                    break;
+                case 6:
+                    switch (minor)
+                    {
+                        case 0:
+                            _osName = "Windows-2008-" + major + "." + minor;
+                            break;
+                        case 1:
+                            _osName = "Windows-7-" + major + "." + minor;
+                            break;
+                        case 2:
+                            _osName = "Windows-8-" + major + "." + minor;
+                            break;
+                        case 3:
+                            _osName = "Windows-8.1-" + major + "." + minor;
+                            break;
+                    }
+
+                    break;
+                case 10:
+                    _osName = "Windows-10-" + major + "." + minor;
+                    break;
+                default:
+                    _osName = "Windows";
+                    break;
             }
-            break;
-          case 10:
-            _osName = "Windows-10-" + major + "." + minor;
-            break;
-          default:
-            _osName = "Windows";
-            break;
-        }
-      }
-      else
-        _osName = _os + "-" + major + "." + minor;
+        else
+            _osName = _os + "-" + major + "." + minor;
     }
 
-    private static void InitFramework()
+    private static void InitFramework ()
     {
-      _framework = string.Empty;
-      try
-      {
-        _framework = Assembly.GetEntryAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName;
-      }
-      catch (Exception ex)
-      {
-        System.Diagnostics.Debug.WriteLine(ex.ToString());
-      }
+        _framework = string.Empty;
+
+        try
+        {
+            _framework = Assembly.GetEntryAssembly ().GetCustomAttribute <TargetFrameworkAttribute> ().FrameworkName;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine (ex.ToString ());
+        }
     }
-  }
 }

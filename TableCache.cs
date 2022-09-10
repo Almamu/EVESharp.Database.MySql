@@ -30,53 +30,53 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+internal class TableCache
 {
-  internal class TableCache
-  {
     private static readonly BaseTableCache cache;
 
-    static TableCache()
+    static TableCache ()
     {
-      cache = new BaseTableCache(480 /* 8 hour max by default */);
+        cache = new BaseTableCache (480 /* 8 hour max by default */);
     }
 
-    public static void AddToCache(string commandText, ResultSet resultSet)
+    public static void AddToCache (string commandText, ResultSet resultSet)
     {
-      cache.AddToCache(commandText, resultSet);
+        cache.AddToCache (commandText, resultSet);
     }
 
-    public static ResultSet RetrieveFromCache(string commandText, int cacheAge)
+    public static ResultSet RetrieveFromCache (string commandText, int cacheAge)
     {
-      return (ResultSet)cache.RetrieveFromCache(commandText, cacheAge);
+        return (ResultSet) cache.RetrieveFromCache (commandText, cacheAge);
     }
 
-    public static void RemoveFromCache(string commandText)
+    public static void RemoveFromCache (string commandText)
     {
-      cache.RemoveFromCache(commandText);
+        cache.RemoveFromCache (commandText);
     }
 
-    public static void DumpCache()
+    public static void DumpCache ()
     {
-      cache.Dump();
+        cache.Dump ();
     }
-  }
+}
 
-  /// <summary>
-  /// Defines the basic operations to be performed on the table cache.
-  /// </summary>
-  public class BaseTableCache
-  {
+/// <summary>
+/// Defines the basic operations to be performed on the table cache.
+/// </summary>
+public class BaseTableCache
+{
     /// <summary>
     /// The maximum age allowed for cache entries.
     /// </summary>
     protected int MaxCacheAge;
 
-    private Dictionary<string, CacheEntry> cache = new Dictionary<string, CacheEntry>();
+    private Dictionary <string, CacheEntry> cache = new Dictionary <string, CacheEntry> ();
 
-    public BaseTableCache(int maxCacheAge)
+    public BaseTableCache (int maxCacheAge)
     {
-      MaxCacheAge = maxCacheAge;
+        this.MaxCacheAge = maxCacheAge;
     }
 
     /// <summary>
@@ -84,17 +84,20 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="commandText">The command to store in the cache.</param>
     /// <param name="resultSet">The resultset associated to the stored command.</param>
-    public virtual void AddToCache(string commandText, object resultSet)
+    public virtual void AddToCache (string commandText, object resultSet)
     {
-      CleanCache();
-      CacheEntry entry = new CacheEntry();
-      entry.CacheTime = DateTime.Now;
-      entry.CacheElement = resultSet;
-      lock (cache)
-      {
-        if (cache.ContainsKey(commandText)) return;
-        cache.Add(commandText, entry);
-      }
+        this.CleanCache ();
+        CacheEntry entry = new CacheEntry ();
+        entry.CacheTime    = DateTime.Now;
+        entry.CacheElement = resultSet;
+
+        lock (this.cache)
+        {
+            if (this.cache.ContainsKey (commandText))
+                return;
+
+            this.cache.Add (commandText, entry);
+        }
     }
 
     /// <summary>
@@ -103,62 +106,72 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">The command to retrieve.</param>
     /// <param name="cacheAge">The allowed age for the cache entry.</param>
     /// <returns></returns>
-    public virtual object RetrieveFromCache(string commandText, int cacheAge)
+    public virtual object RetrieveFromCache (string commandText, int cacheAge)
     {
-      CleanCache();
-      lock (cache)
-      {
-        if (!cache.ContainsKey(commandText)) return null;
-        CacheEntry entry = cache[commandText];
-        if (DateTime.Now.Subtract(entry.CacheTime).TotalSeconds > cacheAge) return null;
-        return entry.CacheElement;
-      }
+        this.CleanCache ();
+
+        lock (this.cache)
+        {
+            if (!this.cache.ContainsKey (commandText))
+                return null;
+
+            CacheEntry entry = this.cache [commandText];
+
+            if (DateTime.Now.Subtract (entry.CacheTime).TotalSeconds > cacheAge)
+                return null;
+
+            return entry.CacheElement;
+        }
     }
 
     /// <summary>
     /// Removes the specified command from the cache.
     /// </summary>
     /// <param name="commandText">The command to remove from the cache.</param>
-    public void RemoveFromCache(string commandText)
+    public void RemoveFromCache (string commandText)
     {
-      lock (cache)
-      {
-        if (!cache.ContainsKey(commandText)) return;
-        cache.Remove(commandText);
-      }
+        lock (this.cache)
+        {
+            if (!this.cache.ContainsKey (commandText))
+                return;
+
+            this.cache.Remove (commandText);
+        }
     }
 
     /// <summary>
     /// Clears the cache.
     /// </summary>
-    public virtual void Dump()
+    public virtual void Dump ()
     {
-      lock (cache)
-        cache.Clear();
+        lock (this.cache)
+        {
+            this.cache.Clear ();
+        }
     }
 
     /// <summary>
     /// Removes cache entries older than the value defined by <see cref="MaxCacheAge"/>.
     /// </summary>
-    protected virtual void CleanCache()
+    protected virtual void CleanCache ()
     {
-      DateTime now = DateTime.Now;
-      List<string> keysToRemove = new List<string>();
+        DateTime      now          = DateTime.Now;
+        List <string> keysToRemove = new List <string> ();
 
-      lock (cache)
-      {
-        keysToRemove.AddRange(from key in cache.Keys let diff = now.Subtract(cache[key].CacheTime) where diff.TotalSeconds > MaxCacheAge select key);
+        lock (this.cache)
+        {
+            keysToRemove.AddRange (
+                from key in this.cache.Keys let diff = now.Subtract (this.cache [key].CacheTime) where diff.TotalSeconds > this.MaxCacheAge select key
+            );
 
-        foreach (string key in keysToRemove)
-          cache.Remove(key);
-      }
+            foreach (string key in keysToRemove)
+                this.cache.Remove (key);
+        }
     }
 
     private struct CacheEntry
     {
-      public DateTime CacheTime;
-      public object CacheElement;
+        public DateTime CacheTime;
+        public object   CacheElement;
     }
-  }
-
 }

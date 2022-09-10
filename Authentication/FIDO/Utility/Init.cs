@@ -28,22 +28,21 @@
 
 using EVESharp.Database.MySql.Authentication.FIDO.Native;
 
-namespace EVESharp.Database.MySql.Authentication.FIDO.Utility
+namespace EVESharp.Database.MySql.Authentication.FIDO.Utility;
+
+/// <summary>
+/// This class represent the function that should precede any invocation to libfido2 library.
+/// </summary>
+internal class Init
 {
-  /// <summary>
-  /// This class represent the function that should precede any invocation to libfido2 library.
-  /// </summary>
-  internal class Init
-  {
     private static bool _called;
 
-    internal static void Call()
+    internal static void Call ()
     {
-      if (_called)
-        return;
+        if (_called)
+            return;
 
-      _called = true;
-      NativeMethods.fido_init(0);
+        _called = true;
+        NativeMethods.fido_init (0);
     }
-  }
 }

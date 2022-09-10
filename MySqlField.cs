@@ -34,71 +34,75 @@ using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace EVESharp.Database.MySql
-{
-  [Flags]
-  internal enum ColumnFlags : int
-  {
-    NOT_NULL = 1,
-    PRIMARY_KEY = 2,
-    UNIQUE_KEY = 4,
-    MULTIPLE_KEY = 8,
-    BLOB = 16,
-    UNSIGNED = 32,
-    ZERO_FILL = 64,
-    BINARY = 128,
-    ENUM = 256,
-    AUTO_INCREMENT = 512,
-    TIMESTAMP = 1024,
-    SET = 2048,
-    NUMBER = 32768
-  };
+namespace EVESharp.Database.MySql;
 
-  /// <summary>
-  /// Summary description for Field.
-  /// </summary>
-  internal class MySqlField
-  {
-    #region Fields
+[Flags]
+internal enum ColumnFlags : int
+{
+    NOT_NULL       = 1,
+    PRIMARY_KEY    = 2,
+    UNIQUE_KEY     = 4,
+    MULTIPLE_KEY   = 8,
+    BLOB           = 16,
+    UNSIGNED       = 32,
+    ZERO_FILL      = 64,
+    BINARY         = 128,
+    ENUM           = 256,
+    AUTO_INCREMENT = 512,
+    TIMESTAMP      = 1024,
+    SET            = 2048,
+    NUMBER         = 32768
+};
+
+/// <summary>
+/// Summary description for Field.
+/// </summary>
+internal class MySqlField
+{
+#region Fields
 
     // public fields
-    public string CatalogName;
-    public int ColumnLength;
-    public string ColumnName;
-    public string OriginalColumnName;
-    public string TableName;
-    public string RealTableName;
-    public string DatabaseName;
+    public string   CatalogName;
+    public int      ColumnLength;
+    public string   ColumnName;
+    public string   OriginalColumnName;
+    public string   TableName;
+    public string   RealTableName;
+    public string   DatabaseName;
     public Encoding Encoding;
 
     // protected fields
-    protected int charSetIndex;
+    protected int       charSetIndex;
     protected DBVersion connVersion;
-    protected bool binaryOk;
+    protected bool      binaryOk;
 
     // internal fields
     internal Driver driver;
 
-    #endregion
+#endregion
 
     [SecuritySafeCritical]
-    public MySqlField(Driver driver)
+    public MySqlField (Driver driver)
     {
-      this.driver = driver;
-      connVersion = driver.Version;
-      MaxLength = 1;
-      binaryOk = true;
+        this.driver      = driver;
+        this.connVersion = driver.Version;
+        this.MaxLength   = 1;
+        this.binaryOk    = true;
 #if !NETFRAMEWORK
       Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
     }
 
-    #region Properties
+#region Properties
 
     public int CharacterSetIndex
     {
-      get { return charSetIndex; }
-      set { charSetIndex = value; SetFieldEncoding(); }
+        get => this.charSetIndex;
+        set
+        {
+            this.charSetIndex = value;
+            this.SetFieldEncoding ();
+        }
     }
 
     public MySqlDbType Type { get; internal set; }
@@ -111,258 +115,245 @@ namespace EVESharp.Database.MySql
 
     public ColumnFlags Flags { get; protected set; }
 
-    public bool IsAutoIncrement => (Flags & ColumnFlags.AUTO_INCREMENT) > 0;
+    public bool IsAutoIncrement => (this.Flags & ColumnFlags.AUTO_INCREMENT) > 0;
 
-    public bool IsNumeric => (Flags & ColumnFlags.NUMBER) > 0;
+    public bool IsNumeric => (this.Flags & ColumnFlags.NUMBER) > 0;
 
-    public bool AllowsNull => (Flags & ColumnFlags.NOT_NULL) == 0;
+    public bool AllowsNull => (this.Flags & ColumnFlags.NOT_NULL) == 0;
 
-    public bool IsUnique => (Flags & ColumnFlags.UNIQUE_KEY) > 0;
+    public bool IsUnique => (this.Flags & ColumnFlags.UNIQUE_KEY) > 0;
 
-    public bool IsPrimaryKey => (Flags & ColumnFlags.PRIMARY_KEY) > 0;
+    public bool IsPrimaryKey => (this.Flags & ColumnFlags.PRIMARY_KEY) > 0;
 
-    public bool IsBlob => (Type >= MySqlDbType.TinyBlob &&
-                           Type <= MySqlDbType.Blob) ||
-                          (Type >= MySqlDbType.TinyText &&
-                           Type <= MySqlDbType.Text) ||
-                          (Flags & ColumnFlags.BLOB) > 0;
+    public bool IsBlob =>
+        (this.Type >= MySqlDbType.TinyBlob && this.Type <= MySqlDbType.Blob) ||
+        (this.Type >= MySqlDbType.TinyText && this.Type <= MySqlDbType.Text) ||
+        (this.Flags & ColumnFlags.BLOB) > 0;
 
-    public bool IsBinary => binaryOk && (CharacterSetIndex == 63);
+    public bool IsBinary => this.binaryOk && this.CharacterSetIndex == 63;
 
-    public bool IsUnsigned => (Flags & ColumnFlags.UNSIGNED) > 0;
+    public bool IsUnsigned => (this.Flags & ColumnFlags.UNSIGNED) > 0;
 
-    public bool IsTextField
+    public bool IsTextField =>
+        this.Type == MySqlDbType.VarString || this.Type == MySqlDbType.VarChar || this.Type == MySqlDbType.String ||
+        (this.Type == MySqlDbType.Guid && !this.driver.Settings.OldGuids);
+
+    private int CharacterLength => this.ColumnLength / this.MaxLength;
+
+    public List <Type> TypeConversions { get; } = new List <Type> ();
+
+#endregion
+
+    public void SetTypeAndFlags (MySqlDbType type, ColumnFlags flags)
     {
-      get
-      {
-        return Type == MySqlDbType.VarString || Type == MySqlDbType.VarChar ||
-                    Type == MySqlDbType.String || (Type == MySqlDbType.Guid && !driver.Settings.OldGuids);
-      }
+        this.Flags = flags;
+        this.Type  = type;
+
+        if (string.IsNullOrEmpty (this.TableName) && string.IsNullOrEmpty (this.RealTableName) && this.IsBinary && this.driver.Settings.FunctionsReturnString)
+            this.CharacterSetIndex = this.driver.ConnectionCharSetIndex;
+
+        // if our type is an unsigned number, then we need
+        // to bump it up into our unsigned types
+        // we're trusting that the server is not going to set the UNSIGNED
+        // flag unless we are a number
+        if (this.IsUnsigned)
+            switch (type)
+            {
+                case MySqlDbType.Byte:
+                    this.Type = MySqlDbType.UByte;
+                    return;
+                case MySqlDbType.Int16:
+                    this.Type = MySqlDbType.UInt16;
+                    return;
+                case MySqlDbType.Int24:
+                    this.Type = MySqlDbType.UInt24;
+                    return;
+                case MySqlDbType.Int32:
+                    this.Type = MySqlDbType.UInt32;
+                    return;
+                case MySqlDbType.Int64:
+                    this.Type = MySqlDbType.UInt64;
+                    return;
+            }
+
+        if (this.IsBlob)
+        {
+            // handle blob to UTF8 conversion if requested.  This is only activated
+            // on binary blobs
+            if (this.IsBinary && this.driver.Settings.TreatBlobsAsUTF8)
+            {
+                bool  convertBlob  = false;
+                Regex includeRegex = this.driver.Settings.GetBlobAsUTF8IncludeRegex ();
+                Regex excludeRegex = this.driver.Settings.GetBlobAsUTF8ExcludeRegex ();
+
+                if (includeRegex != null && includeRegex.IsMatch (this.ColumnName))
+                    convertBlob = true;
+                else if (includeRegex == null && excludeRegex != null &&
+                         !excludeRegex.IsMatch (this.ColumnName))
+                    convertBlob = true;
+
+                if (convertBlob)
+                {
+                    this.binaryOk     = false;
+                    this.Encoding     = Encoding.GetEncoding ("UTF-8");
+                    this.charSetIndex = -1; // lets driver know we are in charge of encoding
+                    this.MaxLength    = 4;
+                }
+            }
+
+            if (!this.IsBinary)
+            {
+                if (type == MySqlDbType.TinyBlob)
+                    this.Type = MySqlDbType.TinyText;
+                else if (type == MySqlDbType.MediumBlob)
+                    this.Type = MySqlDbType.MediumText;
+                else if (type == MySqlDbType.Blob)
+                    this.Type = MySqlDbType.Text;
+                else if (type == MySqlDbType.LongBlob)
+                    this.Type = MySqlDbType.LongText;
+            }
+
+            if (type == MySqlDbType.JSON)
+            {
+                this.binaryOk     = false;
+                this.Encoding     = Encoding.GetEncoding ("UTF-8");
+                this.charSetIndex = -1; // lets driver know we are in charge of encoding
+                this.MaxLength    = 4;
+            }
+        }
+
+        // now determine if we really should be binary
+        if (this.driver.Settings.RespectBinaryFlags)
+            this.CheckForExceptions ();
+
+        if (this.Type == MySqlDbType.String && this.CharacterLength == 36 && !this.driver.Settings.OldGuids)
+            this.Type = MySqlDbType.Guid;
+
+        if (!this.IsBinary)
+            return;
+
+        if (this.driver.Settings.RespectBinaryFlags)
+        {
+            if (type == MySqlDbType.String)
+                this.Type = MySqlDbType.Binary;
+            else if (type == MySqlDbType.VarChar ||
+                     type == MySqlDbType.VarString)
+                this.Type = MySqlDbType.VarBinary;
+        }
+
+        if (this.CharacterSetIndex == 63)
+            this.CharacterSetIndex = this.driver.ConnectionCharSetIndex;
+
+        if (this.Type == MySqlDbType.Binary && this.ColumnLength == 16 && this.driver.Settings.OldGuids)
+            this.Type = MySqlDbType.Guid;
     }
 
-    private int CharacterLength => ColumnLength / MaxLength;
-
-    public List<Type> TypeConversions { get; } = new List<Type>();
-
-    #endregion
-
-    public void SetTypeAndFlags(MySqlDbType type, ColumnFlags flags)
+    public void AddTypeConversion (Type t)
     {
-      Flags = flags;
-      Type = type;
+        if (this.TypeConversions.Contains (t))
+            return;
 
-      if (String.IsNullOrEmpty(TableName) && String.IsNullOrEmpty(RealTableName) &&
-        IsBinary && driver.Settings.FunctionsReturnString)
-      {
-        CharacterSetIndex = driver.ConnectionCharSetIndex;
-      }
+        this.TypeConversions.Add (t);
+    }
 
-      // if our type is an unsigned number, then we need
-      // to bump it up into our unsigned types
-      // we're trusting that the server is not going to set the UNSIGNED
-      // flag unless we are a number
-      if (IsUnsigned)
-      {
+    private void CheckForExceptions ()
+    {
+        string colName = string.Empty;
+
+        if (this.OriginalColumnName != null)
+            colName = StringUtility.ToUpperInvariant (this.OriginalColumnName);
+
+        if (colName.StartsWith ("CHAR(", StringComparison.Ordinal))
+            this.binaryOk = false;
+    }
+
+    public IMySqlValue GetValueObject ()
+    {
+        IMySqlValue v = GetIMySqlValue (this.Type);
+
+        if (v is MySqlByte && this.ColumnLength == 1 && this.driver.Settings.TreatTinyAsBoolean)
+        {
+            MySqlByte b = (MySqlByte) v;
+            b.TreatAsBoolean = true;
+            v                = b;
+        }
+        else if (v is MySqlGuid)
+        {
+            MySqlGuid g = (MySqlGuid) v;
+            g.OldGuids = this.driver.Settings.OldGuids;
+            v          = g;
+        }
+
+        return v;
+    }
+
+    public static IMySqlValue GetIMySqlValue (MySqlDbType type)
+    {
         switch (type)
         {
-          case MySqlDbType.Byte:
-            Type = MySqlDbType.UByte;
-            return;
-          case MySqlDbType.Int16:
-            Type = MySqlDbType.UInt16;
-            return;
-          case MySqlDbType.Int24:
-            Type = MySqlDbType.UInt24;
-            return;
-          case MySqlDbType.Int32:
-            Type = MySqlDbType.UInt32;
-            return;
-          case MySqlDbType.Int64:
-            Type = MySqlDbType.UInt64;
-            return;
+            case MySqlDbType.Byte:  return new MySqlByte ();
+            case MySqlDbType.UByte: return new MySqlUByte ();
+            case MySqlDbType.Year:
+            case MySqlDbType.Int16:
+                return new MySqlInt16 ();
+            case MySqlDbType.UInt16: return new MySqlUInt16 ();
+            case MySqlDbType.Int24:
+            case MySqlDbType.Int32:
+                return new MySqlInt32 (type, true);
+            case MySqlDbType.UInt24:
+            case MySqlDbType.UInt32:
+                return new MySqlUInt32 (type, true);
+            case MySqlDbType.Bit:    return new MySqlBit ();
+            case MySqlDbType.Int64:  return new MySqlInt64 ();
+            case MySqlDbType.UInt64: return new MySqlUInt64 ();
+            case MySqlDbType.Time:   return new MySqlTimeSpan ();
+            case MySqlDbType.Date:
+            case MySqlDbType.DateTime:
+            case MySqlDbType.Newdate:
+            case MySqlDbType.Timestamp:
+                return new MySqlDateTime (type, true);
+            case MySqlDbType.Decimal:
+            case MySqlDbType.NewDecimal:
+                return new MySqlDecimal ();
+            case MySqlDbType.Float:  return new MySqlSingle ();
+            case MySqlDbType.Double: return new MySqlDouble ();
+            case MySqlDbType.Set:
+            case MySqlDbType.Enum:
+            case MySqlDbType.String:
+            case MySqlDbType.VarString:
+            case MySqlDbType.VarChar:
+            case MySqlDbType.Text:
+            case MySqlDbType.TinyText:
+            case MySqlDbType.MediumText:
+            case MySqlDbType.LongText:
+            case MySqlDbType.JSON:
+            case (MySqlDbType) Field_Type.NULL:
+                return new MySqlString (type, true);
+            case MySqlDbType.Geometry: return new MySqlGeometry (type, true);
+            case MySqlDbType.Blob:
+            case MySqlDbType.MediumBlob:
+            case MySqlDbType.LongBlob:
+            case MySqlDbType.TinyBlob:
+            case MySqlDbType.Binary:
+            case MySqlDbType.VarBinary:
+                return new MySqlBinary (type, true);
+            case MySqlDbType.Guid: return new MySqlGuid ();
+            default:               throw new MySqlException ("Unknown data type");
         }
-      }
-
-      if (IsBlob)
-      {
-        // handle blob to UTF8 conversion if requested.  This is only activated
-        // on binary blobs
-        if (IsBinary && driver.Settings.TreatBlobsAsUTF8)
-        {
-          bool convertBlob = false;
-          Regex includeRegex = driver.Settings.GetBlobAsUTF8IncludeRegex();
-          Regex excludeRegex = driver.Settings.GetBlobAsUTF8ExcludeRegex();
-          if (includeRegex != null && includeRegex.IsMatch(ColumnName))
-            convertBlob = true;
-          else if (includeRegex == null && excludeRegex != null &&
-            !excludeRegex.IsMatch(ColumnName))
-            convertBlob = true;
-
-          if (convertBlob)
-          {
-            binaryOk = false;
-            Encoding = Encoding.GetEncoding("UTF-8");
-            charSetIndex = -1;  // lets driver know we are in charge of encoding
-            MaxLength = 4;
-          }
-        }
-
-        if (!IsBinary)
-        {
-          if (type == MySqlDbType.TinyBlob)
-            Type = MySqlDbType.TinyText;
-          else if (type == MySqlDbType.MediumBlob)
-            Type = MySqlDbType.MediumText;
-          else if (type == MySqlDbType.Blob)
-            Type = MySqlDbType.Text;
-          else if (type == MySqlDbType.LongBlob)
-            Type = MySqlDbType.LongText;
-        }
-
-        if (type == MySqlDbType.JSON)
-        {
-          binaryOk = false;
-          Encoding = Encoding.GetEncoding("UTF-8");
-          charSetIndex = -1;  // lets driver know we are in charge of encoding
-          MaxLength = 4;
-        }
-      }
-
-      // now determine if we really should be binary
-      if (driver.Settings.RespectBinaryFlags)
-        CheckForExceptions();
-
-      if (Type == MySqlDbType.String && CharacterLength == 36 && !driver.Settings.OldGuids)
-        Type = MySqlDbType.Guid;
-
-      if (!IsBinary) return;
-
-      if (driver.Settings.RespectBinaryFlags)
-      {
-        if (type == MySqlDbType.String)
-          Type = MySqlDbType.Binary;
-        else if (type == MySqlDbType.VarChar ||
-             type == MySqlDbType.VarString)
-          Type = MySqlDbType.VarBinary;
-      }
-
-      if (CharacterSetIndex == 63)
-        CharacterSetIndex = driver.ConnectionCharSetIndex;
-
-      if (Type == MySqlDbType.Binary && ColumnLength == 16 && driver.Settings.OldGuids)
-        Type = MySqlDbType.Guid;
     }
 
-    public void AddTypeConversion(Type t)
+    private void SetFieldEncoding ()
     {
-      if (TypeConversions.Contains(t)) return;
-      TypeConversions.Add(t);
+        Dictionary <int, string> charSets = this.driver.CharacterSets;
+
+        if (charSets == null || charSets.Count == 0 || this.CharacterSetIndex == -1)
+            return;
+
+        if (charSets [this.CharacterSetIndex] == null)
+            return;
+
+        CharacterSet cs = CharSetMap.GetCharacterSet (charSets [this.CharacterSetIndex]);
+        this.MaxLength = cs.byteCount;
+        this.Encoding  = CharSetMap.GetEncoding (charSets [this.CharacterSetIndex]);
     }
-
-    private void CheckForExceptions()
-    {
-      string colName = String.Empty;
-      if (OriginalColumnName != null)
-        colName = StringUtility.ToUpperInvariant(OriginalColumnName);
-      if (colName.StartsWith("CHAR(", StringComparison.Ordinal))
-        binaryOk = false;
-    }
-
-    public IMySqlValue GetValueObject()
-    {
-      IMySqlValue v = GetIMySqlValue(Type);
-      if (v is MySqlByte && ColumnLength == 1 && driver.Settings.TreatTinyAsBoolean)
-      {
-        MySqlByte b = (MySqlByte)v;
-        b.TreatAsBoolean = true;
-        v = b;
-      }
-      else if (v is MySqlGuid)
-      {
-        MySqlGuid g = (MySqlGuid)v;
-        g.OldGuids = driver.Settings.OldGuids;
-        v = g;
-      }
-      return v;
-    }
-
-    public static IMySqlValue GetIMySqlValue(MySqlDbType type)
-    {
-      switch (type)
-      {
-        case MySqlDbType.Byte:
-          return new MySqlByte();
-        case MySqlDbType.UByte:
-          return new MySqlUByte();
-        case MySqlDbType.Year:
-        case MySqlDbType.Int16:
-          return new MySqlInt16();
-        case MySqlDbType.UInt16:
-          return new MySqlUInt16();
-        case MySqlDbType.Int24:
-        case MySqlDbType.Int32:
-          return new MySqlInt32(type, true);
-        case MySqlDbType.UInt24:
-        case MySqlDbType.UInt32:
-          return new MySqlUInt32(type, true);
-        case MySqlDbType.Bit:
-          return new MySqlBit();
-        case MySqlDbType.Int64:
-          return new MySqlInt64();
-        case MySqlDbType.UInt64:
-          return new MySqlUInt64();
-        case MySqlDbType.Time:
-          return new MySqlTimeSpan();
-        case MySqlDbType.Date:
-        case MySqlDbType.DateTime:
-        case MySqlDbType.Newdate:
-        case MySqlDbType.Timestamp:
-          return new MySqlDateTime(type, true);
-        case MySqlDbType.Decimal:
-        case MySqlDbType.NewDecimal:
-          return new MySqlDecimal();
-        case MySqlDbType.Float:
-          return new MySqlSingle();
-        case MySqlDbType.Double:
-          return new MySqlDouble();
-        case MySqlDbType.Set:
-        case MySqlDbType.Enum:
-        case MySqlDbType.String:
-        case MySqlDbType.VarString:
-        case MySqlDbType.VarChar:
-        case MySqlDbType.Text:
-        case MySqlDbType.TinyText:
-        case MySqlDbType.MediumText:
-        case MySqlDbType.LongText:
-        case MySqlDbType.JSON:
-        case (MySqlDbType)Field_Type.NULL:
-          return new MySqlString(type, true);
-        case MySqlDbType.Geometry:
-          return new MySqlGeometry(type, true);
-        case MySqlDbType.Blob:
-        case MySqlDbType.MediumBlob:
-        case MySqlDbType.LongBlob:
-        case MySqlDbType.TinyBlob:
-        case MySqlDbType.Binary:
-        case MySqlDbType.VarBinary:
-          return new MySqlBinary(type, true);
-        case MySqlDbType.Guid:
-          return new MySqlGuid();
-        default:
-          throw new MySqlException("Unknown data type");
-      }
-    }
-
-    private void SetFieldEncoding()
-    {
-      Dictionary<int, string> charSets = driver.CharacterSets;
-
-      if (charSets == null || charSets.Count == 0 || CharacterSetIndex == -1) return;
-      if (charSets[CharacterSetIndex] == null) return;
-
-      CharacterSet cs = CharSetMap.GetCharacterSet(charSets[CharacterSetIndex]);
-      MaxLength = cs.byteCount;
-      Encoding = CharSetMap.GetEncoding(charSets[CharacterSetIndex]);
-    }
-  }
 }

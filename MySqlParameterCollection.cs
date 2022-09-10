@@ -32,38 +32,38 @@ using System.Collections.Generic;
 using System.Collections;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Represents a collection of parameters relevant to a <see cref="MySqlCommand"/> 
+/// as well as their respective mappings to columns in a <see cref="System.Data.DataSet"/>. This class cannot be inherited.
+/// </summary>
+/// <remarks>
+///  The number of the parameters in the collection must be equal to the number of
+///  parameter placeholders within the command text, or an exception will be generated.
+///</remarks>
+public sealed partial class MySqlParameterCollection : DbParameterCollection
 {
-  /// <summary>
-  /// Represents a collection of parameters relevant to a <see cref="MySqlCommand"/> 
-  /// as well as their respective mappings to columns in a <see cref="System.Data.DataSet"/>. This class cannot be inherited.
-  /// </summary>
-  /// <remarks>
-  ///  The number of the parameters in the collection must be equal to the number of
-  ///  parameter placeholders within the command text, or an exception will be generated.
-  ///</remarks>
-  public sealed partial class MySqlParameterCollection : DbParameterCollection
-  {
-    readonly List<MySqlParameter> _items = new List<MySqlParameter>();
-    private readonly Dictionary<string, int> _indexHashCs;
-    private readonly Dictionary<string, int> _indexHashCi;
+    private readonly List <MySqlParameter>    _items = new List <MySqlParameter> ();
+    private readonly Dictionary <string, int> _indexHashCs;
+    private readonly Dictionary <string, int> _indexHashCi;
     //turns to true if any parameter is unnamed
     internal bool containsUnnamedParameters;
 
-    internal MySqlParameterCollection(MySqlCommand cmd)
+    internal MySqlParameterCollection (MySqlCommand cmd)
     {
-      _indexHashCs = new Dictionary<string, int>();
-      _indexHashCi = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
-      containsUnnamedParameters = false;
-      Clear();
+        this._indexHashCs              = new Dictionary <string, int> ();
+        this._indexHashCi              = new Dictionary <string, int> (StringComparer.CurrentCultureIgnoreCase);
+        this.containsUnnamedParameters = false;
+        this.Clear ();
     }
 
     /// <summary>
     /// Gets the number of MySqlParameter objects in the collection.
     /// </summary>
-    public override int Count => _items.Count;
+    public override int Count => this._items.Count;
 
-    #region Public Methods
+#region Public Methods
 
     /// <summary>
     /// Gets the <see cref="MySqlParameter"/> at the specified index.
@@ -71,19 +71,19 @@ namespace EVESharp.Database.MySql
     /// <overloads>Gets the <see cref="MySqlParameter"/> with a specified attribute.
     /// [C#] In C#, this property is the indexer for the <see cref="MySqlParameterCollection"/> class.
     /// </overloads>
-    public new MySqlParameter this[int index]
+    public new MySqlParameter this [int index]
     {
-      get { return InternalGetParameter(index); }
-      set { InternalSetParameter(index, value); }
+        get => this.InternalGetParameter (index);
+        set => this.InternalSetParameter (index, value);
     }
 
     /// <summary>
     /// Gets the <see cref="MySqlParameter"/> with the specified name.
     /// </summary>
-    public new MySqlParameter this[string name]
+    public new MySqlParameter this [string name]
     {
-      get { return InternalGetParameter(name); }
-      set { InternalSetParameter(name, value); }
+        get => this.InternalGetParameter (name);
+        set => this.InternalSetParameter (name, value);
     }
 
     /// <summary>
@@ -94,9 +94,9 @@ namespace EVESharp.Database.MySql
     /// <param name="size">The length of the column.</param>
     /// <param name="sourceColumn">The name of the source column.</param>
     /// <returns>The newly added <see cref="MySqlParameter"/> object.</returns>
-    public MySqlParameter Add(string parameterName, MySqlDbType dbType, int size, string sourceColumn)
+    public MySqlParameter Add (string parameterName, MySqlDbType dbType, int size, string sourceColumn)
     {
-      return Add(new MySqlParameter(parameterName, dbType, size, sourceColumn));
+        return this.Add (new MySqlParameter (parameterName, dbType, size, sourceColumn));
     }
 
     /// <summary>
@@ -104,9 +104,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="value">The <see cref="MySqlParameter"/> to add to the collection.</param>
     /// <returns>The newly added <see cref="MySqlParameter"/> object.</returns>
-    public MySqlParameter Add(MySqlParameter value)
+    public MySqlParameter Add (MySqlParameter value)
     {
-      return InternalAdd(value, null);
+        return this.InternalAdd (value, null);
     }
 
     /// <summary>
@@ -115,9 +115,9 @@ namespace EVESharp.Database.MySql
     /// <param name="parameterName">The name of the parameter.</param>
     /// <param name="value">The value of the parameter.</param>
     /// <returns>A <see cref="MySqlParameter"/> object representing the provided values.</returns>
-    public MySqlParameter AddWithValue(string parameterName, object value)
+    public MySqlParameter AddWithValue (string parameterName, object value)
     {
-      return Add(new MySqlParameter(parameterName, value));
+        return this.Add (new MySqlParameter (parameterName, value));
     }
 
     /// <summary>
@@ -126,9 +126,9 @@ namespace EVESharp.Database.MySql
     /// <param name="parameterName">The name of the parameter.</param>
     /// <param name="dbType">One of the <see cref="MySqlDbType"/> values. </param>
     /// <returns>The newly added <see cref="MySqlParameter"/> object.</returns>
-    public MySqlParameter Add(string parameterName, MySqlDbType dbType)
+    public MySqlParameter Add (string parameterName, MySqlDbType dbType)
     {
-      return Add(new MySqlParameter(parameterName, dbType));
+        return this.Add (new MySqlParameter (parameterName, dbType));
     }
 
     /// <summary>
@@ -138,82 +138,90 @@ namespace EVESharp.Database.MySql
     /// <param name="dbType">One of the <see cref="MySqlDbType"/> values. </param>
     /// <param name="size">The length of the column.</param>
     /// <returns>The newly added <see cref="MySqlParameter"/> object.</returns>
-    public MySqlParameter Add(string parameterName, MySqlDbType dbType, int size)
+    public MySqlParameter Add (string parameterName, MySqlDbType dbType, int size)
     {
-      return Add(new MySqlParameter(parameterName, dbType, size));
+        return this.Add (new MySqlParameter (parameterName, dbType, size));
     }
 
-    #endregion
+#endregion
 
     /// <summary>
     /// Removes all items from the collection.
     /// </summary>
-    public override void Clear()
+    public override void Clear ()
     {
-      foreach (MySqlParameter p in _items)
-        p.Collection = null;
-      _items.Clear();
-      _indexHashCs.Clear();
-      _indexHashCi.Clear();
+        foreach (MySqlParameter p in this._items)
+            p.Collection = null;
+
+        this._items.Clear ();
+        this._indexHashCs.Clear ();
+        this._indexHashCi.Clear ();
     }
 
-    void CheckIndex(int index)
+    private void CheckIndex (int index)
     {
-      if (index < 0 || index >= Count)
-        throw new IndexOutOfRangeException("Parameter index is out of range.");
+        if (index < 0 || index >= this.Count)
+            throw new IndexOutOfRangeException ("Parameter index is out of range.");
     }
 
-    private MySqlParameter InternalGetParameter(int index)
+    private MySqlParameter InternalGetParameter (int index)
     {
-      CheckIndex(index);
-      return _items[index];
+        this.CheckIndex (index);
+        return this._items [index];
     }
 
-    private MySqlParameter InternalGetParameter(string parameterName)
+    private MySqlParameter InternalGetParameter (string parameterName)
     {
-      int index = IndexOf(parameterName);
-      if (index < 0)
-      {
-        // check to see if the user has added the parameter without a
-        // parameter marker.  If so, kindly tell them what they did.
-        if (parameterName.StartsWith("@", StringComparison.Ordinal) ||
-                    parameterName.StartsWith("?", StringComparison.Ordinal))
+        int index = this.IndexOf (parameterName);
+
+        if (index < 0)
         {
-          string newParameterName = parameterName.Substring(1);
-          index = IndexOf(newParameterName);
-          if (index != -1)
-            return _items[index];
+            // check to see if the user has added the parameter without a
+            // parameter marker.  If so, kindly tell them what they did.
+            if (parameterName.StartsWith ("@", StringComparison.Ordinal) ||
+                parameterName.StartsWith ("?", StringComparison.Ordinal))
+            {
+                string newParameterName = parameterName.Substring (1);
+                index = this.IndexOf (newParameterName);
+
+                if (index != -1)
+                    return this._items [index];
+            }
+
+            throw new ArgumentException ("Parameter '" + parameterName + "' not found in the collection.");
         }
-        throw new ArgumentException("Parameter '" + parameterName + "' not found in the collection.");
-      }
-      return _items[index];
+
+        return this._items [index];
     }
 
-    private void InternalSetParameter(string parameterName, MySqlParameter value)
+    private void InternalSetParameter (string parameterName, MySqlParameter value)
     {
-      int index = IndexOf(parameterName);
-      if (index < 0)
-        throw new ArgumentException("Parameter '" + parameterName + "' not found in the collection.");
-      InternalSetParameter(index, value);
+        int index = this.IndexOf (parameterName);
+
+        if (index < 0)
+            throw new ArgumentException ("Parameter '" + parameterName + "' not found in the collection.");
+
+        this.InternalSetParameter (index, value);
     }
 
-    private void InternalSetParameter(int index, MySqlParameter value)
+    private void InternalSetParameter (int index, MySqlParameter value)
     {
-      MySqlParameter newParameter = value;
-      if (newParameter == null)
-        throw new ArgumentException(Resources.NewValueShouldBeMySqlParameter);
+        MySqlParameter newParameter = value;
 
-      CheckIndex(index);
-      MySqlParameter p = _items[index];
+        if (newParameter == null)
+            throw new ArgumentException (Resources.NewValueShouldBeMySqlParameter);
 
-      // first we remove the old parameter from our hashes
-      _indexHashCs.Remove(p.ParameterName);
-      _indexHashCi.Remove(p.ParameterName);
+        this.CheckIndex (index);
+        MySqlParameter p = this._items [index];
 
-      // then we add in the new parameter
-      _items[index] = newParameter;
-      _indexHashCs.Add(value.ParameterName, index);
-      _indexHashCi.Add(value.ParameterName, index);
+        // first we remove the old parameter from our hashes
+        this._indexHashCs.Remove (p.ParameterName);
+        this._indexHashCi.Remove (p.ParameterName);
+
+        // then we add in the new parameter
+        this._items [index] = newParameter;
+        this._indexHashCs.Add (value.ParameterName, index);
+        this._indexHashCi.Add (value.ParameterName, index);
     }
 
     /// <summary>
@@ -221,13 +229,15 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="parameterName">The name of the <see cref="MySqlParameter"/> object to retrieve. </param>
     /// <returns>The zero-based location of the <see cref="MySqlParameter"/> in the collection.</returns>
-    public override int IndexOf(string parameterName)
+    public override int IndexOf (string parameterName)
     {
-      int i = -1;
-      if (!_indexHashCs.TryGetValue(parameterName, out i) &&
-        !_indexHashCi.TryGetValue(parameterName, out i))
-        return -1;
-      return i;
+        int i = -1;
+
+        if (!this._indexHashCs.TryGetValue (parameterName, out i) &&
+            !this._indexHashCi.TryGetValue (parameterName, out i))
+            return -1;
+
+        return i;
     }
 
     /// <summary>
@@ -236,86 +246,97 @@ namespace EVESharp.Database.MySql
     /// <param name="value">The <see cref="MySqlParameter"/> object to locate. </param>
     /// <returns>The zero-based location of the <see cref="MySqlParameter"/> in the collection.</returns>
     /// <overloads>Gets the location of a <see cref="MySqlParameter"/> in the collection.</overloads>
-    public override int IndexOf(object value)
+    public override int IndexOf (object value)
     {
-      MySqlParameter parameter = value as MySqlParameter;
-      if (null == parameter)
-        throw new ArgumentException("Argument must be of type DbParameter", "value");
-      return _items.IndexOf(parameter);
+        MySqlParameter parameter = value as MySqlParameter;
+
+        if (null == parameter)
+            throw new ArgumentException ("Argument must be of type DbParameter", "value");
+
+        return this._items.IndexOf (parameter);
     }
 
-    internal void ParameterNameChanged(MySqlParameter p, string oldName, string newName)
+    internal void ParameterNameChanged (MySqlParameter p, string oldName, string newName)
     {
-      int index = IndexOf(oldName);
-      _indexHashCs.Remove(oldName);
-      _indexHashCi.Remove(oldName);
+        int index = this.IndexOf (oldName);
+        this._indexHashCs.Remove (oldName);
+        this._indexHashCi.Remove (oldName);
 
-      _indexHashCs.Add(newName, index);
-      _indexHashCi.Add(newName, index);
+        this._indexHashCs.Add (newName, index);
+        this._indexHashCi.Add (newName, index);
     }
 
-    private MySqlParameter InternalAdd(MySqlParameter value, int? index)
+    private MySqlParameter InternalAdd (MySqlParameter value, int? index)
     {
-      if (value == null)
-        throw new ArgumentException("The MySqlParameterCollection only accepts non-null MySqlParameter type objects.", "value");
+        if (value == null)
+            throw new ArgumentException ("The MySqlParameterCollection only accepts non-null MySqlParameter type objects.", "value");
 
-      // if the parameter is unnamed, then assign a default name
-      if (String.IsNullOrEmpty(value.ParameterName))
-        value.ParameterName = String.Format("Parameter{0}", GetNextIndex());
+        // if the parameter is unnamed, then assign a default name
+        if (string.IsNullOrEmpty (value.ParameterName))
+            value.ParameterName = string.Format ("Parameter{0}", this.GetNextIndex ());
 
-      // make sure we don't already have a parameter with this name
-      if (IndexOf(value.ParameterName) >= 0)
-      {
-        throw new MySqlException(
-            String.Format(Resources.ParameterAlreadyDefined, value.ParameterName));
-      }
-      else
-      {
-        string inComingName = value.ParameterName;
-        if (inComingName[0] == '@' || inComingName[0] == '?')
-          inComingName = inComingName.Substring(1, inComingName.Length - 1);
-        if (IndexOf(inComingName) >= 0)
-          throw new MySqlException(
-              String.Format(Resources.ParameterAlreadyDefined, value.ParameterName));
-      }
+        // make sure we don't already have a parameter with this name
+        if (this.IndexOf (value.ParameterName) >= 0)
+        {
+            throw new MySqlException (string.Format (Resources.ParameterAlreadyDefined, value.ParameterName));
+        }
+        else
+        {
+            string inComingName = value.ParameterName;
 
-      if (index == null)
-      {
-        _items.Add(value);
-        index = _items.Count - 1;
-      }
-      else
-      {
-        _items.Insert((int)index, value);
-        AdjustHashes((int)index, true);
-      }
+            if (inComingName [0] == '@' || inComingName [0] == '?')
+                inComingName = inComingName.Substring (1, inComingName.Length - 1);
 
-      _indexHashCs.Add(value.ParameterName, (int)index);
-      _indexHashCi.Add(value.ParameterName, (int)index);
+            if (this.IndexOf (inComingName) >= 0)
+                throw new MySqlException (string.Format (Resources.ParameterAlreadyDefined, value.ParameterName));
+        }
 
-      value.Collection = this;
-      return value;
+        if (index == null)
+        {
+            this._items.Add (value);
+            index = this._items.Count - 1;
+        }
+        else
+        {
+            this._items.Insert ((int) index, value);
+            this.AdjustHashes ((int) index, true);
+        }
+
+        this._indexHashCs.Add (value.ParameterName, (int) index);
+        this._indexHashCi.Add (value.ParameterName, (int) index);
+
+        value.Collection = this;
+        return value;
     }
 
-    private int GetNextIndex()
+    private int GetNextIndex ()
     {
-      int index = Count + 1;
+        int index = this.Count + 1;
 
-      while (true)
-      {
-        string name = "Parameter" + index.ToString();
-        if (!_indexHashCi.ContainsKey(name)) break;
-        index++;
-      }
-      return index;
+        while (true)
+        {
+            string name = "Parameter" + index.ToString ();
+
+            if (!this._indexHashCi.ContainsKey (name))
+                break;
+
+            index++;
+        }
+
+        return index;
     }
 
-    private static void AdjustHash(Dictionary<string, int> hash, string parameterName, int keyIndex, bool addEntry)
+    private static void AdjustHash (Dictionary <string, int> hash, string parameterName, int keyIndex, bool addEntry)
     {
-      if (!hash.ContainsKey(parameterName)) return;
-      int index = hash[parameterName];
-      if (index < keyIndex) return;
-      hash[parameterName] = addEntry ? ++index : --index;
+        if (!hash.ContainsKey (parameterName))
+            return;
+
+        int index = hash [parameterName];
+
+        if (index < keyIndex)
+            return;
+
+        hash [parameterName] = addEntry ? ++index : --index;
     }
 
     /// <summary>
@@ -324,54 +345,64 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="keyIndex"></param>
     /// <param name="addEntry"></param>
-    private void AdjustHashes(int keyIndex, bool addEntry)
+    private void AdjustHashes (int keyIndex, bool addEntry)
     {
-      for (int i = 0; i < Count; i++)
-      {
-        string name = _items[i].ParameterName;
-        AdjustHash(_indexHashCi, name, keyIndex, addEntry);
-        AdjustHash(_indexHashCs, name, keyIndex, addEntry);
-      }
+        for (int i = 0; i < this.Count; i++)
+        {
+            string name = this._items [i].ParameterName;
+            AdjustHash (this._indexHashCi, name, keyIndex, addEntry);
+            AdjustHash (this._indexHashCs, name, keyIndex, addEntry);
+        }
     }
 
-    private MySqlParameter GetParameterFlexibleInternal(string baseName)
+    private MySqlParameter GetParameterFlexibleInternal (string baseName)
     {
-      int index = IndexOf(baseName);
-      if (-1 == index)
-        index = IndexOf("?" + baseName);
-      if (-1 == index)
-        index = IndexOf("@" + baseName);
-      if (-1 != index)
-        return this[index];
-      return null;
+        int index = this.IndexOf (baseName);
+
+        if (-1 == index)
+            index = this.IndexOf ("?" + baseName);
+
+        if (-1 == index)
+            index = this.IndexOf ("@" + baseName);
+
+        if (-1 != index)
+            return this [index];
+
+        return null;
     }
 
-    internal MySqlParameter GetParameterFlexible(string parameterName, bool throwOnNotFound)
+    internal MySqlParameter GetParameterFlexible (string parameterName, bool throwOnNotFound)
     {
-      string baseName = parameterName;
-      MySqlParameter p = GetParameterFlexibleInternal(baseName);
-      if (p != null) return p;
+        string         baseName = parameterName;
+        MySqlParameter p        = this.GetParameterFlexibleInternal (baseName);
 
-      if (parameterName.StartsWith("@", StringComparison.Ordinal) || parameterName.StartsWith("?", StringComparison.Ordinal))
-        baseName = parameterName.Substring(1);
-      p = GetParameterFlexibleInternal(baseName);
-      if (p != null) return p;
+        if (p != null)
+            return p;
 
-      if (throwOnNotFound)
-        throw new ArgumentException("Parameter '" + parameterName + "' not found in the collection.");
-      return null;
+        if (parameterName.StartsWith ("@", StringComparison.Ordinal) || parameterName.StartsWith ("?", StringComparison.Ordinal))
+            baseName = parameterName.Substring (1);
+
+        p = this.GetParameterFlexibleInternal (baseName);
+
+        if (p != null)
+            return p;
+
+        if (throwOnNotFound)
+            throw new ArgumentException ("Parameter '" + parameterName + "' not found in the collection.");
+
+        return null;
     }
 
-    #region DbParameterCollection Implementation
+#region DbParameterCollection Implementation
 
     /// <summary>
     /// Adds an array of values to the end of the <see cref="MySqlParameterCollection"/>. 
     /// </summary>
     /// <param name="values"></param>
-    public override void AddRange(Array values)
+    public override void AddRange (Array values)
     {
-      foreach (DbParameter p in values)
-        Add(p);
+        foreach (DbParameter p in values)
+            this.Add (p);
     }
 
     /// <summary>
@@ -379,24 +410,24 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="parameterName"></param>
     /// <returns></returns>
-    protected override DbParameter GetParameter(string parameterName)
+    protected override DbParameter GetParameter (string parameterName)
     {
-      return InternalGetParameter(parameterName);
+        return this.InternalGetParameter (parameterName);
     }
 
-    protected override DbParameter GetParameter(int index)
+    protected override DbParameter GetParameter (int index)
     {
-      return InternalGetParameter(index);
+        return this.InternalGetParameter (index);
     }
 
-    protected override void SetParameter(string parameterName, DbParameter value)
+    protected override void SetParameter (string parameterName, DbParameter value)
     {
-      InternalSetParameter(parameterName, value as MySqlParameter);
+        this.InternalSetParameter (parameterName, value as MySqlParameter);
     }
 
-    protected override void SetParameter(int index, DbParameter value)
+    protected override void SetParameter (int index, DbParameter value)
     {
-      InternalSetParameter(index, value as MySqlParameter);
+        this.InternalSetParameter (index, value as MySqlParameter);
     }
 
     /// <summary>
@@ -404,14 +435,15 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="value">The <see cref="MySqlParameter"/> to add to the collection.</param>
     /// <returns>The index of the new <see cref="MySqlParameter"/> object.</returns>
-    public override int Add(object value)
+    public override int Add (object value)
     {
-      MySqlParameter parameter = value as MySqlParameter;
-      if (parameter == null)
-        throw new MySqlException("Only MySqlParameter objects may be stored");
+        MySqlParameter parameter = value as MySqlParameter;
 
-      parameter = Add(parameter);
-      return IndexOf(parameter);
+        if (parameter == null)
+            throw new MySqlException ("Only MySqlParameter objects may be stored");
+
+        parameter = this.Add (parameter);
+        return this.IndexOf (parameter);
     }
 
     /// <summary>
@@ -419,9 +451,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="parameterName">The name of the <see cref="MySqlParameter"/> object to find.</param>
     /// <returns>true if the collection contains the parameter; otherwise, false.</returns>
-    public override bool Contains(string parameterName)
+    public override bool Contains (string parameterName)
     {
-      return IndexOf(parameterName) != -1;
+        return this.IndexOf (parameterName) != -1;
     }
 
     /// <summary>
@@ -430,12 +462,14 @@ namespace EVESharp.Database.MySql
     /// <param name="value">The value of the <see cref="MySqlParameter"/> object to find. </param>
     /// <returns>true if the collection contains the <see cref="MySqlParameter"/> object; otherwise, false.</returns>
     /// <overloads>Gets a value indicating whether a <see cref="MySqlParameter"/> exists in the collection.</overloads>
-    public override bool Contains(object value)
+    public override bool Contains (object value)
     {
-      MySqlParameter parameter = value as MySqlParameter;
-      if (null == parameter)
-        throw new ArgumentException("Argument must be of type DbParameter", nameof(value));
-      return _items.Contains(parameter);
+        MySqlParameter parameter = value as MySqlParameter;
+
+        if (null == parameter)
+            throw new ArgumentException ("Argument must be of type DbParameter", nameof (value));
+
+        return this._items.Contains (parameter);
     }
 
     /// <summary>
@@ -443,18 +477,18 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="array"></param>
     /// <param name="index"></param>
-    public override void CopyTo(Array array, int index)
+    public override void CopyTo (Array array, int index)
     {
-      _items.ToArray().CopyTo(array, index);
+        this._items.ToArray ().CopyTo (array, index);
     }
 
     /// <summary>
     /// Returns an enumerator that iterates through the <see cref="MySqlParameterCollection"/>. 
     /// </summary>
     /// <returns></returns>
-    public override IEnumerator GetEnumerator()
+    public override IEnumerator GetEnumerator ()
     {
-      return _items.GetEnumerator();
+        return this._items.GetEnumerator ();
     }
 
     /// <summary>
@@ -462,38 +496,40 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="index"></param>
     /// <param name="value"></param>
-    public override void Insert(int index, object value)
+    public override void Insert (int index, object value)
     {
-      MySqlParameter parameter = value as MySqlParameter;
-      if (parameter == null)
-        throw new MySqlException("Only MySqlParameter objects may be stored");
-      InternalAdd(parameter, index);
+        MySqlParameter parameter = value as MySqlParameter;
+
+        if (parameter == null)
+            throw new MySqlException ("Only MySqlParameter objects may be stored");
+
+        this.InternalAdd (parameter, index);
     }
 
     /// <summary>
     /// Removes the specified MySqlParameter from the collection.
     /// </summary>
     /// <param name="value"></param>
-    public override void Remove(object value)
+    public override void Remove (object value)
     {
-      MySqlParameter p = (value as MySqlParameter);
-      p.Collection = null;
-      int index = IndexOf(p);
-      _items.Remove(p);
+        MySqlParameter p = value as MySqlParameter;
+        p.Collection = null;
+        int index = this.IndexOf (p);
+        this._items.Remove (p);
 
-      _indexHashCs.Remove(p.ParameterName);
-      _indexHashCi.Remove(p.ParameterName);
-      AdjustHashes(index, false);
+        this._indexHashCs.Remove (p.ParameterName);
+        this._indexHashCi.Remove (p.ParameterName);
+        this.AdjustHashes (index, false);
     }
 
     /// <summary>
     /// Removes the specified <see cref="MySqlParameter"/> from the collection using the parameter name.
     /// </summary>
     /// <param name="parameterName">The name of the <see cref="MySqlParameter"/> object to retrieve. </param>
-    public override void RemoveAt(string parameterName)
+    public override void RemoveAt (string parameterName)
     {
-      DbParameter p = GetParameter(parameterName);
-      Remove(p);
+        DbParameter p = this.GetParameter (parameterName);
+        this.Remove (p);
     }
 
     /// <summary>
@@ -501,19 +537,17 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="index">The zero-based index of the parameter. </param>
     /// <overloads>Removes the specified <see cref="MySqlParameter"/> from the collection.</overloads>
-    public override void RemoveAt(int index)
+    public override void RemoveAt (int index)
     {
-      object o = _items[index];
-      Remove(o);
+        object o = this._items [index];
+        this.Remove (o);
     }
 
     /// <summary>
     /// Gets an object that can be used to synchronize access to the 
     /// <see cref="MySqlParameterCollection"/>. 
     /// </summary>
-    public override object SyncRoot => (_items as IList).SyncRoot;
+    public override object SyncRoot => (this._items as IList).SyncRoot;
 
-    #endregion
-
-  }
+#endregion
 }

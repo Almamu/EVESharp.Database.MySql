@@ -26,21 +26,16 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-namespace EVESharp.Database.MySql.Authentication.FIDO.Utility
-{
-  internal static class Extensions
-  {
-    public static void Check(this int err)
-    {
-      if (err > (int)CtapStatus.Ok)
-      {
-        throw new CtapException((CtapStatus)err);
-      }
+namespace EVESharp.Database.MySql.Authentication.FIDO.Utility;
 
-      if (err < (int)FidoStatus.Ok)
-      {
-        throw new FidoException((FidoStatus)err);
-      }
+internal static class Extensions
+{
+    public static void Check (this int err)
+    {
+        if (err > (int) CtapStatus.Ok)
+            throw new CtapException ((CtapStatus) err);
+
+        if (err < (int) FidoStatus.Ok)
+            throw new FidoException ((FidoStatus) err);
     }
-  }
 }

@@ -28,19 +28,16 @@
 
 using System;
 
-namespace EVESharp.Database.MySql.Types
+namespace EVESharp.Database.MySql.Types;
+
+/// <summary>
+/// An exception thrown by MySQL when a type conversion does not succeed.
+/// </summary>
+[Serializable]
+public class MySqlConversionException : Exception
 {
-  /// <summary>
-  /// An exception thrown by MySQL when a type conversion does not succeed.
-  /// </summary>
-  [Serializable]
-  public class MySqlConversionException : Exception
-  {
     /// <summary>Initializes a new instance of the <see cref="MySqlConversionException"/> class with a specified error message. </summary>
     /// <param name="msg">Message describing the error.</param>
-    public MySqlConversionException(string msg)
-      : base(msg)
-    {
-    }
-  }
+    public MySqlConversionException (string msg)
+        : base (msg) { }
 }

@@ -37,14 +37,14 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-namespace EVESharp.Database.MySql.Common
+namespace EVESharp.Database.MySql.Common;
+
+/// <summary>
+/// Handles SSL connections for the Classic and X protocols.
+/// </summary>
+internal class Ssl
 {
-  /// <summary>
-  /// Handles SSL connections for the Classic and X protocols.
-  /// </summary>
-  internal class Ssl
-  {
-    #region Fields
+#region Fields
 
     /// <summary>
     /// Contains the connection options provided by the user.
@@ -59,38 +59,42 @@ namespace EVESharp.Database.MySql.Common
     /// <summary>
     /// Defines the supported TLS protocols.
     /// </summary>
-    private static SslProtocols[] tlsProtocols = new SslProtocols[] { SslProtocols.Tls12 };
-    private static Dictionary<string, SslProtocols> tlsConnectionRef = new Dictionary<string, SslProtocols>();
-    private static Dictionary<string, int> tlsRetry = new Dictionary<string, int>();
-    private static Object thisLock = new Object();
+    private static SslProtocols [] tlsProtocols = new SslProtocols [] {SslProtocols.Tls12};
+    private static Dictionary <string, SslProtocols> tlsConnectionRef = new Dictionary <string, SslProtocols> ();
+    private static Dictionary <string, int>          tlsRetry         = new Dictionary <string, int> ();
+    private static object                            thisLock         = new object ();
 
-    #endregion
+#endregion
 
-    public Ssl(MySqlConnectionStringBuilder settings)
+    public Ssl (MySqlConnectionStringBuilder settings)
     {
-      this._settings = settings;
-      // Set default value to true since PEM files is the standard for MySQL SSL certificates.
-      _treatCertificatesAsPemFormat = true;
+        this._settings = settings;
+        // Set default value to true since PEM files is the standard for MySQL SSL certificates.
+        this._treatCertificatesAsPemFormat = true;
     }
 
-    public Ssl(string server, MySqlSslMode sslMode, string certificateFile, MySqlCertificateStoreLocation certificateStoreLocation,
-        string certificatePassword, string certificateThumbprint, string sslCa, string sslCert, string sslKey, string tlsVersion)
+    public Ssl
+    (
+        string server,              MySqlSslMode sslMode,               string certificateFile, MySqlCertificateStoreLocation certificateStoreLocation,
+        string certificatePassword, string       certificateThumbprint, string sslCa,           string sslCert, string sslKey, string tlsVersion
+    )
     {
-      this._settings = new MySqlConnectionStringBuilder()
-      {
-        Server = server,
-        SslMode = sslMode,
-        CertificateFile = certificateFile,
-        CertificateStoreLocation = certificateStoreLocation,
-        CertificatePassword = certificatePassword,
-        CertificateThumbprint = certificateThumbprint,
-        SslCa = sslCa,
-        SslCert = sslCert,
-        SslKey = sslKey,
-        TlsVersion = tlsVersion
-      };
-      // Set default value to true since PEM files is the standard for MySQL SSL certificates.
-      _treatCertificatesAsPemFormat = true;
+        this._settings = new MySqlConnectionStringBuilder ()
+        {
+            Server                   = server,
+            SslMode                  = sslMode,
+            CertificateFile          = certificateFile,
+            CertificateStoreLocation = certificateStoreLocation,
+            CertificatePassword      = certificatePassword,
+            CertificateThumbprint    = certificateThumbprint,
+            SslCa                    = sslCa,
+            SslCert                  = sslCert,
+            SslKey                   = sslKey,
+            TlsVersion               = tlsVersion
+        };
+
+        // Set default value to true since PEM files is the standard for MySQL SSL certificates.
+        this._treatCertificatesAsPemFormat = true;
     }
 
     /// <summary>
@@ -98,61 +102,58 @@ namespace EVESharp.Database.MySql.Common
     /// </summary>
     /// <remarks>Dependent on connection string settings.
     /// Either file or store based certificates are used.</remarks>
-    private X509CertificateCollection GetPFXClientCertificates()
+    private X509CertificateCollection GetPFXClientCertificates ()
     {
-      X509CertificateCollection certs = new X509CertificateCollection();
+        X509CertificateCollection certs = new X509CertificateCollection ();
 
-      // Check for file-based certificate
-      if (_settings.CertificateFile != null)
-      {
-        X509Certificate2 clientCert = new X509Certificate2(_settings.CertificateFile,
-            _settings.CertificatePassword);
-        certs.Add(clientCert);
-        return certs;
-      }
-
-      if (_settings.CertificateStoreLocation == MySqlCertificateStoreLocation.None)
-        return certs;
-
-      StoreLocation location =
-          (_settings.CertificateStoreLocation == MySqlCertificateStoreLocation.CurrentUser) ?
-          StoreLocation.CurrentUser : StoreLocation.LocalMachine;
-
-      try
-      {
-        // Check for store-based certificate
-        X509Store store = new X509Store(StoreName.My, location);
-        store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
-
-
-        if (_settings.CertificateThumbprint == null)
+        // Check for file-based certificate
+        if (this._settings.CertificateFile != null)
         {
-          // Return all certificates from the store.
-          certs.AddRange(store.Certificates);
+            X509Certificate2 clientCert = new X509Certificate2 (this._settings.CertificateFile, this._settings.CertificatePassword);
 
-          if (certs.Count == 0)
-            throw new MySqlException("No certificates were found in the certificate store");
-
-          return certs;
+            certs.Add (clientCert);
+            return certs;
         }
-        else
+
+        if (this._settings.CertificateStoreLocation == MySqlCertificateStoreLocation.None)
+            return certs;
+
+        StoreLocation location =
+            this._settings.CertificateStoreLocation == MySqlCertificateStoreLocation.CurrentUser ? StoreLocation.CurrentUser : StoreLocation.LocalMachine;
+
+        try
         {
-          bool validateCert = _settings.SslMode == MySqlSslMode.VerifyCA || _settings.SslMode == MySqlSslMode.VerifyFull;
+            // Check for store-based certificate
+            X509Store store = new X509Store (StoreName.My, location);
+            store.Open (OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
 
-          // Find certificate with given thumbprint
-          certs.AddRange(store.Certificates.Find(X509FindType.FindByThumbprint,
-                    _settings.CertificateThumbprint, validateCert));
+            if (this._settings.CertificateThumbprint == null)
+            {
+                // Return all certificates from the store.
+                certs.AddRange (store.Certificates);
 
-          if (certs.Count == 0)
-            throw new MySqlException(String.Format(Resources.InvalidCertificateThumbprint, _settings.CertificateThumbprint));
+                if (certs.Count == 0)
+                    throw new MySqlException ("No certificates were found in the certificate store");
 
-          return certs;
+                return certs;
+            }
+            else
+            {
+                bool validateCert = this._settings.SslMode == MySqlSslMode.VerifyCA || this._settings.SslMode == MySqlSslMode.VerifyFull;
+
+                // Find certificate with given thumbprint
+                certs.AddRange (store.Certificates.Find (X509FindType.FindByThumbprint, this._settings.CertificateThumbprint, validateCert));
+
+                if (certs.Count == 0)
+                    throw new MySqlException (string.Format (Resources.InvalidCertificateThumbprint, this._settings.CertificateThumbprint));
+
+                return certs;
+            }
         }
-      }
-      catch (CryptographicException ex)
-      {
-        throw new MySqlException("Certificate couldn't be loaded from the CertificateStoreLocation", ex);
-      }
+        catch (CryptographicException ex)
+        {
+            throw new MySqlException ("Certificate couldn't be loaded from the CertificateStoreLocation", ex);
+        }
     }
 
     /// <summary>
@@ -162,94 +163,99 @@ namespace EVESharp.Database.MySql.Common
     /// <param name="encoding">The encoding used in the SSL connection.</param>
     /// <param name="connectionString">The connection string used to establish the connection.</param>
     /// <returns>A <see cref="MySqlStream"/> instance ready to initiate an SSL connection.</returns>
-    public MySqlStream StartSSL(ref Stream baseStream, Encoding encoding, string connectionString)
+    public MySqlStream StartSSL (ref Stream baseStream, Encoding encoding, string connectionString)
     {
-      // If SslCa connection option was provided, check for the file extension as it can also be set as a PFX file.
-      if (_settings.SslCa != null)
-      {
-        var fileExtension = GetCertificateFileExtension(_settings.SslCa, true);
+        // If SslCa connection option was provided, check for the file extension as it can also be set as a PFX file.
+        if (this._settings.SslCa != null)
+        {
+            string fileExtension = this.GetCertificateFileExtension (this._settings.SslCa, true);
 
-        if (fileExtension != null)
-          _treatCertificatesAsPemFormat = fileExtension != "pfx";
-      }
+            if (fileExtension != null)
+                this._treatCertificatesAsPemFormat = fileExtension != "pfx";
+        }
 
-      RemoteCertificateValidationCallback sslValidateCallback =
-          new RemoteCertificateValidationCallback(ServerCheckValidation);
-      SslStream ss = new SslStream(baseStream, false, sslValidateCallback, null);
-      X509CertificateCollection certs = (_treatCertificatesAsPemFormat &&
-        _settings.CertificateStoreLocation == MySqlCertificateStoreLocation.None)
-        ? new X509CertificateCollection()
-        : GetPFXClientCertificates();
+        RemoteCertificateValidationCallback sslValidateCallback =
+            new RemoteCertificateValidationCallback (this.ServerCheckValidation);
 
-      string connectionId = connectionString.GetHashCode().ToString();
-      SslProtocols tlsProtocol = SslProtocols.None;
-      if (_settings.TlsVersion != null)
-      {
+        SslStream ss = new SslStream (baseStream, false, sslValidateCallback, null);
+
+        X509CertificateCollection certs = this._treatCertificatesAsPemFormat && this._settings.CertificateStoreLocation == MySqlCertificateStoreLocation.None
+            ? new X509CertificateCollection ()
+            : this.GetPFXClientCertificates ();
+
+        string       connectionId = connectionString.GetHashCode ().ToString ();
+        SslProtocols tlsProtocol  = SslProtocols.None;
+
+        if (this._settings.TlsVersion != null)
+        {
 #if NET452 || NETSTANDARD2_0
-        if (_settings.TlsVersion.Equals("Tls13", StringComparison.OrdinalIgnoreCase))
-          throw new NotSupportedException(Resources.Tlsv13NotSupported);
+            if (this._settings.TlsVersion.Equals ("Tls13", StringComparison.OrdinalIgnoreCase))
+                throw new NotSupportedException (Resources.Tlsv13NotSupported);
 #endif
 
-        SslProtocols sslProtocolsToUse = (SslProtocols)Enum.Parse(typeof(SslProtocols), _settings.TlsVersion);
-        List<SslProtocols> listProtocols = new List<SslProtocols>();
+            SslProtocols        sslProtocolsToUse = (SslProtocols) Enum.Parse (typeof (SslProtocols), this._settings.TlsVersion);
+            List <SslProtocols> listProtocols     = new List <SslProtocols> ();
 
 #if NET48 || NETSTANDARD2_1 || NET5_0_OR_GREATER
         if (sslProtocolsToUse.HasFlag((SslProtocols)12288))
           listProtocols.Add((SslProtocols)12288);
 #endif
 
-        if (sslProtocolsToUse.HasFlag(SslProtocols.Tls12))
-          listProtocols.Add(SslProtocols.Tls12);
+            if (sslProtocolsToUse.HasFlag (SslProtocols.Tls12))
+                listProtocols.Add (SslProtocols.Tls12);
 
-        tlsProtocols = listProtocols.ToArray();
-      }
+            tlsProtocols = listProtocols.ToArray ();
+        }
 
-      lock (thisLock)
-      {
-        if (tlsConnectionRef.ContainsKey(connectionId))
+        lock (thisLock)
         {
-          tlsProtocol = tlsConnectionRef[connectionId];
-        }
-        else
-        {
-          if (!tlsRetry.ContainsKey(connectionId))
-          {
-            tlsRetry[connectionId] = 0;
-          }
-          for (int i = tlsRetry[connectionId]; i < tlsProtocols.Length; i++)
-          {
-            tlsProtocol |= tlsProtocols[i];
-          }
-        }
-        try
-        {
-          tlsProtocol = (tlsProtocol == SslProtocols.None) ? SslProtocols.Tls12 : tlsProtocol;
-          if (!ss.AuthenticateAsClientAsync(_settings.Server, certs, tlsProtocol, false).Wait((int)_settings.ConnectionTimeout * 1000))
-            throw new AuthenticationException($"Authentication to host '{_settings.Server}' failed.");
-          tlsConnectionRef[connectionId] = tlsProtocol;
-          tlsRetry.Remove(connectionId);
-        }
-        catch (AggregateException ex)
-        {
-          if (ex.GetBaseException() is IOException)
-          {
-            tlsConnectionRef.Remove(connectionId);
-            if (tlsRetry.ContainsKey(connectionId))
+            if (tlsConnectionRef.ContainsKey (connectionId))
             {
-              if (tlsRetry[connectionId] > tlsProtocols.Length)
-                throw new MySqlException(Resources.SslConnectionError, ex);
-              tlsRetry[connectionId] += 1;
+                tlsProtocol = tlsConnectionRef [connectionId];
             }
-          }
-          throw ex.GetBaseException();
+            else
+            {
+                if (!tlsRetry.ContainsKey (connectionId))
+                    tlsRetry [connectionId] = 0;
+
+                for (int i = tlsRetry [connectionId]; i < tlsProtocols.Length; i++)
+                    tlsProtocol |= tlsProtocols [i];
+            }
+
+            try
+            {
+                tlsProtocol = tlsProtocol == SslProtocols.None ? SslProtocols.Tls12 : tlsProtocol;
+
+                if (!ss.AuthenticateAsClientAsync (this._settings.Server, certs, tlsProtocol, false).Wait ((int) this._settings.ConnectionTimeout * 1000))
+                    throw new AuthenticationException ($"Authentication to host '{this._settings.Server}' failed.");
+
+                tlsConnectionRef [connectionId] = tlsProtocol;
+                tlsRetry.Remove (connectionId);
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.GetBaseException () is IOException)
+                {
+                    tlsConnectionRef.Remove (connectionId);
+
+                    if (tlsRetry.ContainsKey (connectionId))
+                    {
+                        if (tlsRetry [connectionId] > tlsProtocols.Length)
+                            throw new MySqlException (Resources.SslConnectionError, ex);
+
+                        tlsRetry [connectionId] += 1;
+                    }
+                }
+
+                throw ex.GetBaseException ();
+            }
         }
-      }
 
-      baseStream = ss;
-      MySqlStream stream = new MySqlStream(ss, encoding, false);
-      stream.SequenceByte = 2;
+        baseStream = ss;
+        MySqlStream stream = new MySqlStream (ss, encoding, false);
+        stream.SequenceByte = 2;
 
-      return stream;
+        return stream;
     }
 
     /// <summary>
@@ -260,34 +266,34 @@ namespace EVESharp.Database.MySql.Common
     /// <param name="chain">The chain of certificate authorities associated with the remote certificate.</param>
     /// <param name="sslPolicyErrors">One or more errors associated with the remote certificate.</param>
     /// <returns><c>true</c> if no errors were found based on the selected SSL mode; <c>false</c>, otherwise.</returns>
-    private bool ServerCheckValidation(object sender, X509Certificate certificate,
-                                              X509Chain chain, SslPolicyErrors sslPolicyErrors)
+    private bool ServerCheckValidation
+    (
+        object    sender, X509Certificate certificate,
+        X509Chain chain,  SslPolicyErrors sslPolicyErrors
+    )
     {
-      if (sslPolicyErrors == SslPolicyErrors.None)
-        return true;
+        if (sslPolicyErrors == SslPolicyErrors.None)
+            return true;
 
-      if (_settings.SslMode == MySqlSslMode.Required ||
-          _settings.SslMode == MySqlSslMode.Preferred)
-      {
-        // Tolerate all certificate errors.
-        return true;
-      }
+        if (this._settings.SslMode == MySqlSslMode.Required || this._settings.SslMode == MySqlSslMode.Preferred)
+            // Tolerate all certificate errors.
+            return true;
 
-      // Validate PEM certificates using Bouncy Castle.
-      if (_treatCertificatesAsPemFormat)
-      {
-        SslPemCertificateValidator.ValidateCertificate(chain, _settings);
-        return true;
-      }
-      // Validate PFX certificate errors.
-      else if (_settings.SslMode == MySqlSslMode.VerifyCA &&
-          sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch)
-      {
-        // Tolerate name mismatch in certificate, if full validation is not requested.
-        return true;
-      }
+        // Validate PEM certificates using Bouncy Castle.
+        if (this._treatCertificatesAsPemFormat)
+        {
+            SslPemCertificateValidator.ValidateCertificate (chain, this._settings);
+            return true;
+        }
+        // Validate PFX certificate errors.
+        else if (this._settings.SslMode == MySqlSslMode.VerifyCA &&
+                 sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch)
+        {
+            // Tolerate name mismatch in certificate, if full validation is not requested.
+            return true;
+        }
 
-      return false;
+        return false;
     }
 
     /// <summary>
@@ -297,19 +303,19 @@ namespace EVESharp.Database.MySql.Common
     /// <param name="toLowerCase">Flag to indicate if the result should be converted to lower case.</param>
     /// <remarks>The . character is ommited from the result.</remarks>
     /// <returns></returns>
-    private string GetCertificateFileExtension(string filePath, bool toLowerCase)
+    private string GetCertificateFileExtension (string filePath, bool toLowerCase)
     {
-      if (filePath == null || !File.Exists(filePath))
-        return null;
+        if (filePath == null || !File.Exists (filePath))
+            return null;
 
-      var extension = Path.GetExtension(filePath);
-      extension = string.IsNullOrEmpty(extension)
-        ? null
-        : extension.Substring(extension.IndexOf(".") + 1);
+        string extension = Path.GetExtension (filePath);
 
-      return toLowerCase
-        ? extension.ToLowerInvariant()
-        : extension;
+        extension = string.IsNullOrEmpty (extension)
+            ? null
+            : extension.Substring (extension.IndexOf (".") + 1);
+
+        return toLowerCase
+            ? extension.ToLowerInvariant ()
+            : extension;
     }
-  }
 }

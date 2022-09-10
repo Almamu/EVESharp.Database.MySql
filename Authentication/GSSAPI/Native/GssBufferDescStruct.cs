@@ -29,15 +29,14 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native;
+
+[StructLayout (LayoutKind.Sequential)]
+internal struct GssBufferDescStruct
 {
-  [StructLayout(LayoutKind.Sequential)]
-  internal struct GssBufferDescStruct
-  {
     /// size_t->unsigned int
     public uint length;
 
     /// void*
     public IntPtr value;
-  }
 }

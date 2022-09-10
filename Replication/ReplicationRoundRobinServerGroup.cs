@@ -30,18 +30,18 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace EVESharp.Database.MySql.Replication
+namespace EVESharp.Database.MySql.Replication;
+
+/// <summary>
+/// Class that implements Round Robing Load Balancing technique.
+/// </summary>
+public class ReplicationRoundRobinServerGroup : ReplicationServerGroup
 {
-  /// <summary>
-  /// Class that implements Round Robing Load Balancing technique.
-  /// </summary>
-  public class ReplicationRoundRobinServerGroup : ReplicationServerGroup
-  {
     private int nextServer;
 
-    public ReplicationRoundRobinServerGroup(string name, int retryTime) : base(name, retryTime)
+    public ReplicationRoundRobinServerGroup (string name, int retryTime) : base (name, retryTime)
     {
-      nextServer = -1;
+        this.nextServer = -1;
     }
 
     /// <summary>
@@ -49,19 +49,26 @@ namespace EVESharp.Database.MySql.Replication
     /// </summary>
     /// <param name="isSource">Flag indicating if the server to return must be a source.</param>
     /// <returns>A <see cref="ReplicationServer"/> object representing the next available server.</returns>
-    internal protected override ReplicationServer GetServer(bool isSource)
+    protected internal override ReplicationServer GetServer (bool isSource)
     {
-      for (int i = 0; i < Servers.Count; i++)
-      {
-        nextServer++;
-        if (nextServer == Servers.Count)
-          nextServer = 0;
-        ReplicationServer s = Servers[nextServer];
-        if (!s.IsAvailable) continue;
-        if (isSource && !s.IsSource) continue;
-        return s;
-      }
-      return null;
+        for (int i = 0; i < this.Servers.Count; i++)
+        {
+            this.nextServer++;
+
+            if (this.nextServer == this.Servers.Count)
+                this.nextServer = 0;
+
+            ReplicationServer s = this.Servers [this.nextServer];
+
+            if (!s.IsAvailable)
+                continue;
+
+            if (isSource && !s.IsSource)
+                continue;
+
+            return s;
+        }
+
+        return null;
     }
-  }
 }

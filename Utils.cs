@@ -30,30 +30,37 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+internal class Utils
 {
-  internal class Utils
-  {
-    public static string ReadResource(string name)
+    public static string ReadResource (string name)
     {
-      string rez = ReadResourceInternal(name);
-      if (rez != null) return rez;
-      return ReadResourceInternal("MySqlClient/" + name);
+        string rez = ReadResourceInternal (name);
+
+        if (rez != null)
+            return rez;
+
+        return ReadResourceInternal ("MySqlClient/" + name);
     }
 
-    public static string ReadResourceInternal(string name)
+    public static string ReadResourceInternal (string name)
     {
-      var assembly = Assembly.GetExecutingAssembly();
-      var resName = assembly.GetName().Name + "." + name.Replace(" ", "_")
-                                                     .Replace("\\", ".")
-                                                     .Replace("/", ".");
-      var resourceStream = assembly.GetManifestResourceStream(resName);
-      if (resourceStream == null) return null;
+        Assembly assembly = Assembly.GetExecutingAssembly ();
 
-      using (var reader = new StreamReader(resourceStream, Encoding.UTF8))
-      {
-        return reader.ReadToEnd();
-      }
+        string resName = assembly.GetName ().Name + "." + name.Replace (" ", "_")
+                                                              .Replace ("\\", ".")
+                                                              .Replace ("/",  ".");
+
+        Stream resourceStream = assembly.GetManifestResourceStream (resName);
+
+        if (resourceStream == null)
+            return null;
+
+        using (StreamReader reader = new StreamReader (resourceStream, Encoding.UTF8))
+        {
+            return reader.ReadToEnd ();
+        }
     }
 
     /// <summary>
@@ -62,12 +69,11 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="quotedString">The string to unquote.</param>
     /// <returns></returns>
-    public static string UnquoteString(string quotedString)
+    public static string UnquoteString (string quotedString)
     {
-      if (quotedString.StartsWith("`"))
-        return quotedString.Substring(1, quotedString.Length - 2).Replace("``", "`");
-      else
-        return quotedString;
+        if (quotedString.StartsWith ("`"))
+            return quotedString.Substring (1, quotedString.Length - 2).Replace ("``", "`");
+        else
+            return quotedString;
     }
-  }
 }

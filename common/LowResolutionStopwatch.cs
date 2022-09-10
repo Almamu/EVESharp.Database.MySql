@@ -28,74 +28,76 @@
 
 using System;
 
-namespace EVESharp.Database.MySql.Common
+namespace EVESharp.Database.MySql.Common;
+
+/// <summary>
+/// This class is modeled after .NET Stopwatch. It provides better
+/// performance (no system calls).It is however less precise than
+/// .NET Stopwatch, measuring in milliseconds. It is adequate to use
+/// when high-precision is not required (e.g for measuring IO timeouts),
+/// but not for other tasks.
+/// </summary>
+internal class LowResolutionStopwatch
 {
-  /// <summary>
-  /// This class is modeled after .NET Stopwatch. It provides better
-  /// performance (no system calls).It is however less precise than
-  /// .NET Stopwatch, measuring in milliseconds. It is adequate to use
-  /// when high-precision is not required (e.g for measuring IO timeouts),
-  /// but not for other tasks.
-  /// </summary>
-  internal class LowResolutionStopwatch
-  {
-    long _startTime;
-    public static readonly long Frequency = 1000; // measure in milliseconds
+    private                long _startTime;
+    public static readonly long Frequency        = 1000; // measure in milliseconds
     public static readonly bool IsHighResolution = false;
 
-    public LowResolutionStopwatch()
+    public LowResolutionStopwatch ()
     {
-      ElapsedMilliseconds = 0;
+        this.ElapsedMilliseconds = 0;
     }
+
     public long ElapsedMilliseconds { get; private set; }
 
-    public void Start()
+    public void Start ()
     {
-      _startTime = Environment.TickCount;
+        this._startTime = Environment.TickCount;
     }
 
-    public void Stop()
+    public void Stop ()
     {
-      long now = Environment.TickCount;
-      long elapsed;
+        long now = Environment.TickCount;
+        long elapsed;
 
-      // Calculate time different, handle possible overflow
-      if (now < _startTime)
-      {
-        if (now < 0)
-          elapsed = 1 + ((long)Int32.MaxValue - _startTime) + (now - (long)Int32.MinValue);
+        // Calculate time different, handle possible overflow
+        if (now < this._startTime)
+        {
+            if (now < 0)
+                elapsed = 1 + ((long) int.MaxValue - this._startTime) + (now - (long) int.MinValue);
+            else
+                elapsed = int.MaxValue - this._startTime + now;
+        }
         else
-          elapsed = Int32.MaxValue - _startTime + now;
-      }
-      else
-        elapsed = now - _startTime;
+        {
+            elapsed = now - this._startTime;
+        }
 
-      ElapsedMilliseconds += elapsed;
+        this.ElapsedMilliseconds += elapsed;
     }
 
-    public void Reset()
+    public void Reset ()
     {
-      ElapsedMilliseconds = 0;
-      _startTime = 0;
+        this.ElapsedMilliseconds = 0;
+        this._startTime          = 0;
     }
 
-    public TimeSpan Elapsed => new TimeSpan(0, 0, 0, 0, (int)ElapsedMilliseconds);
+    public TimeSpan Elapsed => new TimeSpan (0, 0, 0, 0, (int) this.ElapsedMilliseconds);
 
-    public static LowResolutionStopwatch StartNew()
+    public static LowResolutionStopwatch StartNew ()
     {
-      LowResolutionStopwatch sw = new LowResolutionStopwatch();
-      sw.Start();
-      return sw;
+        LowResolutionStopwatch sw = new LowResolutionStopwatch ();
+        sw.Start ();
+        return sw;
     }
 
-    public static long GetTimestamp()
+    public static long GetTimestamp ()
     {
-      return Environment.TickCount;
+        return Environment.TickCount;
     }
 
-    bool IsRunning()
+    private bool IsRunning ()
     {
-      return (_startTime != 0);
+        return this._startTime != 0;
     }
-  }
 }

@@ -32,117 +32,117 @@ using System.Collections;
 using System.Collections.Generic;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+internal abstract class Statement
 {
-  internal abstract class Statement
-  {
-    protected MySqlCommand command;
-    private readonly List<MySqlPacket> _buffers;
-    protected string commandText;
-    protected int paramsPosition;
+    protected        MySqlCommand       command;
+    private readonly List <MySqlPacket> _buffers;
+    protected        string             commandText;
+    protected        int                paramsPosition;
 
-    private Statement(MySqlCommand cmd)
+    private Statement (MySqlCommand cmd)
     {
-      command = cmd;
-      _buffers = new List<MySqlPacket>();
+        this.command  = cmd;
+        this._buffers = new List <MySqlPacket> ();
     }
 
-    protected Statement(MySqlCommand cmd, string text)
-      : this(cmd)
+    protected Statement (MySqlCommand cmd, string text)
+        : this (cmd)
     {
-      commandText = text;
+        this.commandText = text;
     }
 
-    #region Properties
+#region Properties
 
-    public virtual string ResolvedCommandText
+    public virtual string ResolvedCommandText => this.commandText;
+
+    protected Driver Driver => this.command.Connection.driver;
+
+    protected MySqlConnection Connection => this.command.Connection;
+
+    protected MySqlParameterCollection Parameters => this.command.Parameters;
+
+    protected MySqlAttributeCollection Attributes => this.command.Attributes;
+
+#endregion
+
+    public virtual void Close (MySqlDataReader reader) { }
+
+    public virtual void Resolve (bool preparing) { }
+
+    public virtual void Execute ()
     {
-      get { return commandText; }
+        // we keep a reference to this until we are done
+        this.BindParameters ();
+        this.ExecuteNext ();
     }
 
-    protected Driver Driver => command.Connection.driver;
-
-    protected MySqlConnection Connection => command.Connection;
-
-    protected MySqlParameterCollection Parameters => command.Parameters;
-
-    protected MySqlAttributeCollection Attributes => command.Attributes;
-
-    #endregion
-
-    public virtual void Close(MySqlDataReader reader)
+    public virtual bool ExecuteNext ()
     {
+        if (this._buffers.Count == 0)
+            return false;
+
+        MySqlPacket packet = this._buffers [0];
+        this.Driver.SendQuery (packet, this.paramsPosition);
+        this._buffers.RemoveAt (0);
+        return true;
     }
 
-    public virtual void Resolve(bool preparing)
+    protected virtual void BindParameters ()
     {
-    }
+        MySqlParameterCollection parameters = this.command.Parameters;
+        MySqlAttributeCollection attributes = this.command.Attributes;
+        int                      index      = 0;
 
-    public virtual void Execute()
-    {
-      // we keep a reference to this until we are done
-      BindParameters();
-      ExecuteNext();
-    }
-
-    public virtual bool ExecuteNext()
-    {
-      if (_buffers.Count == 0)
-        return false;
-
-      MySqlPacket packet = _buffers[0];
-      Driver.SendQuery(packet, paramsPosition);
-      _buffers.RemoveAt(0);
-      return true;
-    }
-
-    protected virtual void BindParameters()
-    {
-      MySqlParameterCollection parameters = command.Parameters;
-      MySqlAttributeCollection attributes = command.Attributes;
-      int index = 0;
-
-      while (true)
-      {
-        MySqlPacket packet = BuildQueryAttributesPacket(attributes);
-        InternalBindParameters(ResolvedCommandText, parameters, packet);
-
-        // if we are not batching, then we are done.  This is only really relevant the
-        // first time through
-        if (command.Batch == null) return;
-        while (index < command.Batch.Count)
+        while (true)
         {
-          MySqlCommand batchedCmd = command.Batch[index++];
-          packet = (MySqlPacket)_buffers[_buffers.Count - 1];
+            MySqlPacket packet = this.BuildQueryAttributesPacket (attributes);
+            this.InternalBindParameters (this.ResolvedCommandText, parameters, packet);
 
-          // now we make a guess if this statement will fit in our current stream
-          long estimatedCmdSize = batchedCmd.EstimatedSize();
-          if (((packet.Length - 4) + estimatedCmdSize) > Connection.driver.MaxPacketSize)
-            // it won't, so we raise an exception to avoid a partial batch 
-            throw new MySqlException(Resources.QueryTooLarge, (int)MySqlErrorCode.PacketTooLarge);
+            // if we are not batching, then we are done.  This is only really relevant the
+            // first time through
+            if (this.command.Batch == null)
+                return;
 
-          // looks like we might have room for it so we remember the current end of the stream
-          _buffers.RemoveAt(_buffers.Count - 1);
-          //long originalLength = packet.Length - 4;
+            while (index < this.command.Batch.Count)
+            {
+                MySqlCommand batchedCmd = this.command.Batch [index++];
+                packet = (MySqlPacket) this._buffers [this._buffers.Count - 1];
 
-          // and attempt to stream the next command
-          string text = ResolvedCommandText;
-          if (text.StartsWith("(", StringComparison.Ordinal))
-            packet.WriteStringNoNull(", ");
-          else
-            packet.WriteStringNoNull("; ");
-          InternalBindParameters(text, batchedCmd.Parameters, packet);
-          if ((packet.Length - 4) > Connection.driver.MaxPacketSize)
-          {
-            //TODO
-            //stream.InternalBuffer.SetLength(originalLength);
-            parameters = batchedCmd.Parameters;
-            break;
-          }
+                // now we make a guess if this statement will fit in our current stream
+                long estimatedCmdSize = batchedCmd.EstimatedSize ();
+
+                if (packet.Length - 4 + estimatedCmdSize > this.Connection.driver.MaxPacketSize)
+                    // it won't, so we raise an exception to avoid a partial batch 
+                    throw new MySqlException (Resources.QueryTooLarge, (int) MySqlErrorCode.PacketTooLarge);
+
+                // looks like we might have room for it so we remember the current end of the stream
+                this._buffers.RemoveAt (this._buffers.Count - 1);
+                //long originalLength = packet.Length - 4;
+
+                // and attempt to stream the next command
+                string text = this.ResolvedCommandText;
+
+                if (text.StartsWith ("(", StringComparison.Ordinal))
+                    packet.WriteStringNoNull (", ");
+                else
+                    packet.WriteStringNoNull ("; ");
+
+                this.InternalBindParameters (text, batchedCmd.Parameters, packet);
+
+                if (packet.Length - 4 > this.Connection.driver.MaxPacketSize)
+                {
+                    //TODO
+                    //stream.InternalBuffer.SetLength(originalLength);
+                    parameters = batchedCmd.Parameters;
+                    break;
+                }
+            }
+
+            if (index == this.command.Batch.Count)
+                return;
         }
-        if (index == command.Batch.Count)
-          return;
-      }
     }
 
     /// <summary>
@@ -150,107 +150,122 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="attributes">Collection of attributes</param>
     /// <returns>A <see cref="MySqlPacket"/></returns>
-    private MySqlPacket BuildQueryAttributesPacket(MySqlAttributeCollection attributes)
+    private MySqlPacket BuildQueryAttributesPacket (MySqlAttributeCollection attributes)
     {
-      MySqlPacket packet;
-      packet = new MySqlPacket(Driver.Encoding) { Version = Driver.Version };
-      packet.WriteByte(0);
+        MySqlPacket packet;
+        packet = new MySqlPacket (this.Driver.Encoding) {Version = this.Driver.Version};
+        packet.WriteByte (0);
 
-      if (attributes.Count > 0 && !Driver.SupportsQueryAttributes)
-        MySqlTrace.LogWarning(Connection.ServerThread, string.Format(Resources.QueryAttributesNotSupported, Driver.Version));
-      else if (Driver.SupportsQueryAttributes)
-      {
-        int paramCount = attributes.Count;
-        packet.WriteLength(paramCount); // int<lenenc> parameter_count - Number of parameters
-        packet.WriteByte(1); // int<lenenc> parameter_set_count - Number of parameter sets. Currently always 1
-
-        if (paramCount > 0)
+        if (attributes.Count > 0 && !this.Driver.SupportsQueryAttributes)
         {
-          // now prepare our null map
-          BitArray _nullMap = new BitArray(paramCount);
-          int numNullBytes = (_nullMap.Length + 7) / 8;
-          int _nullMapPosition = packet.Position;
-          packet.Position += numNullBytes;  // leave room for our null map
-          packet.WriteByte((byte)1); // new_params_bind_flag - Always 1. Malformed packet error if not 1
-
-          // set type and name for each attribute
-          foreach (MySqlAttribute attribute in attributes)
-          {
-            packet.WriteInteger(attribute.GetPSType(), 2);
-            packet.WriteLenString(attribute.AttributeName);
-          }
-
-          // set value for each attribute
-          for (int i = 0; i < attributes.Count; i++)
-          {
-            MySqlAttribute attr = attributes[i];
-            _nullMap[i] = (attr.Value == DBNull.Value || attr.Value == null);
-            if (_nullMap[i]) continue;
-            attr.Serialize(packet, true, Connection.Settings);
-          }
-
-          byte[] tempByteArray = new byte[(_nullMap.Length + 7) >> 3];
-          _nullMap.CopyTo(tempByteArray, 0);
-
-          Array.Copy(tempByteArray, 0, packet.Buffer, _nullMapPosition, tempByteArray.Length);
+            MySqlTrace.LogWarning (this.Connection.ServerThread, string.Format (Resources.QueryAttributesNotSupported, this.Driver.Version));
         }
-      }
+        else if (this.Driver.SupportsQueryAttributes)
+        {
+            int paramCount = attributes.Count;
+            packet.WriteLength (paramCount); // int<lenenc> parameter_count - Number of parameters
+            packet.WriteByte (1); // int<lenenc> parameter_set_count - Number of parameter sets. Currently always 1
 
-      paramsPosition = packet.Position;
-      return packet;
+            if (paramCount > 0)
+            {
+                // now prepare our null map
+                BitArray _nullMap         = new BitArray (paramCount);
+                int      numNullBytes     = (_nullMap.Length + 7) / 8;
+                int      _nullMapPosition = packet.Position;
+                packet.Position += numNullBytes; // leave room for our null map
+                packet.WriteByte ((byte) 1); // new_params_bind_flag - Always 1. Malformed packet error if not 1
+
+                // set type and name for each attribute
+                foreach (MySqlAttribute attribute in attributes)
+                {
+                    packet.WriteInteger (attribute.GetPSType (), 2);
+                    packet.WriteLenString (attribute.AttributeName);
+                }
+
+                // set value for each attribute
+                for (int i = 0; i < attributes.Count; i++)
+                {
+                    MySqlAttribute attr = attributes [i];
+                    _nullMap [i] = attr.Value == DBNull.Value || attr.Value == null;
+
+                    if (_nullMap [i])
+                        continue;
+
+                    attr.Serialize (packet, true, this.Connection.Settings);
+                }
+
+                byte [] tempByteArray = new byte[(_nullMap.Length + 7) >> 3];
+                _nullMap.CopyTo (tempByteArray, 0);
+
+                Array.Copy (tempByteArray, 0, packet.Buffer, _nullMapPosition, tempByteArray.Length);
+            }
+        }
+
+        this.paramsPosition = packet.Position;
+        return packet;
     }
 
-    private void InternalBindParameters(string sql, MySqlParameterCollection parameters, MySqlPacket packet)
+    private void InternalBindParameters (string sql, MySqlParameterCollection parameters, MySqlPacket packet)
     {
-      bool sqlServerMode = command.Connection.Settings.SqlServerMode;
+        bool sqlServerMode = this.command.Connection.Settings.SqlServerMode;
 
-      MySqlTokenizer tokenizer = new MySqlTokenizer(sql)
-      {
-        ReturnComments = true,
-        SqlServerMode = sqlServerMode
-      };
-
-      int pos = 0;
-      string token = tokenizer.NextToken();
-      int parameterCount = 0;
-      while (token != null)
-      {
-        // serialize everything that came before the token (i.e. whitespace)
-        packet.WriteStringNoNull(sql.Substring(pos, tokenizer.StartIndex - pos));
-        pos = tokenizer.StopIndex;
-
-        if (MySqlTokenizer.IsParameter(token))
+        MySqlTokenizer tokenizer = new MySqlTokenizer (sql)
         {
-          if ((!parameters.containsUnnamedParameters && token.Length == 1 && parameterCount > 0) || parameters.containsUnnamedParameters && token.Length > 1)
-            throw new MySqlException(Resources.MixedParameterNamingNotAllowed);
+            ReturnComments = true,
+            SqlServerMode  = sqlServerMode
+        };
 
-          parameters.containsUnnamedParameters = token.Length == 1;
-          if (SerializeParameter(parameters, packet, token, parameterCount))
-            token = null;
-          parameterCount++;
+        int    pos            = 0;
+        string token          = tokenizer.NextToken ();
+        int    parameterCount = 0;
+
+        while (token != null)
+        {
+            // serialize everything that came before the token (i.e. whitespace)
+            packet.WriteStringNoNull (sql.Substring (pos, tokenizer.StartIndex - pos));
+            pos = tokenizer.StopIndex;
+
+            if (MySqlTokenizer.IsParameter (token))
+            {
+                if ((!parameters.containsUnnamedParameters && token.Length == 1 && parameterCount > 0) ||
+                    (parameters.containsUnnamedParameters && token.Length > 1))
+                    throw new MySqlException (Resources.MixedParameterNamingNotAllowed);
+
+                parameters.containsUnnamedParameters = token.Length == 1;
+
+                if (this.SerializeParameter (parameters, packet, token, parameterCount))
+                    token = null;
+
+                parameterCount++;
+            }
+
+            if (token != null)
+            {
+                if (sqlServerMode && tokenizer.Quoted && token.StartsWith ("[", StringComparison.Ordinal))
+                    token = string.Format ("`{0}`", token.Substring (1, token.Length - 2));
+
+                packet.WriteStringNoNull (token);
+            }
+
+            token = tokenizer.NextToken ();
         }
 
-        if (token != null)
-        {
-          if (sqlServerMode && tokenizer.Quoted && token.StartsWith("[", StringComparison.Ordinal))
-            token = String.Format("`{0}`", token.Substring(1, token.Length - 2));
-          packet.WriteStringNoNull(token);
-        }
-        token = tokenizer.NextToken();
-      }
-      _buffers.Add(packet);
+        this._buffers.Add (packet);
     }
 
-    protected virtual bool ShouldIgnoreMissingParameter(string parameterName)
+    protected virtual bool ShouldIgnoreMissingParameter (string parameterName)
     {
-      if (Connection.Settings.AllowUserVariables)
-        return true;
-      if (parameterName.StartsWith("@" + StoredProcedure.ParameterPrefix, StringComparison.OrdinalIgnoreCase))
-        return true;
-      if (parameterName.Length > 1 &&
-          (parameterName[1] == '`' || parameterName[1] == '\''))
-        return true;
-      return false;
+        if (this.Connection.Settings.AllowUserVariables)
+            return true;
+
+        if (parameterName.StartsWith ("@" + StoredProcedure.ParameterPrefix, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (parameterName.Length > 1 &&
+            (parameterName [1] == '`' || parameterName [1] == '\''))
+            return true;
+
+        return false;
     }
 
     /// <summary>
@@ -262,32 +277,37 @@ namespace EVESharp.Database.MySql
     /// </para>
     /// </remarks>
     /// <returns>True if the parameter was successfully serialized, false otherwise.</returns>
-    private bool SerializeParameter(MySqlParameterCollection parameters,
-                                    MySqlPacket packet, string parmName, int parameterIndex)
+    private bool SerializeParameter
+    (
+        MySqlParameterCollection parameters,
+        MySqlPacket              packet, string parmName, int parameterIndex
+    )
     {
-      MySqlParameter parameter = null;
+        MySqlParameter parameter = null;
 
-      if (!parameters.containsUnnamedParameters)
-        parameter = parameters.GetParameterFlexible(parmName, false);
-      else
-      {
-        if (parameterIndex <= parameters.Count)
-          parameter = parameters[parameterIndex];
+        if (!parameters.containsUnnamedParameters)
+        {
+            parameter = parameters.GetParameterFlexible (parmName, false);
+        }
         else
-          throw new MySqlException(Resources.ParameterIndexNotFound);
-      }
+        {
+            if (parameterIndex <= parameters.Count)
+                parameter = parameters [parameterIndex];
+            else
+                throw new MySqlException (Resources.ParameterIndexNotFound);
+        }
 
-      if (parameter == null)
-      {
-        // if we are allowing user variables and the parameter name starts with @
-        // then we can't throw an exception
-        if (parmName.StartsWith("@", StringComparison.Ordinal) && ShouldIgnoreMissingParameter(parmName))
-          return false;
-        throw new MySqlException(
-            String.Format(Resources.ParameterMustBeDefined, parmName));
-      }
-      parameter.Serialize(packet, false, Connection.Settings);
-      return true;
+        if (parameter == null)
+        {
+            // if we are allowing user variables and the parameter name starts with @
+            // then we can't throw an exception
+            if (parmName.StartsWith ("@", StringComparison.Ordinal) && this.ShouldIgnoreMissingParameter (parmName))
+                return false;
+
+            throw new MySqlException (string.Format (Resources.ParameterMustBeDefined, parmName));
+        }
+
+        parameter.Serialize (packet, false, this.Connection.Settings);
+        return true;
     }
-  }
 }

@@ -31,18 +31,18 @@ using System.Collections.Generic;
 using System.IO;
 using EVESharp.Database.MySql.Common;
 
-namespace EVESharp.Database.MySql.Memcached
+namespace EVESharp.Database.MySql.Memcached;
+
+/// <summary>
+/// An interface of the client memcached protocol. This class is abstract for 
+/// implementation of the Memcached client interface see <see cref="TextClient"/> for the 
+/// text protocol version and <see cref="BinaryClient"/> for the binary protocol version.
+/// 
+/// -------- This class has been deprecated and will be removed in a future version ------
+///
+/// </summary>
+public abstract class Client
 {
-  /// <summary>
-  /// An interface of the client memcached protocol. This class is abstract for 
-  /// implementation of the Memcached client interface see <see cref="TextClient"/> for the 
-  /// text protocol version and <see cref="BinaryClient"/> for the binary protocol version.
-  /// 
-  /// -------- This class has been deprecated and will be removed in a future version ------
-  ///
-  /// </summary>
-  public abstract class Client
-  {
     /// <summary>
     /// The port used by the connection.
     /// </summary>
@@ -66,39 +66,36 @@ namespace EVESharp.Database.MySql.Memcached
     /// <param name="port">The port for the Memcached server</param>
     /// <param name="flags">A set of flags indicating characterestics requested.</param>
     /// <returns>An instance of a client connection ready to be used.</returns>
-    public static Client GetInstance(string server, uint port, MemcachedFlags flags)
+    public static Client GetInstance (string server, uint port, MemcachedFlags flags)
     {
-      if ((flags | MemcachedFlags.TextProtocol) != 0)
-      {
-        return new TextClient(server, port);
-      }
-      else if ( ( flags | MemcachedFlags.BinaryProtocol ) != 0 )
-      {
-        return new BinaryClient(server, port);
-      }
-      return null;
+        if ((flags | MemcachedFlags.TextProtocol) != 0)
+            return new TextClient (server, port);
+        else if ((flags | MemcachedFlags.BinaryProtocol) != 0)
+            return new BinaryClient (server, port);
+
+        return null;
     }
 
     /// <summary>
     /// Opens the client connection.
     /// </summary>
-    public virtual void Open()
+    public virtual void Open ()
     {
-      this.stream = StreamCreator.GetStream(server, port, null, 10, new DBVersion(), 60);
+        this.stream = StreamCreator.GetStream (this.server, this.port, null, 10, new DBVersion (), 60);
     }
 
     /// <summary>
     /// Closes the client connection.
     /// </summary>
-    public virtual void Close()
+    public virtual void Close ()
     {
-      stream.Dispose();
+        this.stream.Dispose ();
     }
 
-    protected Client(string server, uint port)
+    protected Client (string server, uint port)
     {
-      this.server = server;
-      this.port = port;
+        this.server = server;
+        this.port   = port;
     }
 
     /// <summary>
@@ -107,14 +104,14 @@ namespace EVESharp.Database.MySql.Memcached
     /// <param name="key">The key for identifying the entry.</param>
     /// <param name="data">The data to associate with the key.</param>
     /// <param name="expiration">The interval of timespan, use TimeSpan.Zero for no expiration.</param>
-    public abstract void Add(string key, object data, TimeSpan expiration);
+    public abstract void Add (string key, object data, TimeSpan expiration);
 
     /// <summary>
     /// Appens the data to the existing data for the associated key.
     /// </summary>
     /// <param name="key">The key for identifying the entry.</param>
     /// <param name="data">The data to append with the data associated with the key.</param>
-    public abstract void Append(string key, object data);
+    public abstract void Append (string key, object data);
 
     /// <summary>
     /// Executes the Check-and-set Memcached operation.
@@ -124,47 +121,47 @@ namespace EVESharp.Database.MySql.Memcached
     /// <param name="expiration">The interval of timespan, use TimeSpan.Zero for no expiration.</param>
     /// <param name="casUnique">The CAS unique value to use.</param>
     /// <exception cref="MemcachedException"></exception>
-    public abstract void Cas(string key, object data, TimeSpan expiration, ulong casUnique);
+    public abstract void Cas (string key, object data, TimeSpan expiration, ulong casUnique);
 
     /// <summary>
     /// Decrements the value associated with a key by the given amount.
     /// </summary>
     /// <param name="key">The key associated with the value to decrement.</param>
     /// <param name="amount">The amount to decrement the value.</param>
-    public abstract void Decrement(string key, int amount);
+    public abstract void Decrement (string key, int amount);
 
     /// <summary>
     /// Removes they pair key/value given the specified key.
     /// </summary>
     /// <param name="key"></param>
-    public abstract void Delete(string key);
+    public abstract void Delete (string key);
 
     /// <summary>
     /// Removes all entries from the storage, effectively invalidating the whole cache.
     /// </summary>
     /// <param name="delay">The interval after which the cache will be cleaned. Can be TimeSpan.Zero for immediately.</param>
-    public abstract void FlushAll(TimeSpan delay);
+    public abstract void FlushAll (TimeSpan delay);
 
     /// <summary>
     /// Get the key/value pair associated with a given key.
     /// </summary>
     /// <param name="key">The key for which to returm the key/value.</param>
     /// <returns>The key/value associated with the key or a MemcachedException if it does not exists.</returns>
-    public abstract KeyValuePair<string, object> Get(string key);
+    public abstract KeyValuePair <string, object> Get (string key);
 
     /// <summary>
     /// Increments the value associated with a key by the given amount.
     /// </summary>
     /// <param name="key">The key associated with the value to increment.</param>
     /// <param name="amount">The amount to increment the value.</param>
-    public abstract void Increment(string key, int amount);
+    public abstract void Increment (string key, int amount);
 
     /// <summary>
     /// Prepends the data to the existing data for the associated key.
     /// </summary>
     /// <param name="key">The key for identifying the entry.</param>
     /// <param name="data">The data to append with the data associated with the key.</param>
-    public abstract void Prepend(string key, object data);
+    public abstract void Prepend (string key, object data);
 
     /// <summary>
     /// Replaces the value associated with the given key with another value.
@@ -172,7 +169,7 @@ namespace EVESharp.Database.MySql.Memcached
     /// <param name="key">The key for identifying the entry.</param>
     /// <param name="data">The data to replace the value associated with the key.</param>
     /// <param name="expiration">The interval of timespan, use TimeSpan.Zero for no expiration.</param>
-    public abstract void Replace(string key, object data, TimeSpan expiration);
+    public abstract void Replace (string key, object data, TimeSpan expiration);
 
     /// <summary>
     /// Set the value of a given key.
@@ -180,15 +177,15 @@ namespace EVESharp.Database.MySql.Memcached
     /// <param name="key">The key for identifying the entry.</param>
     /// <param name="data">The data to associate with the given key.</param>
     /// <param name="expiration">The interval of timespan, use TimeSpan.Zero for no expiration.</param>
-    public abstract void Set(string key, object data, TimeSpan expiration);
-  }
+    public abstract void Set (string key, object data, TimeSpan expiration);
+}
 
-  /// <summary>
-  /// A set of flags for requesting new instances of connections
-  /// </summary>
-  [Flags]
-  public enum MemcachedFlags : ushort
-  {
+/// <summary>
+/// A set of flags for requesting new instances of connections
+/// </summary>
+[Flags]
+public enum MemcachedFlags : ushort
+{
     /// <summary>
     /// Requests a connection implememting the text protocol.
     /// </summary>
@@ -201,5 +198,4 @@ namespace EVESharp.Database.MySql.Memcached
     /// Requests a TCP connection. Currently UDP is not supported.
     /// </summary>
     Tcp = 0x4
-  }
 }

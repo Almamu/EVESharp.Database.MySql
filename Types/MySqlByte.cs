@@ -30,25 +30,25 @@ using System;
 using System.Globalization;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Types
+namespace EVESharp.Database.MySql.Types;
+
+internal struct MySqlByte : IMySqlValue
 {
-  internal struct MySqlByte : IMySqlValue
-  {
-    public MySqlByte(bool isNull)
+    public MySqlByte (bool isNull)
     {
-      IsNull = isNull;
-      Value = 0;
-      TreatAsBoolean = false;
+        this.IsNull         = isNull;
+        this.Value          = 0;
+        this.TreatAsBoolean = false;
     }
 
-    public MySqlByte(sbyte val)
+    public MySqlByte (sbyte val)
     {
-      IsNull = false;
-      Value = val;
-      TreatAsBoolean = false;
+        this.IsNull         = false;
+        this.Value          = val;
+        this.TreatAsBoolean = false;
     }
 
-    #region IMySqlValue Members
+#region IMySqlValue Members
 
     public bool IsNull { get; }
 
@@ -56,85 +56,89 @@ namespace EVESharp.Database.MySql.Types
 
     object IMySqlValue.Value
     {
-      get
-      {
-        if (TreatAsBoolean)
-          return Convert.ToBoolean(Value);
-        return Value;
-      }
+        get
+        {
+            if (this.TreatAsBoolean)
+                return Convert.ToBoolean (this.Value);
+
+            return this.Value;
+        }
     }
 
     public sbyte Value { get; set; }
 
-    Type IMySqlValue.SystemType => TreatAsBoolean ? typeof(bool) : typeof(sbyte);
+    Type IMySqlValue.SystemType => this.TreatAsBoolean ? typeof (bool) : typeof (sbyte);
 
     string IMySqlValue.MySqlTypeName => "TINYINT";
 
-    void IMySqlValue.WriteValue(MySqlPacket packet, bool binary, object val, int length)
+    void IMySqlValue.WriteValue (MySqlPacket packet, bool binary, object val, int length)
     {
-      sbyte v = val as sbyte? ?? Convert.ToSByte(val);
-      if (binary)
-        packet.WriteByte((byte)v);
-      else
-        packet.WriteStringNoNull(v.ToString(CultureInfo.InvariantCulture));
+        sbyte v = val as sbyte? ?? Convert.ToSByte (val);
+
+        if (binary)
+            packet.WriteByte ((byte) v);
+        else
+            packet.WriteStringNoNull (v.ToString (CultureInfo.InvariantCulture));
     }
 
-    IMySqlValue IMySqlValue.ReadValue(MySqlPacket packet, long length, bool nullVal)
+    IMySqlValue IMySqlValue.ReadValue (MySqlPacket packet, long length, bool nullVal)
     {
-      if (nullVal)
-        return new MySqlByte(true) { TreatAsBoolean = TreatAsBoolean };
+        if (nullVal)
+            return new MySqlByte (true) {TreatAsBoolean = this.TreatAsBoolean};
 
-      MySqlByte b;
-      if (length == -1)
-        b = new MySqlByte((sbyte)packet.ReadByte());
-      else
-      {
-        string s = packet.ReadString(length);
-        b = new MySqlByte(SByte.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture));  
-      }
+        MySqlByte b;
 
-      b.TreatAsBoolean = TreatAsBoolean;
-      return b;
+        if (length == -1)
+        {
+            b = new MySqlByte ((sbyte) packet.ReadByte ());
+        }
+        else
+        {
+            string s = packet.ReadString (length);
+            b = new MySqlByte (sbyte.Parse (s, NumberStyles.Any, CultureInfo.InvariantCulture));
+        }
+
+        b.TreatAsBoolean = this.TreatAsBoolean;
+        return b;
     }
 
-    void IMySqlValue.SkipValue(MySqlPacket packet)
+    void IMySqlValue.SkipValue (MySqlPacket packet)
     {
-      packet.ReadByte();
+        packet.ReadByte ();
     }
 
-    #endregion
+#endregion
 
     internal bool TreatAsBoolean { get; set; }
 
-    internal static void SetDSInfo(MySqlSchemaCollection sc)
+    internal static void SetDSInfo (MySqlSchemaCollection sc)
     {
-      // we use name indexing because this method will only be called
-      // when GetSchema is called for the DataSourceInformation 
-      // collection and then it wil be cached.
-      MySqlSchemaRow row = sc.AddRow();
-      row["TypeName"] = "TINYINT";
-      row["ProviderDbType"] = MySqlDbType.Byte;
-      row["ColumnSize"] = 0;
-      row["CreateFormat"] = "TINYINT";
-      row["CreateParameters"] = null;
-      row["DataType"] = "System.SByte";
-      row["IsAutoincrementable"] = true;
-      row["IsBestMatch"] = true;
-      row["IsCaseSensitive"] = false;
-      row["IsFixedLength"] = true;
-      row["IsFixedPrecisionScale"] = true;
-      row["IsLong"] = false;
-      row["IsNullable"] = true;
-      row["IsSearchable"] = true;
-      row["IsSearchableWithLike"] = false;
-      row["IsUnsigned"] = false;
-      row["MaximumScale"] = 0;
-      row["MinimumScale"] = 0;
-      row["IsConcurrencyType"] = DBNull.Value;
-      row["IsLiteralSupported"] = false;
-      row["LiteralPrefix"] = null;
-      row["LiteralSuffix"] = null;
-      row["NativeDataType"] = null;
+        // we use name indexing because this method will only be called
+        // when GetSchema is called for the DataSourceInformation 
+        // collection and then it wil be cached.
+        MySqlSchemaRow row = sc.AddRow ();
+        row ["TypeName"]              = "TINYINT";
+        row ["ProviderDbType"]        = MySqlDbType.Byte;
+        row ["ColumnSize"]            = 0;
+        row ["CreateFormat"]          = "TINYINT";
+        row ["CreateParameters"]      = null;
+        row ["DataType"]              = "System.SByte";
+        row ["IsAutoincrementable"]   = true;
+        row ["IsBestMatch"]           = true;
+        row ["IsCaseSensitive"]       = false;
+        row ["IsFixedLength"]         = true;
+        row ["IsFixedPrecisionScale"] = true;
+        row ["IsLong"]                = false;
+        row ["IsNullable"]            = true;
+        row ["IsSearchable"]          = true;
+        row ["IsSearchableWithLike"]  = false;
+        row ["IsUnsigned"]            = false;
+        row ["MaximumScale"]          = 0;
+        row ["MinimumScale"]          = 0;
+        row ["IsConcurrencyType"]     = DBNull.Value;
+        row ["IsLiteralSupported"]    = false;
+        row ["LiteralPrefix"]         = null;
+        row ["LiteralSuffix"]         = null;
+        row ["NativeDataType"]        = null;
     }
-  }
 }

@@ -38,15 +38,15 @@ using EVESharp.Database.MySql;
 using static System.String;
 using EVESharp.Database.MySql.Common;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Provides a class capable of executing a SQL script containing
+/// multiple SQL statements including CREATE PROCEDURE statements
+/// that require changing the delimiter
+/// </summary>
+public class MySqlScript
 {
-  /// <summary>
-  /// Provides a class capable of executing a SQL script containing
-  /// multiple SQL statements including CREATE PROCEDURE statements
-  /// that require changing the delimiter
-  /// </summary>
-  public class MySqlScript
-  {
     /// <summary>
     /// Handles the event raised whenever a statement is executed.
     /// </summary>
@@ -62,15 +62,15 @@ namespace EVESharp.Database.MySql
     /// </summary>
     public event EventHandler ScriptCompleted;
 
-    #region Constructors
+#region Constructors
 
     /// <summary>
     /// Initializes a new instance of the 
     /// <see cref="MySqlScript"/> class.
     /// </summary>
-    public MySqlScript()
+    public MySqlScript ()
     {
-      Delimiter = ";";
+        this.Delimiter = ";";
     }
 
     /// <summary>
@@ -78,10 +78,10 @@ namespace EVESharp.Database.MySql
     /// <see cref="MySqlScript"/> class.
     /// </summary>
     /// <param name="connection">The connection.</param>
-    public MySqlScript(MySqlConnection connection)
-      : this()
+    public MySqlScript (MySqlConnection connection)
+        : this ()
     {
-      Connection = connection;
+        this.Connection = connection;
     }
 
     /// <summary>
@@ -89,10 +89,10 @@ namespace EVESharp.Database.MySql
     /// <see cref="MySqlScript"/> class.
     /// </summary>
     /// <param name="query">The query.</param>
-    public MySqlScript(string query)
-      : this()
+    public MySqlScript (string query)
+        : this ()
     {
-      Query = query;
+        this.Query = query;
     }
 
     /// <summary>
@@ -101,16 +101,16 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="connection">The connection.</param>
     /// <param name="query">The query.</param>
-    public MySqlScript(MySqlConnection connection, string query)
-      : this()
+    public MySqlScript (MySqlConnection connection, string query)
+        : this ()
     {
-      Connection = connection;
-      Query = query;
+        this.Connection = connection;
+        this.Query      = query;
     }
 
-    #endregion
+#endregion
 
-    #region Properties
+#region Properties
 
     /// <summary>
     /// Gets or sets the connection.
@@ -130,226 +130,247 @@ namespace EVESharp.Database.MySql
     /// <value>The delimiter.</value>
     public string Delimiter { get; set; }
 
-    #endregion
+#endregion
 
-    #region Public Methods
+#region Public Methods
 
     /// <summary>
     /// Executes this instance.
     /// </summary>
     /// <returns>The number of statements executed as part of the script.</returns>
-    public int Execute()
+    public int Execute ()
     {
-      bool openedConnection = false;
+        bool openedConnection = false;
 
-      if (Connection == null)
-        throw new InvalidOperationException(Resources.ConnectionNotSet);
-      if (IsNullOrEmpty(Query))
-        return 0;
+        if (this.Connection == null)
+            throw new InvalidOperationException (Resources.ConnectionNotSet);
 
-      // next we open up the connetion if it is not already open
-      if (Connection.State != ConnectionState.Open)
-      {
-        openedConnection = true;
-        Connection.Open();
-      }
+        if (IsNullOrEmpty (this.Query))
+            return 0;
 
-      // since we don't allow setting of parameters on a script we can 
-      // therefore safely allow the use of user variables.  no one should be using
-      // this connection while we are using it so we can temporarily tell it
-      // to allow the use of user variables
-      bool allowUserVars = Connection.Settings.AllowUserVariables;
-      Connection.Settings.AllowUserVariables = true;
-
-      try
-      {
-        string mode = Connection.driver.Property("sql_mode");
-        mode = StringUtility.ToUpperInvariant(mode);
-        bool ansiQuotes = mode.IndexOf("ANSI_QUOTES") != -1;
-        bool noBackslashEscapes = mode.IndexOf("NO_BACKSLASH_ESCAPES") != -1;
-
-        // first we break the query up into smaller queries
-        List<ScriptStatement> statements = BreakIntoStatements(ansiQuotes, noBackslashEscapes);
-
-        int count = 0;
-        MySqlCommand cmd = new MySqlCommand(null, Connection);
-        foreach (ScriptStatement statement in statements.Where(statement => !IsNullOrEmpty(statement.text)))
+        // next we open up the connetion if it is not already open
+        if (this.Connection.State != ConnectionState.Open)
         {
-          cmd.CommandText = statement.text;
-          try
-          {
-            cmd.ExecuteNonQuery();
-            count++;
-            OnQueryExecuted(statement);
-          }
-          catch (Exception ex)
-          {
-            if (Error == null)
-              throw;
-            if (!OnScriptError(ex))
-              break;
-          }
+            openedConnection = true;
+            this.Connection.Open ();
         }
-        OnScriptCompleted();
-        return count;
-      }
-      finally
-      {
-        Connection.Settings.AllowUserVariables = allowUserVars;
-        if (openedConnection)
+
+        // since we don't allow setting of parameters on a script we can 
+        // therefore safely allow the use of user variables.  no one should be using
+        // this connection while we are using it so we can temporarily tell it
+        // to allow the use of user variables
+        bool allowUserVars = this.Connection.Settings.AllowUserVariables;
+        this.Connection.Settings.AllowUserVariables = true;
+
+        try
         {
-          Connection.Close();
-        }
-      }
-    }
+            string mode = this.Connection.driver.Property ("sql_mode");
+            mode = StringUtility.ToUpperInvariant (mode);
+            bool ansiQuotes         = mode.IndexOf ("ANSI_QUOTES") != -1;
+            bool noBackslashEscapes = mode.IndexOf ("NO_BACKSLASH_ESCAPES") != -1;
 
-    #endregion
+            // first we break the query up into smaller queries
+            List <ScriptStatement> statements = this.BreakIntoStatements (ansiQuotes, noBackslashEscapes);
 
-    private void OnQueryExecuted(ScriptStatement statement)
-    {
-      if (StatementExecuted == null) return;
+            int          count = 0;
+            MySqlCommand cmd   = new MySqlCommand (null, this.Connection);
 
-      MySqlScriptEventArgs args = new MySqlScriptEventArgs { Statement = statement };
-      StatementExecuted(this, args);
-    }
-
-    private void OnScriptCompleted()
-    {
-      ScriptCompleted?.Invoke(this, EventArgs.Empty);
-    }
-
-    private bool OnScriptError(Exception ex)
-    {
-      if (Error == null) return false;
-
-      MySqlScriptErrorEventArgs args = new MySqlScriptErrorEventArgs(ex);
-      Error(this, args);
-      return args.Ignore;
-    }
-
-    private List<int> BreakScriptIntoLines()
-    {
-      List<int> lineNumbers = new List<int>();
-
-      StringReader sr = new StringReader(Query);
-      string line = sr.ReadLine();
-      int pos = 0;
-      while (line != null)
-      {
-        lineNumbers.Add(pos);
-        pos += line.Length;
-        line = sr.ReadLine();
-      }
-      return lineNumbers;
-    }
-
-    private static int FindLineNumber(int position, List<int> lineNumbers)
-    {
-      int i = 0;
-      while (i < lineNumbers.Count && position < lineNumbers[i])
-        i++;
-      return i;
-    }
-
-    private List<ScriptStatement> BreakIntoStatements(bool ansiQuotes, bool noBackslashEscapes)
-    {
-      string currentDelimiter = Delimiter;
-      int startPos = 0;
-      List<ScriptStatement> statements = new List<ScriptStatement>();
-      List<int> lineNumbers = BreakScriptIntoLines();
-      MySqlTokenizer tokenizer = new MySqlTokenizer(Query);
-
-      tokenizer.AnsiQuotes = ansiQuotes;
-      tokenizer.BackslashEscapes = !noBackslashEscapes;
-
-      string token = tokenizer.NextToken();
-      while (token != null)
-      {
-        if (!tokenizer.Quoted)
-        {
-          if (token.ToLower(CultureInfo.InvariantCulture) == "delimiter")
-          {
-            tokenizer.NextToken();
-            AdjustDelimiterEnd(tokenizer);
-            currentDelimiter = Query.Substring(tokenizer.StartIndex,
-              tokenizer.StopIndex - tokenizer.StartIndex).Trim();
-            startPos = tokenizer.StopIndex;
-          }
-          else
-          {
-            // this handles the case where our tokenizer reads part of the
-            // delimiter
-            if (currentDelimiter.StartsWith(token, StringComparison.OrdinalIgnoreCase))
+            foreach (ScriptStatement statement in statements.Where (statement => !IsNullOrEmpty (statement.text)))
             {
-              if ((tokenizer.StartIndex + currentDelimiter.Length) <= Query.Length)
-              {
-                if (Query.Substring(tokenizer.StartIndex, currentDelimiter.Length) == currentDelimiter)
+                cmd.CommandText = statement.text;
+
+                try
                 {
-                  token = currentDelimiter;
-                  tokenizer.Position = tokenizer.StartIndex + currentDelimiter.Length;
-                  tokenizer.StopIndex = tokenizer.Position;
+                    cmd.ExecuteNonQuery ();
+                    count++;
+                    this.OnQueryExecuted (statement);
                 }
-              }
+                catch (Exception ex)
+                {
+                    if (this.Error == null)
+                        throw;
+
+                    if (!this.OnScriptError (ex))
+                        break;
+                }
             }
 
-            int delimiterPos = token.IndexOf(currentDelimiter, StringComparison.OrdinalIgnoreCase);
-            if (delimiterPos != -1)
-            {
-              int endPos = tokenizer.StopIndex - token.Length + delimiterPos;
-              if (tokenizer.StopIndex == Query.Length - 1)
-                endPos++;
-              string currentQuery = Query.Substring(startPos, endPos - startPos);
-              ScriptStatement statement = new ScriptStatement();
-              statement.text = currentQuery.Trim();
-              statement.line = FindLineNumber(startPos, lineNumbers);
-              statement.position = startPos - lineNumbers[statement.line];
-              statements.Add(statement);
-              startPos = endPos + currentDelimiter.Length;
-            }
-          }
+            this.OnScriptCompleted ();
+            return count;
         }
-        token = tokenizer.NextToken();
-      }
-
-      // now clean up the last statement
-      if (startPos < Query.Length - 1)
-      {
-        string sqlLeftOver = Query.Substring(startPos).Trim();
-        if (IsNullOrEmpty(sqlLeftOver)) return statements;
-        ScriptStatement statement = new ScriptStatement
+        finally
         {
-          text = sqlLeftOver,
-          line = FindLineNumber(startPos, lineNumbers)
-        };
-        statement.position = startPos - lineNumbers[statement.line];
-        statements.Add(statement);
-      }
-      return statements;
+            this.Connection.Settings.AllowUserVariables = allowUserVars;
+
+            if (openedConnection)
+                this.Connection.Close ();
+        }
     }
 
-    private void AdjustDelimiterEnd(MySqlTokenizer tokenizer)
+#endregion
+
+    private void OnQueryExecuted (ScriptStatement statement)
     {
-      if (tokenizer.StopIndex >= Query.Length) return;
+        if (this.StatementExecuted == null)
+            return;
 
-      int pos = tokenizer.StopIndex;
-      char c = Query[pos];
-
-      while (!Char.IsWhiteSpace(c) && pos < (Query.Length - 1))
-      {
-        c = Query[++pos];
-      }
-      tokenizer.StopIndex = pos;
-      tokenizer.Position = pos;
+        MySqlScriptEventArgs args = new MySqlScriptEventArgs {Statement = statement};
+        this.StatementExecuted (this, args);
     }
 
-    #region Async
+    private void OnScriptCompleted ()
+    {
+        this.ScriptCompleted?.Invoke (this, EventArgs.Empty);
+    }
+
+    private bool OnScriptError (Exception ex)
+    {
+        if (this.Error == null)
+            return false;
+
+        MySqlScriptErrorEventArgs args = new MySqlScriptErrorEventArgs (ex);
+        this.Error (this, args);
+        return args.Ignore;
+    }
+
+    private List <int> BreakScriptIntoLines ()
+    {
+        List <int> lineNumbers = new List <int> ();
+
+        StringReader sr   = new StringReader (this.Query);
+        string       line = sr.ReadLine ();
+        int          pos  = 0;
+
+        while (line != null)
+        {
+            lineNumbers.Add (pos);
+            pos  += line.Length;
+            line =  sr.ReadLine ();
+        }
+
+        return lineNumbers;
+    }
+
+    private static int FindLineNumber (int position, List <int> lineNumbers)
+    {
+        int i = 0;
+
+        while (i < lineNumbers.Count && position < lineNumbers [i])
+            i++;
+
+        return i;
+    }
+
+    private List <ScriptStatement> BreakIntoStatements (bool ansiQuotes, bool noBackslashEscapes)
+    {
+        string                 currentDelimiter = this.Delimiter;
+        int                    startPos         = 0;
+        List <ScriptStatement> statements       = new List <ScriptStatement> ();
+        List <int>             lineNumbers      = this.BreakScriptIntoLines ();
+        MySqlTokenizer         tokenizer        = new MySqlTokenizer (this.Query);
+
+        tokenizer.AnsiQuotes       = ansiQuotes;
+        tokenizer.BackslashEscapes = !noBackslashEscapes;
+
+        string token = tokenizer.NextToken ();
+
+        while (token != null)
+        {
+            if (!tokenizer.Quoted)
+            {
+                if (token.ToLower (CultureInfo.InvariantCulture) == "delimiter")
+                {
+                    tokenizer.NextToken ();
+                    this.AdjustDelimiterEnd (tokenizer);
+
+                    currentDelimiter = this.Query.Substring (
+                        tokenizer.StartIndex,
+                        tokenizer.StopIndex - tokenizer.StartIndex
+                    ).Trim ();
+
+                    startPos = tokenizer.StopIndex;
+                }
+                else
+                {
+                    // this handles the case where our tokenizer reads part of the
+                    // delimiter
+                    if (currentDelimiter.StartsWith (token, StringComparison.OrdinalIgnoreCase))
+                        if (tokenizer.StartIndex + currentDelimiter.Length <= this.Query.Length)
+                            if (this.Query.Substring (tokenizer.StartIndex, currentDelimiter.Length) == currentDelimiter)
+                            {
+                                token               = currentDelimiter;
+                                tokenizer.Position  = tokenizer.StartIndex + currentDelimiter.Length;
+                                tokenizer.StopIndex = tokenizer.Position;
+                            }
+
+                    int delimiterPos = token.IndexOf (currentDelimiter, StringComparison.OrdinalIgnoreCase);
+
+                    if (delimiterPos != -1)
+                    {
+                        int endPos = tokenizer.StopIndex - token.Length + delimiterPos;
+
+                        if (tokenizer.StopIndex == this.Query.Length - 1)
+                            endPos++;
+
+                        string          currentQuery = this.Query.Substring (startPos, endPos - startPos);
+                        ScriptStatement statement    = new ScriptStatement ();
+                        statement.text     = currentQuery.Trim ();
+                        statement.line     = FindLineNumber (startPos, lineNumbers);
+                        statement.position = startPos - lineNumbers [statement.line];
+                        statements.Add (statement);
+                        startPos = endPos + currentDelimiter.Length;
+                    }
+                }
+            }
+
+            token = tokenizer.NextToken ();
+        }
+
+        // now clean up the last statement
+        if (startPos < this.Query.Length - 1)
+        {
+            string sqlLeftOver = this.Query.Substring (startPos).Trim ();
+
+            if (IsNullOrEmpty (sqlLeftOver))
+                return statements;
+
+            ScriptStatement statement = new ScriptStatement
+            {
+                text = sqlLeftOver,
+                line = FindLineNumber (startPos, lineNumbers)
+            };
+
+            statement.position = startPos - lineNumbers [statement.line];
+            statements.Add (statement);
+        }
+
+        return statements;
+    }
+
+    private void AdjustDelimiterEnd (MySqlTokenizer tokenizer)
+    {
+        if (tokenizer.StopIndex >= this.Query.Length)
+            return;
+
+        int  pos = tokenizer.StopIndex;
+        char c   = this.Query [pos];
+
+        while (!char.IsWhiteSpace (c) && pos < this.Query.Length - 1)
+            c = this.Query [++pos];
+
+        tokenizer.StopIndex = pos;
+        tokenizer.Position  = pos;
+    }
+
+#region Async
+
     /// <summary>
     /// Initiates the asynchronous execution of SQL statements.
     /// </summary>
     /// <returns>The number of statements executed as part of the script inside.</returns>
-    public Task<int> ExecuteAsync()
+    public Task <int> ExecuteAsync ()
     {
-      return ExecuteAsync(CancellationToken.None);
+        return this.ExecuteAsync (CancellationToken.None);
     }
 
     /// <summary>
@@ -357,77 +378,77 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of statements executed as part of the script inside.</returns>
-    public Task<int> ExecuteAsync(CancellationToken cancellationToken)
+    public Task <int> ExecuteAsync (CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var executeResult = Execute();
-          result.SetResult(executeResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int executeResult = this.Execute ();
+                result.SetResult (executeResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
-    #endregion
-  }
 
-  /// <summary>
-  /// Represents the method that will handle errors when executing MySQL statements.
-  /// </summary>
-  public delegate void MySqlStatementExecutedEventHandler(object sender, MySqlScriptEventArgs args);
-  /// <summary>
-  /// Represents the method that will handle errors when executing MySQL scripts.
-  /// </summary>
-  public delegate void MySqlScriptErrorEventHandler(object sender, MySqlScriptErrorEventArgs args);
+#endregion
+}
 
-  /// <summary>
-  /// Sets the arguments associated to MySQL scripts.
-  /// </summary>
-  public class MySqlScriptEventArgs : EventArgs
-  {
+/// <summary>
+/// Represents the method that will handle errors when executing MySQL statements.
+/// </summary>
+public delegate void MySqlStatementExecutedEventHandler (object sender, MySqlScriptEventArgs args);
+
+/// <summary>
+/// Represents the method that will handle errors when executing MySQL scripts.
+/// </summary>
+public delegate void MySqlScriptErrorEventHandler (object sender, MySqlScriptErrorEventArgs args);
+
+/// <summary>
+/// Sets the arguments associated to MySQL scripts.
+/// </summary>
+public class MySqlScriptEventArgs : EventArgs
+{
     internal ScriptStatement Statement { get; set; }
 
     /// <summary>
     /// Gets the statement text.
     /// </summary>
     /// <value>The statement text.</value>
-    public string StatementText => Statement.text;
+    public string StatementText => this.Statement.text;
 
     /// <summary>
     /// Gets the line.
     /// </summary>
     /// <value>The line.</value>
-    public int Line => Statement.line;
+    public int Line => this.Statement.line;
 
     /// <summary>
     /// Gets the position.
     /// </summary>
     /// <value>The position.</value>
-    public int Position => Statement.position;
-  }
+    public int Position => this.Statement.position;
+}
 
-  /// <summary>
-  /// Sets the arguments associated to MySQL script errors.
-  /// </summary>
-  public class MySqlScriptErrorEventArgs : MySqlScriptEventArgs
-  {
+/// <summary>
+/// Sets the arguments associated to MySQL script errors.
+/// </summary>
+public class MySqlScriptErrorEventArgs : MySqlScriptEventArgs
+{
     /// <summary>
     /// Initializes a new instance of the <see cref="MySqlScriptErrorEventArgs"/> class.
     /// </summary>
     /// <param name="exception">The exception.</param>
-    public MySqlScriptErrorEventArgs(Exception exception)
+    public MySqlScriptErrorEventArgs (Exception exception)
     {
-      Exception = exception;
+        this.Exception = exception;
     }
 
     /// <summary>
@@ -441,12 +462,11 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <value><c>true</c> if ignore; otherwise, <c>false</c>.</value>
     public bool Ignore { get; set; }
-  }
+}
 
-  struct ScriptStatement
-  {
+internal struct ScriptStatement
+{
     public string text;
-    public int line;
-    public int position;
-  }
+    public int    line;
+    public int    position;
 }

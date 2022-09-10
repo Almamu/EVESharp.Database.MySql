@@ -26,7 +26,6 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-
 using System;
 using System.ComponentModel;
 using System.Data;
@@ -37,22 +36,21 @@ using System.Security.Permissions;
 using System.Transactions;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
-{
+namespace EVESharp.Database.MySql;
 #if NET452
-  [ToolboxBitmap(typeof(MySqlConnection), "MySqlClient.resources.connection.bmp")]
+[ToolboxBitmap (typeof (MySqlConnection), "MySqlClient.resources.connection.bmp")]
 #endif
-  [DesignerCategory("Code")]
-  [ToolboxItem(true)]
-  public sealed partial class MySqlConnection : DbConnection, ICloneable
-  {
+[DesignerCategory ("Code")]
+[ToolboxItem (true)]
+public sealed partial class MySqlConnection : DbConnection, ICloneable
+{
     /// <summary>
     /// Returns schema information for the data source of this <see cref="DbConnection"/>. 
     /// </summary>
     /// <returns>A <see cref="DataTable"/> that contains schema information. </returns>
-    public override DataTable GetSchema()
+    public override DataTable GetSchema ()
     {
-      return GetSchema(null);
+        return this.GetSchema (null);
     }
 
     /// <summary>
@@ -61,12 +59,12 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="collectionName">Specifies the name of the schema to return. </param>
     /// <returns>A <see cref="DataTable"/> that contains schema information. </returns>
-    public override DataTable GetSchema(string collectionName)
+    public override DataTable GetSchema (string collectionName)
     {
-      if (collectionName == null)
-        collectionName = SchemaProvider.MetaCollection;
+        if (collectionName == null)
+            collectionName = SchemaProvider.MetaCollection;
 
-      return GetSchema(collectionName, null);
+        return this.GetSchema (collectionName, null);
     }
 
     /// <summary>
@@ -77,14 +75,14 @@ namespace EVESharp.Database.MySql
     /// <param name="collectionName">Specifies the name of the schema to return.</param>
     /// <param name="restrictionValues">Specifies a set of restriction values for the requested schema.</param>
     /// <returns>A <see cref="DataTable"/> that contains schema information.</returns>
-    public override DataTable GetSchema(string collectionName, string[] restrictionValues)
+    public override DataTable GetSchema (string collectionName, string [] restrictionValues)
     {
-      if (collectionName == null)
-        collectionName = SchemaProvider.MetaCollection;
+        if (collectionName == null)
+            collectionName = SchemaProvider.MetaCollection;
 
-      string[] restrictions = _schemaProvider.CleanRestrictions(restrictionValues);
-      MySqlSchemaCollection c = _schemaProvider.GetSchema(collectionName, restrictions);
-      return c.AsDataTable();
+        string []             restrictions = this._schemaProvider.CleanRestrictions (restrictionValues);
+        MySqlSchemaCollection c            = this._schemaProvider.GetSchema (collectionName, restrictions);
+        return c.AsDataTable ();
     }
 
     /// <summary>
@@ -93,83 +91,87 @@ namespace EVESharp.Database.MySql
     /// <param name="transaction">
     /// A reference to an existing <see cref="System.Transactions.Transaction"/> in which to enlist.
     /// </param>
-    public override void EnlistTransaction(Transaction transaction)
+    public override void EnlistTransaction (Transaction transaction)
     {
-      // enlisting in the null transaction is a noop
-      if (transaction == null)
-        return;
+        // enlisting in the null transaction is a noop
+        if (transaction == null)
+            return;
 
-      // guard against trying to enlist in more than one transaction
-      if (driver.currentTransaction != null)
-      {
-        if (driver.currentTransaction.BaseTransaction == transaction)
-          return;
+        // guard against trying to enlist in more than one transaction
+        if (this.driver.currentTransaction != null)
+        {
+            if (this.driver.currentTransaction.BaseTransaction == transaction)
+                return;
 
-        Throw(new MySqlException("Already enlisted"));
-      }
+            this.Throw (new MySqlException ("Already enlisted"));
+        }
 
-      // now see if we need to swap out drivers.  We would need to do this since
-      // we have to make sure all ops for a given transaction are done on the
-      // same physical connection.
-      Driver existingDriver = DriverTransactionManager.GetDriverInTransaction(transaction);
-      if (existingDriver != null)
-      {
-        // we can't allow more than one driver to contribute to the same connection
-        if (existingDriver.IsInActiveUse)
-          Throw(new NotSupportedException(Resources.MultipleConnectionsInTransactionNotSupported));
+        // now see if we need to swap out drivers.  We would need to do this since
+        // we have to make sure all ops for a given transaction are done on the
+        // same physical connection.
+        Driver existingDriver = DriverTransactionManager.GetDriverInTransaction (transaction);
 
-        // there is an existing driver and it's not being currently used.
-        // now we need to see if it is using the same connection string
-        string text1 = existingDriver.Settings.ConnectionString;
-        string text2 = Settings.ConnectionString;
-        if (String.Compare(text1, text2, true) != 0)
-          Throw(new NotSupportedException(Resources.MultipleConnectionsInTransactionNotSupported));
+        if (existingDriver != null)
+        {
+            // we can't allow more than one driver to contribute to the same connection
+            if (existingDriver.IsInActiveUse)
+                this.Throw (new NotSupportedException (Resources.MultipleConnectionsInTransactionNotSupported));
 
-        // close existing driver
-        // set this new driver as our existing driver
-        CloseFully();
-        driver = existingDriver;
-      }
+            // there is an existing driver and it's not being currently used.
+            // now we need to see if it is using the same connection string
+            string text1 = existingDriver.Settings.ConnectionString;
+            string text2 = this.Settings.ConnectionString;
 
-      if (driver.currentTransaction == null)
-      {
-        MySqlPromotableTransaction t = new MySqlPromotableTransaction(this, transaction);
-        if (!transaction.EnlistPromotableSinglePhase(t))
-          Throw(new NotSupportedException(Resources.DistributedTxnNotSupported));
+            if (string.Compare (text1, text2, true) != 0)
+                this.Throw (new NotSupportedException (Resources.MultipleConnectionsInTransactionNotSupported));
 
-        driver.currentTransaction = t;
-        DriverTransactionManager.SetDriverInTransaction(driver);
-        driver.IsInActiveUse = true;
-      }
+            // close existing driver
+            // set this new driver as our existing driver
+            this.CloseFully ();
+            this.driver = existingDriver;
+        }
+
+        if (this.driver.currentTransaction == null)
+        {
+            MySqlPromotableTransaction t = new MySqlPromotableTransaction (this, transaction);
+
+            if (!transaction.EnlistPromotableSinglePhase (t))
+                this.Throw (new NotSupportedException (Resources.DistributedTxnNotSupported));
+
+            this.driver.currentTransaction = t;
+            DriverTransactionManager.SetDriverInTransaction (this.driver);
+            this.driver.IsInActiveUse = true;
+        }
     }
 
-    void AssertPermissions()
+    private void AssertPermissions ()
     {
-      // Security Asserts can only be done when the assemblies 
-      // are put in the GAC as documented in 
-      // http://msdn.microsoft.com/en-us/library/ff648665.aspx
-      if (this.Settings.IncludeSecurityAsserts)
-      {
-        PermissionSet set = new PermissionSet(PermissionState.None);
-        set.AddPermission(new MySqlClientPermission(ConnectionString));
-        set.Demand();
-        MySqlSecurityPermission.CreatePermissionSet(true).Assert();
-      }
+        // Security Asserts can only be done when the assemblies 
+        // are put in the GAC as documented in 
+        // http://msdn.microsoft.com/en-us/library/ff648665.aspx
+        if (this.Settings.IncludeSecurityAsserts)
+        {
+            PermissionSet set = new PermissionSet (PermissionState.None);
+            set.AddPermission (new MySqlClientPermission (this.ConnectionString));
+            set.Demand ();
+            MySqlSecurityPermission.CreatePermissionSet (true).Assert ();
+        }
     }
 
     /// <summary>
     /// Creates a new MySqlConnection object with the exact same ConnectionString value
     /// </summary>
     /// <returns>A cloned MySqlConnection object</returns>
-    public object Clone()
+    public object Clone ()
     {
-      MySqlConnection clone = new MySqlConnection();
-      clone.IsClone = true;
-      clone.ParentHasbeenOpen = hasBeenOpen;
-      string connectionString = Settings.ConnectionString;
-      if (connectionString != null)
-        clone.ConnectionString = connectionString;
-      return clone;
+        MySqlConnection clone = new MySqlConnection ();
+        clone.IsClone           = true;
+        clone.ParentHasbeenOpen = this.hasBeenOpen;
+        string connectionString = this.Settings.ConnectionString;
+
+        if (connectionString != null)
+            clone.ConnectionString = connectionString;
+
+        return clone;
     }
-  }
 }

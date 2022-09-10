@@ -30,19 +30,19 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace EVESharp.Database.MySql.Replication
+namespace EVESharp.Database.MySql.Replication;
+
+/// <summary>
+/// Represents a server in a Replication environment.
+/// </summary>
+public class ReplicationServer
 {
-  /// <summary>
-  /// Represents a server in a Replication environment.
-  /// </summary>
-  public class ReplicationServer
-  {
-    public ReplicationServer(string name, bool isSource, string connectionString)
+    public ReplicationServer (string name, bool isSource, string connectionString)
     {
-      Name = name;
-      IsSource = isSource;
-      ConnectionString = connectionString;
-      IsAvailable = true;
+        this.Name             = name;
+        this.IsSource         = isSource;
+        this.ConnectionString = connectionString;
+        this.IsAvailable      = true;
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ namespace EVESharp.Database.MySql.Replication
     /// <summary>
     /// Gets a value indicating whether the server is source or replica.
     /// </summary>
-    [Obsolete("This property is deprecated please use IsSource instead.")]
+    [Obsolete ("This property is deprecated please use IsSource instead.")]
     public bool IsMaster { get; private set; }
     /// <summary>
     /// Gets a value indicating whether the server is source or replica.
@@ -66,5 +66,4 @@ namespace EVESharp.Database.MySql.Replication
     /// Gets a flag indicating if the server is available to be considered in load balancing.
     /// </summary>
     public bool IsAvailable { get; set; }
-  }
 }

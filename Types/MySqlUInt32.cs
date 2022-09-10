@@ -30,114 +30,114 @@ using System;
 using System.Globalization;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Types
+namespace EVESharp.Database.MySql.Types;
+
+internal struct MySqlUInt32 : IMySqlValue
 {
-  internal struct MySqlUInt32 : IMySqlValue
-  {
     private readonly bool _is24Bit;
 
-    private MySqlUInt32(MySqlDbType type)
+    private MySqlUInt32 (MySqlDbType type)
     {
-      _is24Bit = type == MySqlDbType.Int24;
-      IsNull = true;
-      Value = 0;
+        this._is24Bit = type == MySqlDbType.Int24;
+        this.IsNull   = true;
+        this.Value    = 0;
     }
 
-    public MySqlUInt32(MySqlDbType type, bool isNull)
-      : this(type)
+    public MySqlUInt32 (MySqlDbType type, bool isNull)
+        : this (type)
     {
-      IsNull = isNull;
+        this.IsNull = isNull;
     }
 
-    public MySqlUInt32(MySqlDbType type, uint val)
-      : this(type)
+    public MySqlUInt32 (MySqlDbType type, uint val)
+        : this (type)
     {
-      IsNull = false;
-      Value = val;
+        this.IsNull = false;
+        this.Value  = val;
     }
 
-    #region IMySqlValue Members
+#region IMySqlValue Members
 
     public bool IsNull { get; }
 
     MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.UInt32;
 
-    object IMySqlValue.Value => Value;
+    object IMySqlValue.Value => this.Value;
 
     public uint Value { get; }
 
-    Type IMySqlValue.SystemType => typeof(UInt32);
+    Type IMySqlValue.SystemType => typeof (uint);
 
-    string IMySqlValue.MySqlTypeName
+    string IMySqlValue.MySqlTypeName => this._is24Bit ? "MEDIUMINT" : "INT";
+
+    void IMySqlValue.WriteValue (MySqlPacket packet, bool binary, object v, int length)
     {
-      get { return _is24Bit ? "MEDIUMINT" : "INT"; }
+        uint val = v as uint? ?? Convert.ToUInt32 (v);
+
+        if (binary)
+            packet.WriteInteger ((long) val, this._is24Bit ? 3 : 4);
+        else
+            packet.WriteStringNoNull (val.ToString (CultureInfo.InvariantCulture));
     }
 
-    void IMySqlValue.WriteValue(MySqlPacket packet, bool binary, object v, int length)
+    IMySqlValue IMySqlValue.ReadValue (MySqlPacket packet, long length, bool nullVal)
     {
-      uint val = v as uint? ?? Convert.ToUInt32(v);
-      if (binary)
-        packet.WriteInteger((long)val, _is24Bit ? 3 : 4);
-      else
-        packet.WriteStringNoNull(val.ToString(CultureInfo.InvariantCulture));
+        if (nullVal)
+            return new MySqlUInt32 ((this as IMySqlValue).MySqlDbType, true);
+
+        if (length == -1)
+            return new MySqlUInt32 (
+                (this as IMySqlValue).MySqlDbType,
+                (uint) packet.ReadInteger (4)
+            );
+        else
+            return new MySqlUInt32 (
+                (this as IMySqlValue).MySqlDbType,
+                uint.Parse (packet.ReadString (length), NumberStyles.Any, CultureInfo.InvariantCulture)
+            );
     }
 
-    IMySqlValue IMySqlValue.ReadValue(MySqlPacket packet, long length, bool nullVal)
+    void IMySqlValue.SkipValue (MySqlPacket packet)
     {
-      if (nullVal)
-        return new MySqlUInt32((this as IMySqlValue).MySqlDbType, true);
-
-      if (length == -1)
-        return new MySqlUInt32((this as IMySqlValue).MySqlDbType,
-                     (uint)packet.ReadInteger(4));
-      else
-        return new MySqlUInt32((this as IMySqlValue).MySqlDbType,
-                     UInt32.Parse(packet.ReadString(length), NumberStyles.Any, CultureInfo.InvariantCulture));
+        packet.Position += 4;
     }
 
-    void IMySqlValue.SkipValue(MySqlPacket packet)
+#endregion
+
+    internal static void SetDSInfo (MySqlSchemaCollection sc)
     {
-      packet.Position += 4;
+        string []      types  = new string [] {"MEDIUMINT", "INT"};
+        MySqlDbType [] dbtype = new MySqlDbType [] {MySqlDbType.UInt24, MySqlDbType.UInt32};
+
+        // we use name indexing because this method will only be called
+        // when GetSchema is called for the DataSourceInformation 
+        // collection and then it wil be cached.
+        for (int x = 0; x < types.Length; x++)
+        {
+            MySqlSchemaRow row = sc.AddRow ();
+            row ["TypeName"]              = types [x];
+            row ["ProviderDbType"]        = dbtype [x];
+            row ["ColumnSize"]            = 0;
+            row ["CreateFormat"]          = types [x] + " UNSIGNED";
+            row ["CreateParameters"]      = null;
+            row ["DataType"]              = "System.UInt32";
+            row ["IsAutoincrementable"]   = true;
+            row ["IsBestMatch"]           = true;
+            row ["IsCaseSensitive"]       = false;
+            row ["IsFixedLength"]         = true;
+            row ["IsFixedPrecisionScale"] = true;
+            row ["IsLong"]                = false;
+            row ["IsNullable"]            = true;
+            row ["IsSearchable"]          = true;
+            row ["IsSearchableWithLike"]  = false;
+            row ["IsUnsigned"]            = true;
+            row ["MaximumScale"]          = 0;
+            row ["MinimumScale"]          = 0;
+            row ["IsConcurrencyType"]     = DBNull.Value;
+            row ["IsLiteralSupported"]    = false;
+            row ["LiteralPrefix"]         = null;
+            row ["LiteralSuffix"]         = null;
+            row ["NativeDataType"]        = null;
+        }
     }
-
-    #endregion
-
-    internal static void SetDSInfo(MySqlSchemaCollection sc)
-    {
-      string[] types = new string[] { "MEDIUMINT", "INT" };
-      MySqlDbType[] dbtype = new MySqlDbType[] { MySqlDbType.UInt24, 
-                MySqlDbType.UInt32 };
-
-      // we use name indexing because this method will only be called
-      // when GetSchema is called for the DataSourceInformation 
-      // collection and then it wil be cached.
-      for (int x = 0; x < types.Length; x++)
-      {
-        MySqlSchemaRow row = sc.AddRow();
-        row["TypeName"] = types[x];
-        row["ProviderDbType"] = dbtype[x];
-        row["ColumnSize"] = 0;
-        row["CreateFormat"] = types[x] + " UNSIGNED";
-        row["CreateParameters"] = null;
-        row["DataType"] = "System.UInt32";
-        row["IsAutoincrementable"] = true;
-        row["IsBestMatch"] = true;
-        row["IsCaseSensitive"] = false;
-        row["IsFixedLength"] = true;
-        row["IsFixedPrecisionScale"] = true;
-        row["IsLong"] = false;
-        row["IsNullable"] = true;
-        row["IsSearchable"] = true;
-        row["IsSearchableWithLike"] = false;
-        row["IsUnsigned"] = true;
-        row["MaximumScale"] = 0;
-        row["MinimumScale"] = 0;
-        row["IsConcurrencyType"] = DBNull.Value;
-        row["IsLiteralSupported"] = false;
-        row["LiteralPrefix"] = null;
-        row["LiteralSuffix"] = null;
-        row["NativeDataType"] = null;
-      }
-    }
-  }
 }

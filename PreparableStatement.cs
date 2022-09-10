@@ -34,176 +34,184 @@ using System.Data;
 using System.Text;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Summary description for PreparedStatement.
+/// </summary>
+internal class PreparableStatement : Statement
 {
-  /// <summary>
-  /// Summary description for PreparedStatement.
-  /// </summary>
-  internal class PreparableStatement : Statement
-  {
-    BitArray _nullMap;
-    readonly List<MySqlParameter> _parametersToSend = new List<MySqlParameter>();
-    MySqlPacket _packet;
-    int _dataPosition;
-    int _nullMapPosition;
+    private          BitArray              _nullMap;
+    private readonly List <MySqlParameter> _parametersToSend = new List <MySqlParameter> ();
+    private          MySqlPacket           _packet;
+    private          int                   _dataPosition;
+    private          int                   _nullMapPosition;
 
-    const int PARAMETER_COUNT_AVAILABLE = 0x08; // QueryAttributes should be sent to the server
+    private const int PARAMETER_COUNT_AVAILABLE = 0x08; // QueryAttributes should be sent to the server
 
-    public PreparableStatement(MySqlCommand command, string text)
-      : base(command, text)
-    {
-    }
+    public PreparableStatement (MySqlCommand command, string text)
+        : base (command, text) { }
 
-    #region Properties
+#region Properties
 
     public int ExecutionCount { get; set; }
 
-    public bool IsPrepared => StatementId > 0;
+    public bool IsPrepared => this.StatementId > 0;
 
     public int StatementId { get; private set; }
 
-    #endregion
+#endregion
 
-    public virtual void Prepare()
+    public virtual void Prepare ()
     {
-      // strip out names from parameter markers
-      string text;
-      List<string> parameterNames = PrepareCommandText(out text);
+        // strip out names from parameter markers
+        string        text;
+        List <string> parameterNames = this.PrepareCommandText (out text);
 
-      // ask our connection to send the prepare command
-      MySqlField[] paramList = null;
-      StatementId = Driver.PrepareStatement(text, ref paramList);
+        // ask our connection to send the prepare command
+        MySqlField [] paramList = null;
+        this.StatementId = this.Driver.PrepareStatement (text, ref paramList);
 
-      // now we need to assign our field names since we stripped them out
-      // for the prepare
-      for (int i = 0; i < parameterNames.Count; i++)
-      {
-        string parameterName = (string)parameterNames[i];
-        MySqlParameter p = Parameters.GetParameterFlexible(parameterName, false);
-        if (p == null)
-          throw new InvalidOperationException(
-              String.Format(Resources.ParameterNotFoundDuringPrepare, parameterName));
-        p.Encoding = paramList[i].Encoding;
-        _parametersToSend.Add(p);
-      }
-
-      if (Attributes.Count > 0 && !Driver.SupportsQueryAttributes)
-        MySqlTrace.LogWarning(Connection.ServerThread, string.Format(Resources.QueryAttributesNotSupported, Driver.Version));
-
-      _packet = new MySqlPacket(Driver.Encoding);
-
-      // write out some values that do not change run to run
-      _packet.WriteByte(0);
-      _packet.WriteInteger(StatementId, 4);
-      // flags; if server supports query attributes, then set PARAMETER_COUNT_AVAILABLE (0x08) in the flags block
-      int flags = Driver.SupportsQueryAttributes && Driver.Version.isAtLeast(8, 0, 26) ? PARAMETER_COUNT_AVAILABLE : 0;
-      _packet.WriteInteger(flags, 1);
-      _packet.WriteInteger(1, 4); // iteration count; 1 for 4.1
-      int num_params = paramList != null ? paramList.Length : 0;
-      // we don't send QA with PS when MySQL Server is not at least 8.0.26
-      if (!Driver.Version.isAtLeast(8, 0, 26) && Attributes.Count > 0)
-      {
-        MySqlTrace.LogWarning(Connection.ServerThread, Resources.QueryAttributesNotSupportedByCnet);
-        Attributes.Clear();
-      }
-
-      if (num_params > 0 ||
-        (Driver.SupportsQueryAttributes && flags == PARAMETER_COUNT_AVAILABLE)) // if num_params > 0 
-      {
-        int paramCount = num_params;
-
-        if (Driver.SupportsQueryAttributes) // if CLIENT_QUERY_ATTRIBUTES is on
+        // now we need to assign our field names since we stripped them out
+        // for the prepare
+        for (int i = 0; i < parameterNames.Count; i++)
         {
-          paramCount = num_params + Attributes.Count;
-          _packet.WriteLength(paramCount);
+            string         parameterName = (string) parameterNames [i];
+            MySqlParameter p             = this.Parameters.GetParameterFlexible (parameterName, false);
+
+            if (p == null)
+                throw new InvalidOperationException (string.Format (Resources.ParameterNotFoundDuringPrepare, parameterName));
+
+            p.Encoding = paramList [i].Encoding;
+            this._parametersToSend.Add (p);
         }
 
-        if (paramCount > 0)
+        if (this.Attributes.Count > 0 && !this.Driver.SupportsQueryAttributes)
+            MySqlTrace.LogWarning (this.Connection.ServerThread, string.Format (Resources.QueryAttributesNotSupported, this.Driver.Version));
+
+        this._packet = new MySqlPacket (this.Driver.Encoding);
+
+        // write out some values that do not change run to run
+        this._packet.WriteByte (0);
+        this._packet.WriteInteger (this.StatementId, 4);
+        // flags; if server supports query attributes, then set PARAMETER_COUNT_AVAILABLE (0x08) in the flags block
+        int flags = this.Driver.SupportsQueryAttributes && this.Driver.Version.isAtLeast (8, 0, 26) ? PARAMETER_COUNT_AVAILABLE : 0;
+        this._packet.WriteInteger (flags, 1);
+        this._packet.WriteInteger (1,     4); // iteration count; 1 for 4.1
+        int num_params = paramList != null ? paramList.Length : 0;
+
+        // we don't send QA with PS when MySQL Server is not at least 8.0.26
+        if (!this.Driver.Version.isAtLeast (8, 0, 26) && this.Attributes.Count > 0)
         {
-          // now prepare our null map
-          _nullMap = new BitArray(paramCount);
-          int numNullBytes = (_nullMap.Length + 7) / 8;
-          _nullMapPosition = _packet.Position;
-          _packet.Position += numNullBytes;  // leave room for our null map
-          _packet.WriteByte(1); // new_params_bind_flag
-
-          // write out the parameter types and names
-          foreach (MySqlParameter p in _parametersToSend)
-          {
-            // parameter type
-            _packet.WriteInteger(p.GetPSType(), 2);
-
-            // parameter name
-            if (Driver.SupportsQueryAttributes) // if CLIENT_QUERY_ATTRIBUTES is on
-              _packet.WriteLenString(p.BaseName);
-          }
-
-          // write out the attributes types and names
-          foreach (MySqlAttribute a in Attributes)
-          {
-            // attribute type
-            _packet.WriteInteger(a.GetPSType(), 2);
-
-            // attribute name
-            if (Driver.SupportsQueryAttributes) // if CLIENT_QUERY_ATTRIBUTES is on
-              _packet.WriteLenString(a.AttributeName);
-          }
+            MySqlTrace.LogWarning (this.Connection.ServerThread, Resources.QueryAttributesNotSupportedByCnet);
+            this.Attributes.Clear ();
         }
-      }
 
-      _dataPosition = _packet.Position;
+        if (num_params > 0 ||
+            (this.Driver.SupportsQueryAttributes && flags == PARAMETER_COUNT_AVAILABLE)) // if num_params > 0 
+        {
+            int paramCount = num_params;
+
+            if (this.Driver.SupportsQueryAttributes) // if CLIENT_QUERY_ATTRIBUTES is on
+            {
+                paramCount = num_params + this.Attributes.Count;
+                this._packet.WriteLength (paramCount);
+            }
+
+            if (paramCount > 0)
+            {
+                // now prepare our null map
+                this._nullMap = new BitArray (paramCount);
+                int numNullBytes = (this._nullMap.Length + 7) / 8;
+                this._nullMapPosition =  this._packet.Position;
+                this._packet.Position += numNullBytes; // leave room for our null map
+                this._packet.WriteByte (1); // new_params_bind_flag
+
+                // write out the parameter types and names
+                foreach (MySqlParameter p in this._parametersToSend)
+                {
+                    // parameter type
+                    this._packet.WriteInteger (p.GetPSType (), 2);
+
+                    // parameter name
+                    if (this.Driver.SupportsQueryAttributes) // if CLIENT_QUERY_ATTRIBUTES is on
+                        this._packet.WriteLenString (p.BaseName);
+                }
+
+                // write out the attributes types and names
+                foreach (MySqlAttribute a in this.Attributes)
+                {
+                    // attribute type
+                    this._packet.WriteInteger (a.GetPSType (), 2);
+
+                    // attribute name
+                    if (this.Driver.SupportsQueryAttributes) // if CLIENT_QUERY_ATTRIBUTES is on
+                        this._packet.WriteLenString (a.AttributeName);
+                }
+            }
+        }
+
+        this._dataPosition = this._packet.Position;
     }
 
-    public override void Execute()
+    public override void Execute ()
     {
-      // if we are not prepared, then call down to our base
-      if (!IsPrepared)
-      {
-        base.Execute();
-        return;
-      }
+        // if we are not prepared, then call down to our base
+        if (!this.IsPrepared)
+        {
+            base.Execute ();
+            return;
+        }
 
-      // now write out all non-null values
-      _packet.Position = _dataPosition;
+        // now write out all non-null values
+        this._packet.Position = this._dataPosition;
 
-      // set value for each parameter
-      for (int i = 0; i < _parametersToSend.Count; i++)
-      {
-        MySqlParameter p = _parametersToSend[i];
-        _nullMap[i] = (p.Value == DBNull.Value || p.Value == null) ||
-            p.Direction == ParameterDirection.Output;
-        if (_nullMap[i]) continue;
-        _packet.Encoding = p.Encoding;
-        p.Serialize(_packet, true, Connection.Settings);
-      }
+        // set value for each parameter
+        for (int i = 0; i < this._parametersToSend.Count; i++)
+        {
+            MySqlParameter p = this._parametersToSend [i];
 
-      // // set value for each attribute
-      for (int i = 0; i < Attributes.Count; i++)
-      {
-        MySqlAttribute attr = Attributes[i];
-        _nullMap[i] = (attr.Value == DBNull.Value || attr.Value == null);
-        if (_nullMap[i]) continue;
-        attr.Serialize(_packet, true, Connection.Settings);
-      }
+            this._nullMap [i] = p.Value == DBNull.Value || p.Value == null ||
+                                p.Direction == ParameterDirection.Output;
 
-      if (_nullMap != null)
-      {
-        byte[] tempByteArray = new byte[(_nullMap.Length + 7) >> 3];
-        _nullMap.CopyTo(tempByteArray, 0);
+            if (this._nullMap [i])
+                continue;
 
-        Array.Copy(tempByteArray, 0, _packet.Buffer, _nullMapPosition, tempByteArray.Length);
-      }
+            this._packet.Encoding = p.Encoding;
+            p.Serialize (this._packet, true, this.Connection.Settings);
+        }
 
-      ExecutionCount++;
+        // // set value for each attribute
+        for (int i = 0; i < this.Attributes.Count; i++)
+        {
+            MySqlAttribute attr = this.Attributes [i];
+            this._nullMap [i] = attr.Value == DBNull.Value || attr.Value == null;
 
-      Driver.ExecuteStatement(_packet);
+            if (this._nullMap [i])
+                continue;
+
+            attr.Serialize (this._packet, true, this.Connection.Settings);
+        }
+
+        if (this._nullMap != null)
+        {
+            byte [] tempByteArray = new byte[(this._nullMap.Length + 7) >> 3];
+            this._nullMap.CopyTo (tempByteArray, 0);
+
+            Array.Copy (tempByteArray, 0, this._packet.Buffer, this._nullMapPosition, tempByteArray.Length);
+        }
+
+        this.ExecutionCount++;
+
+        this.Driver.ExecuteStatement (this._packet);
     }
 
-    public override bool ExecuteNext()
+    public override bool ExecuteNext ()
     {
-      if (!IsPrepared)
-        return base.ExecuteNext();
-      return false;
+        if (!this.IsPrepared)
+            return base.ExecuteNext ();
+
+        return false;
     }
 
     /// <summary>
@@ -216,42 +224,47 @@ namespace EVESharp.Database.MySql
     /// the parameterMap array list that includes all the paramter names in the
     /// order they appeared in the SQL
     /// </remarks>
-    private List<string> PrepareCommandText(out string stripped_sql)
+    private List <string> PrepareCommandText (out string stripped_sql)
     {
-      StringBuilder newSQL = new StringBuilder();
-      List<string> parameterMap = new List<string>();
+        StringBuilder newSQL       = new StringBuilder ();
+        List <string> parameterMap = new List <string> ();
 
-      int startPos = 0;
-      string sql = ResolvedCommandText;
-      MySqlTokenizer tokenizer = new MySqlTokenizer(sql);
-      string parameter = tokenizer.NextParameter();
-      int paramIndex = 0;
-      while (parameter != null)
-      {
-        if (parameter.IndexOf(StoredProcedure.ParameterPrefix) == -1)
+        int            startPos   = 0;
+        string         sql        = this.ResolvedCommandText;
+        MySqlTokenizer tokenizer  = new MySqlTokenizer (sql);
+        string         parameter  = tokenizer.NextParameter ();
+        int            paramIndex = 0;
+
+        while (parameter != null)
         {
-          newSQL.Append(sql.Substring(startPos, tokenizer.StartIndex - startPos));
-          newSQL.Append("?");
-          if (parameter.Length == 1 && tokenizer.IsParameterMarker(parameter.ToCharArray()[0]))
-            parameterMap.Add(Parameters[paramIndex].ParameterName);
-          else
-            parameterMap.Add(parameter);
-          startPos = tokenizer.StopIndex;
+            if (parameter.IndexOf (StoredProcedure.ParameterPrefix) == -1)
+            {
+                newSQL.Append (sql.Substring (startPos, tokenizer.StartIndex - startPos));
+                newSQL.Append ("?");
+
+                if (parameter.Length == 1 && tokenizer.IsParameterMarker (parameter.ToCharArray () [0]))
+                    parameterMap.Add (this.Parameters [paramIndex].ParameterName);
+                else
+                    parameterMap.Add (parameter);
+
+                startPos = tokenizer.StopIndex;
+            }
+
+            parameter = tokenizer.NextParameter ();
+            paramIndex++;
         }
-        parameter = tokenizer.NextParameter();
-        paramIndex++;
-      }
-      newSQL.Append(sql.Substring(startPos));
-      stripped_sql = newSQL.ToString();
-      return parameterMap;
+
+        newSQL.Append (sql.Substring (startPos));
+        stripped_sql = newSQL.ToString ();
+        return parameterMap;
     }
 
-    public virtual void CloseStatement()
+    public virtual void CloseStatement ()
     {
-      if (!IsPrepared) return;
+        if (!this.IsPrepared)
+            return;
 
-      Driver.CloseStatement(StatementId);
-      StatementId = 0;
+        this.Driver.CloseStatement (this.StatementId);
+        this.StatementId = 0;
     }
-  }
 }

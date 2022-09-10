@@ -30,30 +30,30 @@ using System;
 using System.Globalization;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Types
+namespace EVESharp.Database.MySql.Types;
+
+/// <summary>
+/// Represents a decimal data type object in a MySql database.
+/// </summary>
+public struct MySqlDecimal : IMySqlValue
 {
-  /// <summary>
-  /// Represents a decimal data type object in a MySql database.
-  /// </summary>
-  public struct MySqlDecimal : IMySqlValue
-  {
     private readonly string _value;
 
-    internal MySqlDecimal(bool isNull)
+    internal MySqlDecimal (bool isNull)
     {
-      IsNull = isNull;
-      _value = null;
-      Precision = Scale = 0;
+        this.IsNull    = isNull;
+        this._value    = null;
+        this.Precision = this.Scale = 0;
     }
 
-    internal MySqlDecimal(string val)
+    internal MySqlDecimal (string val)
     {
-      this.IsNull = false;
-      Precision = Scale = 0;
-      _value = val;
+        this.IsNull    = false;
+        this.Precision = this.Scale = 0;
+        this._value    = val;
     }
 
-    #region IMySqlValue Members
+#region IMySqlValue Members
 
     /// <summary>
     /// Gets a boolean value signaling if the type is <c>null</c>.
@@ -72,89 +72,88 @@ namespace EVESharp.Database.MySql.Types
     /// </summary>
     public byte Scale { get; set; }
 
-
-    object IMySqlValue.Value => Value;
+    object IMySqlValue.Value => this.Value;
 
     /// <summary>
     /// Gets the decimal value associated to this type.
     /// </summary>
-    public decimal Value => Convert.ToDecimal(_value, CultureInfo.InvariantCulture);
+    public decimal Value => Convert.ToDecimal (this._value, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Converts this decimal value to a double value.
     /// </summary>
     /// <returns>The value of this type converted to a dobule value.</returns>
-    public double ToDouble()
+    public double ToDouble ()
     {
-      return Double.Parse(_value, CultureInfo.InvariantCulture);
+        return double.Parse (this._value, CultureInfo.InvariantCulture);
     }
 
-    public override string ToString()
+    public override string ToString ()
     {
-      return _value;
+        return this._value;
     }
 
-    Type IMySqlValue.SystemType => typeof(decimal);
+    Type IMySqlValue.SystemType => typeof (decimal);
 
     string IMySqlValue.MySqlTypeName => "DECIMAL";
 
-    void IMySqlValue.WriteValue(MySqlPacket packet, bool binary, object val, int length)
+    void IMySqlValue.WriteValue (MySqlPacket packet, bool binary, object val, int length)
     {
-      decimal v = val as decimal? ?? Convert.ToDecimal(val);
-      string valStr = v.ToString(CultureInfo.InvariantCulture);
-      if (binary)
-        packet.WriteLenString(valStr);
-      else
-        packet.WriteStringNoNull(valStr);
+        decimal v      = val as decimal? ?? Convert.ToDecimal (val);
+        string  valStr = v.ToString (CultureInfo.InvariantCulture);
+
+        if (binary)
+            packet.WriteLenString (valStr);
+        else
+            packet.WriteStringNoNull (valStr);
     }
 
-    IMySqlValue IMySqlValue.ReadValue(MySqlPacket packet, long length, bool nullVal)
+    IMySqlValue IMySqlValue.ReadValue (MySqlPacket packet, long length, bool nullVal)
     {
-      if (nullVal)
-        return new MySqlDecimal(true);
+        if (nullVal)
+            return new MySqlDecimal (true);
 
-      string s = String.Empty;
-      s = length == -1 ? packet.ReadLenString() : packet.ReadString(length);
-      return new MySqlDecimal(s);
+        string s = string.Empty;
+        s = length == -1 ? packet.ReadLenString () : packet.ReadString (length);
+        return new MySqlDecimal (s);
     }
 
-    void IMySqlValue.SkipValue(MySqlPacket packet)
+    void IMySqlValue.SkipValue (MySqlPacket packet)
     {
-      int len = (int)packet.ReadFieldLength();
-      packet.Position += len;
+        int len = (int) packet.ReadFieldLength ();
+        packet.Position += len;
     }
 
-    #endregion
+#endregion
 
-    internal static void SetDSInfo(MySqlSchemaCollection sc)
+    internal static void SetDSInfo (MySqlSchemaCollection sc)
     {
-      // we use name indexing because this method will only be called
-      // when GetSchema is called for the DataSourceInformation 
-      // collection and then it wil be cached.
-      MySqlSchemaRow row = sc.AddRow();
-      row["TypeName"] = "DECIMAL";
-      row["ProviderDbType"] = MySqlDbType.NewDecimal;
-      row["ColumnSize"] = 0;
-      row["CreateFormat"] = "DECIMAL({0},{1})";
-      row["CreateParameters"] = "precision,scale";
-      row["DataType"] = "System.Decimal";
-      row["IsAutoincrementable"] = false;
-      row["IsBestMatch"] = true;
-      row["IsCaseSensitive"] = false;
-      row["IsFixedLength"] = true;
-      row["IsFixedPrecisionScale"] = true;
-      row["IsLong"] = false;
-      row["IsNullable"] = true;
-      row["IsSearchable"] = true;
-      row["IsSearchableWithLike"] = false;
-      row["IsUnsigned"] = false;
-      row["MaximumScale"] = 0;
-      row["MinimumScale"] = 0;
-      row["IsConcurrencyType"] = DBNull.Value;
-      row["IsLiteralSupported"] = false;
-      row["LiteralPrefix"] = null;
-      row["LiteralSuffix"] = null;
-      row["NativeDataType"] = null;
+        // we use name indexing because this method will only be called
+        // when GetSchema is called for the DataSourceInformation 
+        // collection and then it wil be cached.
+        MySqlSchemaRow row = sc.AddRow ();
+        row ["TypeName"]              = "DECIMAL";
+        row ["ProviderDbType"]        = MySqlDbType.NewDecimal;
+        row ["ColumnSize"]            = 0;
+        row ["CreateFormat"]          = "DECIMAL({0},{1})";
+        row ["CreateParameters"]      = "precision,scale";
+        row ["DataType"]              = "System.Decimal";
+        row ["IsAutoincrementable"]   = false;
+        row ["IsBestMatch"]           = true;
+        row ["IsCaseSensitive"]       = false;
+        row ["IsFixedLength"]         = true;
+        row ["IsFixedPrecisionScale"] = true;
+        row ["IsLong"]                = false;
+        row ["IsNullable"]            = true;
+        row ["IsSearchable"]          = true;
+        row ["IsSearchableWithLike"]  = false;
+        row ["IsUnsigned"]            = false;
+        row ["MaximumScale"]          = 0;
+        row ["MinimumScale"]          = 0;
+        row ["IsConcurrencyType"]     = DBNull.Value;
+        row ["IsLiteralSupported"]    = false;
+        row ["LiteralPrefix"]         = null;
+        row ["LiteralSuffix"]         = null;
+        row ["NativeDataType"]        = null;
     }
-  }
 }

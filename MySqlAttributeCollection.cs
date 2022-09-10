@@ -29,41 +29,39 @@
 using System;
 using System.Collections.Generic;
 
-namespace EVESharp.Database.MySql
-{
-  /// <summary>
-  /// Represents a collection of query attributes relevant to a <see cref="MySqlCommand"/>.
-  /// </summary>
-  public class MySqlAttributeCollection
-  {
-    readonly List<MySqlAttribute> _items = new List<MySqlAttribute>();
+namespace EVESharp.Database.MySql;
 
-    internal MySqlAttributeCollection(MySqlCommand cmd)
+/// <summary>
+/// Represents a collection of query attributes relevant to a <see cref="MySqlCommand"/>.
+/// </summary>
+public class MySqlAttributeCollection
+{
+    private readonly List <MySqlAttribute> _items = new List <MySqlAttribute> ();
+
+    internal MySqlAttributeCollection (MySqlCommand cmd)
     {
-      Clear();
+        this.Clear ();
     }
 
-    #region Public Methods
+#region Public Methods
+
     /// <summary>
     /// Gets the <see cref="MySqlAttribute"/> at the specified index.
     /// </summary>
-    public MySqlAttribute this[int index]
-    {
-      get { return InternalGetParameter(index); }
-    }
+    public MySqlAttribute this [int index] => this.InternalGetParameter (index);
 
     /// <summary>
     /// Gets the number of <see cref="MySqlAttribute"/> objects in the collection.
     /// </summary>
-    public int Count => _items.Count;
+    public int Count => this._items.Count;
 
     /// <summary>
     /// Adds the specified <see cref="MySqlAttribute"/> object to the <see cref="MySqlAttributeCollection"/>.
     /// </summary>
     /// <param name="value"><see cref="MySqlAttribute"/> object to add.</param>
-    public MySqlAttribute SetAttribute(MySqlAttribute value)
+    public MySqlAttribute SetAttribute (MySqlAttribute value)
     {
-      return InternalAdd(value);
+        return this.InternalAdd (value);
     }
 
     /// <summary>
@@ -71,54 +69,59 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="attributeName">Name of the query attribute.</param>
     /// <param name="value">Value of the query attribute.</param>
-    public MySqlAttribute SetAttribute(string attributeName, object value)
+    public MySqlAttribute SetAttribute (string attributeName, object value)
     {
-      return InternalAdd(new MySqlAttribute(attributeName, value));
+        return this.InternalAdd (new MySqlAttribute (attributeName, value));
     }
 
     /// <summary>
     /// Removes all items from the collection.
     /// </summary>
-    public void Clear()
+    public void Clear ()
     {
-      foreach (MySqlAttribute attr in _items)
-        attr.Collection = null;
-      _items.Clear();
-    }
-    #endregion
+        foreach (MySqlAttribute attr in this._items)
+            attr.Collection = null;
 
-    #region Private Methods
-    private MySqlAttribute InternalAdd(MySqlAttribute value)
-    {
-      if (value == null)
-        throw new ArgumentException("The MySqlAttributeCollection only accepts non-null MySqlAttribute type objects.", "value");
-
-      _items.Add(value);
-      value.Collection = this;
-      return value;
+        this._items.Clear ();
     }
 
-    private void CheckIndex(int index)
+#endregion
+
+#region Private Methods
+
+    private MySqlAttribute InternalAdd (MySqlAttribute value)
     {
-      if (index < 0 || index >= Count)
-        throw new IndexOutOfRangeException("Attribute index is out of range.");
+        if (value == null)
+            throw new ArgumentException ("The MySqlAttributeCollection only accepts non-null MySqlAttribute type objects.", "value");
+
+        this._items.Add (value);
+        value.Collection = this;
+        return value;
     }
 
-    private MySqlAttribute InternalGetParameter(int index)
+    private void CheckIndex (int index)
     {
-      CheckIndex(index);
-      return _items[index];
+        if (index < 0 || index >= this.Count)
+            throw new IndexOutOfRangeException ("Attribute index is out of range.");
     }
-    #endregion
 
-    #region MySqlCollection Implementation
+    private MySqlAttribute InternalGetParameter (int index)
+    {
+        this.CheckIndex (index);
+        return this._items [index];
+    }
+
+#endregion
+
+#region MySqlCollection Implementation
+
     /// <summary>
     /// Returns an enumerator that iterates through the <see cref="MySqlAttributeCollection"/>. 
     /// </summary>
-    public IEnumerator<MySqlAttribute> GetEnumerator()
+    public IEnumerator <MySqlAttribute> GetEnumerator ()
     {
-      return _items.GetEnumerator();
+        return this._items.GetEnumerator ();
     }
-    #endregion
-  }
+
+#endregion
 }

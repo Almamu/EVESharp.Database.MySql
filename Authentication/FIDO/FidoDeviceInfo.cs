@@ -30,92 +30,99 @@ using System;
 using EVESharp.Database.MySql.Authentication.FIDO.Native;
 using EVESharp.Database.MySql.Authentication.FIDO.Utility;
 
-namespace EVESharp.Database.MySql.Authentication.FIDO
-{
-  /// <summary>
-  /// A class representing external info about a particular FIDO capable device
-  /// </summary>
-  internal sealed unsafe class FidoDeviceInfo : IDisposable
-  {
-    private fido_dev_info_t* _devInfo;
-    private readonly fido_dev_info_t* _current;
-    private readonly int _size = 5;
+namespace EVESharp.Database.MySql.Authentication.FIDO;
 
-    #region Properties
+/// <summary>
+/// A class representing external info about a particular FIDO capable device
+/// </summary>
+internal sealed unsafe class FidoDeviceInfo : IDisposable
+{
+    private          fido_dev_info_t* _devInfo;
+    private readonly fido_dev_info_t* _current;
+    private readonly int              _size = 5;
+
+#region Properties
+
     /// <summary>
     /// Gets the manufacturer of the device
     /// </summary>
-    public string Manufacturer => NativeMethods.fido_dev_info_manufacturer_string(_current);
+    public string Manufacturer => NativeMethods.fido_dev_info_manufacturer_string (this._current);
 
     /// <summary>
     /// Gets the path of the device (for use in <see cref="FidoDevice.Open(string)"/>)
     /// </summary>
-    public string Path => NativeMethods.fido_dev_info_path(_current);
+    public string Path => NativeMethods.fido_dev_info_path (this._current);
 
     /// <summary>
     /// Gets the product ID of the device
     /// </summary>
-    public short Product => NativeMethods.fido_dev_info_product(_current);
+    public short Product => NativeMethods.fido_dev_info_product (this._current);
 
     /// <summary>
     /// Gets a string representation of the product ID
     /// </summary>
-    public string ProductString => NativeMethods.fido_dev_info_product_string(_current);
+    public string ProductString => NativeMethods.fido_dev_info_product_string (this._current);
 
     /// <summary>
     /// Gets the vendor ID of the device
     /// </summary>
-    public short Vendor => NativeMethods.fido_dev_info_vendor(_current);
-    #endregion
+    public short Vendor => NativeMethods.fido_dev_info_vendor (this._current);
 
-    #region Constructors
-    static FidoDeviceInfo()
+#endregion
+
+#region Constructors
+
+    static FidoDeviceInfo ()
     {
-      Init.Call();
+        Init.Call ();
     }
 
-    internal FidoDeviceInfo()
+    internal FidoDeviceInfo ()
     {
-      _devInfo = NativeMethods.fido_dev_info_new((IntPtr)_size);
-      if (_devInfo == null)
-        throw new OutOfMemoryException();
+        this._devInfo = NativeMethods.fido_dev_info_new ((IntPtr) this._size);
 
-      var olen = IntPtr.Zero;
-      NativeMethods.fido_dev_info_manifest(_devInfo, (IntPtr)_size, &olen).Check();
+        if (this._devInfo == null)
+            throw new OutOfMemoryException ();
 
-      for (int i = 0; i < (int)olen; i++)
-      {
-        _current = NativeMethods.fido_dev_info_ptr(_devInfo, (IntPtr)i);
+        IntPtr olen = IntPtr.Zero;
+        NativeMethods.fido_dev_info_manifest (this._devInfo, (IntPtr) this._size, &olen).Check ();
 
-        if (Product != 1)
-          break;
-      }
+        for (int i = 0; i < (int) olen; i++)
+        {
+            this._current = NativeMethods.fido_dev_info_ptr (this._devInfo, (IntPtr) i);
+
+            if (this.Product != 1)
+                break;
+        }
     }
 
     /// <summary>
     /// Finalizer
     /// </summary>
-    ~FidoDeviceInfo() => ReleaseUnmanagedResources();
-    #endregion
-
-    private void ReleaseUnmanagedResources()
+    ~FidoDeviceInfo ()
     {
-      if (_devInfo == null)
-      {
-        return;
-      }
-
-      var native = _devInfo;
-      NativeMethods.fido_dev_info_free(&native, (IntPtr)_size);
-      _devInfo = null;
+        this.ReleaseUnmanagedResources ();
     }
 
-    #region IDisposable
-    public void Dispose()
+#endregion
+
+    private void ReleaseUnmanagedResources ()
     {
-      ReleaseUnmanagedResources();
-      GC.SuppressFinalize(this);
+        if (this._devInfo == null)
+            return;
+
+        fido_dev_info_t* native = this._devInfo;
+        NativeMethods.fido_dev_info_free (&native, (IntPtr) this._size);
+        this._devInfo = null;
     }
-    #endregion
-  }
+
+#region IDisposable
+
+    public void Dispose ()
+    {
+        this.ReleaseUnmanagedResources ();
+        GC.SuppressFinalize (this);
+    }
+
+#endregion
 }

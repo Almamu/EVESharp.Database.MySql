@@ -28,93 +28,106 @@
 
 using System;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility;
+
+/// <summary>
+/// Automatic dynamic disposable
+/// </summary>
+internal static class Disposable
 {
-  /// <summary>
-  /// Automatic dynamic disposable
-  /// </summary>
-  internal static class Disposable
-  {
     /// <summary>
     /// Automatic dynamic disposable storing <paramref name="value"/>
     /// </summary> 
-    public static Disposable<T> From<T>(T value) =>
-        From(value, (IDisposable[])null, (Action)null);
+    public static Disposable <T> From <T> (T value)
+    {
+        return From (value, (IDisposable []) null, (Action) null);
+    }
 
     /// <summary>
     /// Automatic dynamic disposable storing <paramref name="value"/>, <paramref name="disposeAction"/> will be called at dispose
     /// </summary>
-    public static Disposable<T> From<T>(T value, Action disposeAction) =>
-        From(value, null, disposeAction);
+    public static Disposable <T> From <T> (T value, Action disposeAction)
+    {
+        return From (value, null, disposeAction);
+    }
 
     /// <summary>
     /// Automatic dynamic disposable storing <paramref name="value"/>, <paramref name="disposable"/> will be disposed
     /// </summary>
-    public static Disposable<T> From<T, D>(D disposable, Func<D, T> loader) where D : IDisposable =>
-        From(loader(disposable), disposable);
+    public static Disposable <T> From <T, D> (D disposable, Func <D, T> loader) where D : IDisposable
+    {
+        return From (loader (disposable), disposable);
+    }
+
     /// <summary>
     /// Automatic dynamic disposable storing <paramref name="value"/>, <paramref name="disposable"/> will be disposed
     /// </summary>
-    public static Disposable<T> From<T, D>(D disposable, Func<D, T> loader, Action<T> disposer) where D : IDisposable =>
-        From(loader(disposable), disposable);
+    public static Disposable <T> From <T, D> (D disposable, Func <D, T> loader, Action <T> disposer) where D : IDisposable
+    {
+        return From (loader (disposable), disposable);
+    }
 
     /// <summary>
     /// Automatic dynamic disposable storing <paramref name="value"/>, <paramref name="disposables"/> will be disposed
     /// </summary>
-    public static Disposable<T> From<T>(T value, params IDisposable[] disposables) =>
-        From(value, disposables, null);
+    public static Disposable <T> From <T> (T value, params IDisposable [] disposables)
+    {
+        return From (value, disposables, null);
+    }
 
     /// <summary>
     /// Automatic dynamic disposable storing <paramref name="value"/>, <paramref name="disposables"/> will be disposed and <paramref name="disposeAction"/> will be called at dispose
     /// </summary>
-    public static Disposable<T> From<T>(T value, IDisposable[] disposables, Action disposeAction) =>
-        new Disposable<T>(value, disposables, disposeAction);
-  }
+    public static Disposable <T> From <T> (T value, IDisposable [] disposables, Action disposeAction)
+    {
+        return new Disposable <T> (value, disposables, disposeAction);
+    }
+}
 
-  /// <summary>
-  /// Automatic dynamic disposable
-  /// </summary>
-  internal sealed class Disposable<T> : IDisposable
-  {
+/// <summary>
+/// Automatic dynamic disposable
+/// </summary>
+internal sealed class Disposable <T> : IDisposable
+{
     /// <summary>
     /// Original value, can be used with <code>ref</code>
     /// </summary>
     public T Value;
 
-    private readonly IDisposable[] _disposables;
-    private readonly Action _disposeAction;
+    private readonly IDisposable [] _disposables;
+    private readonly Action         _disposeAction;
 
     /// <summary>
     /// Automatic dynamic disposable storing <paramref name="value"/>, <paramref name="disposables"/> will be disposed and <paramref name="disposeAction"/> will be called at dispose
     /// </summary>
-    public Disposable(T value, IDisposable[] disposables, Action disposeAction)
+    public Disposable (T value, IDisposable [] disposables, Action disposeAction)
     {
-      Value = value;
-      _disposables = disposables;
-      _disposeAction = disposeAction;
+        this.Value          = value;
+        this._disposables   = disposables;
+        this._disposeAction = disposeAction;
     }
 
     /// <summary>
     /// Returns stored value
     /// </summary>
-    public static implicit operator T(Disposable<T> p)
+    public static implicit operator T (Disposable <T> p)
     {
-      return p.Value;
+        return p.Value;
     }
 
     private bool _disposed = false;
 
-    public void Dispose()
+    public void Dispose ()
     {
-      if (_disposed)
-        return;
-      _disposed = true;
+        if (this._disposed)
+            return;
 
-      if (_disposables != null)
-        foreach (var t in _disposables)
-          t?.Dispose();
+        this._disposed = true;
 
-      _disposeAction?.Invoke();
+        if (this._disposables != null)
+            foreach (IDisposable t in this._disposables)
+                t?.Dispose ();
+
+        this._disposeAction?.Invoke ();
     }
-  }
 }

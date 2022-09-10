@@ -30,61 +30,62 @@ using EVESharp.Database.MySql;
 using System;
 using static EVESharp.Database.MySql.Authentication.SSPI.NativeMethods;
 
-namespace EVESharp.Database.MySql.Authentication.SSPI
+namespace EVESharp.Database.MySql.Authentication.SSPI;
+
+internal class SspiCredentials
 {
-  internal class SspiCredentials
-  {
     /// <summary>
     /// A safe handle to the credential's handle.
     /// </summary>
-    internal SECURITY_HANDLE credentialsHandle = default;
+    internal SECURITY_HANDLE credentialsHandle = default (SECURITY_HANDLE);
 
     /// <summary>
     /// Acquires a handle to preexisting credentials of a security principal.
     /// </summary>
-    internal SspiCredentials(string package)
+    internal SspiCredentials (string package)
     {
-      var result = AcquireCredentialsHandle(
-        null,
-        package,
-        Const.SECPKG_CRED_BOTH,
-        IntPtr.Zero,
-        IntPtr.Zero,
-        0,
-        IntPtr.Zero,
-        ref credentialsHandle,
-        IntPtr.Zero);
+        SecStatus result = AcquireCredentialsHandle (
+            null,
+            package,
+            Const.SECPKG_CRED_BOTH,
+            IntPtr.Zero,
+            IntPtr.Zero,
+            0,
+            IntPtr.Zero,
+            ref this.credentialsHandle,
+            IntPtr.Zero
+        );
 
-      if (result != SecStatus.SEC_E_OK)
-        throw new MySqlException($"AcquireCredentialsHandle failed with error code: {result}");
+        if (result != SecStatus.SEC_E_OK)
+            throw new MySqlException ($"AcquireCredentialsHandle failed with error code: {result}");
     }
 
-    internal SspiCredentials(string principal, string username, string password, string domain, string package)
+    internal SspiCredentials (string principal, string username, string password, string domain, string package)
     {
-      var authenticationData = new SEC_WINNT_AUTH_IDENTITY
-      {
-        User = username,
-        UserLength = username.Length,
-        Domain = domain,
-        DomainLength = domain.Length,
-        Password = password,
-        PasswordLength = password.Length,
-        Flags = Const.SEC_WINNT_AUTH_IDENTITY_UNICODE
-      };
+        SEC_WINNT_AUTH_IDENTITY authenticationData = new SEC_WINNT_AUTH_IDENTITY
+        {
+            User           = username,
+            UserLength     = username.Length,
+            Domain         = domain,
+            DomainLength   = domain.Length,
+            Password       = password,
+            PasswordLength = password.Length,
+            Flags          = Const.SEC_WINNT_AUTH_IDENTITY_UNICODE
+        };
 
-      var result = AcquireCredentialsHandle(
-        principal,
-        package,
-        Const.SECPKG_CRED_BOTH,
-        IntPtr.Zero,
-        authenticationData,
-        0,
-        IntPtr.Zero,
-        ref credentialsHandle,
-        IntPtr.Zero);
+        SecStatus result = AcquireCredentialsHandle (
+            principal,
+            package,
+            Const.SECPKG_CRED_BOTH,
+            IntPtr.Zero,
+            authenticationData,
+            0,
+            IntPtr.Zero,
+            ref this.credentialsHandle,
+            IntPtr.Zero
+        );
 
-      if (result != SecStatus.SEC_E_OK)
-        throw new Exception($"Unable to aquire credentials for {principal} with error code: {result}");
+        if (result != SecStatus.SEC_E_OK)
+            throw new Exception ($"Unable to aquire credentials for {principal} with error code: {result}");
     }
-  }
 }

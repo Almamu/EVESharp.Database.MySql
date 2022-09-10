@@ -29,102 +29,120 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace EVESharp.Database.MySql.Authentication.SSPI
+namespace EVESharp.Database.MySql.Authentication.SSPI;
+
+/// <summary>
+/// SSPI Bindings
+/// </summary>
+internal static class NativeMethods
 {
-  /// <summary>
-  /// SSPI Bindings
-  /// </summary>
-  internal static class NativeMethods
-  {
     private const string SECUR32 = "secur32.dll";
 
-    #region Imports
-    [DllImport(
-      SECUR32,
-      CharSet = CharSet.Unicode)]
-    internal static extern SecStatus AcquireCredentialsHandle(
-      string pszPrincipal,
-      string pszPackage,
-      int fCredentialUse,
-      IntPtr PAuthenticationID,
-      IntPtr pAuthData,
-      int pGetKeyFn,
-      IntPtr pvGetKeyArgument,
-      ref SECURITY_HANDLE phCredential,
-      IntPtr ptsExpiry);
+#region Imports
 
-    [DllImport(
-      SECUR32,
-      CharSet = CharSet.Unicode)]
-    internal static extern SecStatus AcquireCredentialsHandle(
-      string pszPrincipal,
-      string pszPackage,
-      int fCredentialUse,
-      IntPtr PAuthenticationID,
-      SEC_WINNT_AUTH_IDENTITY pAuthData,
-      int pGetKeyFn,
-      IntPtr pvGetKeyArgument,
-      ref SECURITY_HANDLE phCredential,
-      IntPtr ptsExpiry);
+    [DllImport (
+        SECUR32,
+        CharSet = CharSet.Unicode
+    )]
+    internal static extern SecStatus AcquireCredentialsHandle
+    (
+        string              pszPrincipal,
+        string              pszPackage,
+        int                 fCredentialUse,
+        IntPtr              PAuthenticationID,
+        IntPtr              pAuthData,
+        int                 pGetKeyFn,
+        IntPtr              pvGetKeyArgument,
+        ref SECURITY_HANDLE phCredential,
+        IntPtr              ptsExpiry
+    );
 
-    [DllImport(
-      SECUR32,
-      CharSet = CharSet.Unicode,
-      SetLastError = true,
-      EntryPoint = "InitializeSecurityContext")]
-    internal static extern SecStatus InitializeSecurityContext_0(
-      ref SECURITY_HANDLE phCredential,
-      IntPtr phContext,
-      string pszTargetName,
-      int fContextReq,
-      int Reserved1,
-      int TargetDataRep,
-      IntPtr pInput,
-      int Reserved2,
-      out SECURITY_HANDLE phNewContext,
-      out SecBufferDesc pOutput,
-      out uint pfContextAttr,
-      out SECURITY_INTEGER ptsExpiry);
+    [DllImport (
+        SECUR32,
+        CharSet = CharSet.Unicode
+    )]
+    internal static extern SecStatus AcquireCredentialsHandle
+    (
+        string                  pszPrincipal,
+        string                  pszPackage,
+        int                     fCredentialUse,
+        IntPtr                  PAuthenticationID,
+        SEC_WINNT_AUTH_IDENTITY pAuthData,
+        int                     pGetKeyFn,
+        IntPtr                  pvGetKeyArgument,
+        ref SECURITY_HANDLE     phCredential,
+        IntPtr                  ptsExpiry
+    );
 
-    [DllImport(
-      SECUR32,
-      CharSet = CharSet.Unicode,
-      SetLastError = true,
-      EntryPoint = "InitializeSecurityContext")]
-    internal static extern SecStatus InitializeSecurityContext_1(
-      ref SECURITY_HANDLE phCredential,
-      ref SECURITY_HANDLE phContext,
-      string pszTargetName,
-      int fContextReq,
-      int Reserved1,
-      int TargetDataRep,
-      ref SecBufferDesc SecBufferDesc,
-      int Reserved2,
-      out SECURITY_HANDLE phNewContext,
-      out SecBufferDesc pOutput,
-      out uint pfContextAttr,
-      out SECURITY_INTEGER ptsExpiry);
+    [DllImport (
+        SECUR32,
+        CharSet = CharSet.Unicode,
+        SetLastError = true,
+        EntryPoint = "InitializeSecurityContext"
+    )]
+    internal static extern SecStatus InitializeSecurityContext_0
+    (
+        ref SECURITY_HANDLE  phCredential,
+        IntPtr               phContext,
+        string               pszTargetName,
+        int                  fContextReq,
+        int                  Reserved1,
+        int                  TargetDataRep,
+        IntPtr               pInput,
+        int                  Reserved2,
+        out SECURITY_HANDLE  phNewContext,
+        out SecBufferDesc    pOutput,
+        out uint             pfContextAttr,
+        out SECURITY_INTEGER ptsExpiry
+    );
 
-    [DllImport(SECUR32, CharSet = CharSet.Unicode, SetLastError = true)]
-    internal static extern int CompleteAuthToken(
+    [DllImport (
+        SECUR32,
+        CharSet = CharSet.Unicode,
+        SetLastError = true,
+        EntryPoint = "InitializeSecurityContext"
+    )]
+    internal static extern SecStatus InitializeSecurityContext_1
+    (
+        ref SECURITY_HANDLE  phCredential,
+        ref SECURITY_HANDLE  phContext,
+        string               pszTargetName,
+        int                  fContextReq,
+        int                  Reserved1,
+        int                  TargetDataRep,
+        ref SecBufferDesc    SecBufferDesc,
+        int                  Reserved2,
+        out SECURITY_HANDLE  phNewContext,
+        out SecBufferDesc    pOutput,
+        out uint             pfContextAttr,
+        out SECURITY_INTEGER ptsExpiry
+    );
+
+    [DllImport (SECUR32, CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern int CompleteAuthToken
+    (
         ref SECURITY_HANDLE phContext,
-        ref SecBufferDesc pToken);
+        ref SecBufferDesc   pToken
+    );
 
-    [DllImport(
-      SECUR32,
-      CharSet = CharSet.Unicode,
-      SetLastError = false,
-      EntryPoint = "QueryContextAttributes")]
-    internal static extern int QueryContextAttributes_String(
-        ref SECURITY_HANDLE phContext,
-        uint ulAttribute,
-        ref SecPkgContext_SecString pBuffer);
+    [DllImport (
+        SECUR32,
+        CharSet = CharSet.Unicode,
+        SetLastError = false,
+        EntryPoint = "QueryContextAttributes"
+    )]
+    internal static extern int QueryContextAttributes_String
+    (
+        ref SECURITY_HANDLE         phContext,
+        uint                        ulAttribute,
+        ref SecPkgContext_SecString pBuffer
+    );
 
-    [DllImport(SECUR32, CharSet = CharSet.Unicode, SetLastError = false)]
-    internal static extern int FreeCredentialsHandle(ref SECURITY_HANDLE pCred);
+    [DllImport (SECUR32, CharSet = CharSet.Unicode, SetLastError = false)]
+    internal static extern int FreeCredentialsHandle (ref SECURITY_HANDLE pCred);
 
-    [DllImport(SECUR32, CharSet = CharSet.Unicode, SetLastError = false)]
-    internal static extern int DeleteSecurityContext(ref SECURITY_HANDLE pContext);
-    #endregion
-  }
+    [DllImport (SECUR32, CharSet = CharSet.Unicode, SetLastError = false)]
+    internal static extern int DeleteSecurityContext (ref SECURITY_HANDLE pContext);
+
+#endregion
 }

@@ -29,16 +29,16 @@
 
 using System.Security.Cryptography;
 
-namespace EVESharp.Database.MySql.Authentication
+namespace EVESharp.Database.MySql.Authentication;
+
+/// <summary>
+/// The SCRAM-SHA-256 SASL mechanism.
+/// </summary>
+/// <remarks>
+/// A salted challenge/response SASL mechanism that uses the HMAC SHA-256 algorithm.
+/// </remarks>
+internal class ScramSha256Mechanism : ScramBase
 {
-  /// <summary>
-  /// The SCRAM-SHA-256 SASL mechanism.
-  /// </summary>
-  /// <remarks>
-  /// A salted challenge/response SASL mechanism that uses the HMAC SHA-256 algorithm.
-  /// </remarks>
-  internal class ScramSha256Mechanism : ScramBase
-  {
     /// <summary>
     /// Initializes a new instance of the <see cref="ScramSha256Mechanism"/> class.
     /// </summary>
@@ -48,25 +48,23 @@ namespace EVESharp.Database.MySql.Authentication
     /// <param name="username">The user name.</param>
     /// <param name="password">The password.</param>
     /// <param name="host">The host.</param>
-    internal ScramSha256Mechanism(string username, string password, string host) : base(username, password, host) { }
+    internal ScramSha256Mechanism (string username, string password, string host) : base (username, password, host) { }
 
     /// <summary>
     /// Gets the name of the method.
     /// </summary>
-    internal override string MechanismName
+    internal override string MechanismName => "SCRAM-SHA-256";
+
+    protected override KeyedHashAlgorithm CreateHMAC (byte [] key)
     {
-      get { return "SCRAM-SHA-256"; }
+        return new HMACSHA256 (key);
     }
 
-    protected override KeyedHashAlgorithm CreateHMAC(byte[] key)
+    protected override byte [] Hash (byte [] str)
     {
-      return new HMACSHA256(key);
+        using (SHA256 sha256 = SHA256.Create ())
+        {
+            return sha256.ComputeHash (str);
+        }
     }
-
-    protected override byte[] Hash(byte[] str)
-    {
-      using (var sha256 = SHA256.Create())
-        return sha256.ComputeHash(str);
-    }
-  }
 }

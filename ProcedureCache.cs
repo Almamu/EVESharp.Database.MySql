@@ -33,137 +33,152 @@ using System.Linq;
 using System.Text;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+internal class ProcedureCacheEntry
 {
-  internal class ProcedureCacheEntry
-  {
     public MySqlSchemaCollection procedure;
     public MySqlSchemaCollection parameters;
-  }
+}
 
-  internal class ProcedureCache
-  {
-    private readonly Dictionary<int, ProcedureCacheEntry> _procHash;
-    private readonly Queue<int> _hashQueue;
-    private readonly int _maxSize;
+internal class ProcedureCache
+{
+    private readonly Dictionary <int, ProcedureCacheEntry> _procHash;
+    private readonly Queue <int>                           _hashQueue;
+    private readonly int                                   _maxSize;
 
-    public ProcedureCache(int size)
+    public ProcedureCache (int size)
     {
-      _maxSize = size;
-      _hashQueue = new Queue<int>(_maxSize);
-      _procHash = new Dictionary<int, ProcedureCacheEntry>(_maxSize);
+        this._maxSize   = size;
+        this._hashQueue = new Queue <int> (this._maxSize);
+        this._procHash  = new Dictionary <int, ProcedureCacheEntry> (this._maxSize);
     }
 
-    public ProcedureCacheEntry GetProcedure(MySqlConnection conn, string spName, string cacheKey)
+    public ProcedureCacheEntry GetProcedure (MySqlConnection conn, string spName, string cacheKey)
     {
-      ProcedureCacheEntry proc = null;
+        ProcedureCacheEntry proc = null;
 
-      if (cacheKey != null)
-      {
-        int hash = cacheKey.GetHashCode();
-
-        lock (_procHash)
+        if (cacheKey != null)
         {
-          _procHash.TryGetValue(hash, out proc);
-        }
-      }
-      if (proc == null)
-      {
-        proc = AddNew(conn, spName);
-        conn.PerfMonitor.AddHardProcedureQuery();
-        if (conn.Settings.Logging)
-          MySqlTrace.LogInformation(conn.ServerThread,
-            String.Format(Resources.HardProcQuery, spName));
-      }
-      else
-      {
-        conn.PerfMonitor.AddSoftProcedureQuery();
-        if (conn.Settings.Logging)
-          MySqlTrace.LogInformation(conn.ServerThread,
-            String.Format(Resources.SoftProcQuery, spName));
-      }
-      return proc;
-    }
+            int hash = cacheKey.GetHashCode ();
 
-    internal string GetCacheKey(string spName, ProcedureCacheEntry proc)
-    {
-      string retValue = String.Empty;
-      StringBuilder key = new StringBuilder(spName);
-      key.Append("(");
-      string delimiter = "";
-      if (proc.parameters != null)
-      {
-        foreach (MySqlSchemaRow row in proc.parameters.Rows)
+            lock (this._procHash)
+            {
+                this._procHash.TryGetValue (hash, out proc);
+            }
+        }
+
+        if (proc == null)
         {
-          if (row["ORDINAL_POSITION"].Equals(0))
-            retValue = "?=";
-          else
-          {
-            key.AppendFormat(CultureInfo.InvariantCulture, "{0}?", delimiter);
-            delimiter = ",";
-          }
+            proc = this.AddNew (conn, spName);
+            conn.PerfMonitor.AddHardProcedureQuery ();
+
+            if (conn.Settings.Logging)
+                MySqlTrace.LogInformation (
+                    conn.ServerThread,
+                    string.Format (Resources.HardProcQuery, spName)
+                );
         }
-      }
-      key.Append(")");
-      return retValue + key.ToString();
-    }
-
-    private ProcedureCacheEntry AddNew(MySqlConnection connection, string spName)
-    {
-      ProcedureCacheEntry procData = GetProcData(connection, spName);
-
-      if (_maxSize <= 0) return procData;
-
-      string cacheKey = GetCacheKey(spName, procData);
-      int hash = cacheKey.GetHashCode();
-      lock (_procHash)
-      {
-        if (_procHash.Keys.Count >= _maxSize)
-          TrimHash();
-        if (!_procHash.ContainsKey(hash))
+        else
         {
-          _procHash[hash] = procData;
-          _hashQueue.Enqueue(hash);
+            conn.PerfMonitor.AddSoftProcedureQuery ();
+
+            if (conn.Settings.Logging)
+                MySqlTrace.LogInformation (
+                    conn.ServerThread,
+                    string.Format (Resources.SoftProcQuery, spName)
+                );
         }
-      }
-      return procData;
+
+        return proc;
     }
 
-    private void TrimHash()
+    internal string GetCacheKey (string spName, ProcedureCacheEntry proc)
     {
-      int oldestHash = _hashQueue.Dequeue();
-      _procHash.Remove(oldestHash);
+        string        retValue = string.Empty;
+        StringBuilder key      = new StringBuilder (spName);
+        key.Append ("(");
+        string delimiter = "";
+
+        if (proc.parameters != null)
+            foreach (MySqlSchemaRow row in proc.parameters.Rows)
+                if (row ["ORDINAL_POSITION"].Equals (0))
+                {
+                    retValue = "?=";
+                }
+                else
+                {
+                    key.AppendFormat (CultureInfo.InvariantCulture, "{0}?", delimiter);
+                    delimiter = ",";
+                }
+
+        key.Append (")");
+        return retValue + key.ToString ();
     }
 
-    private static ProcedureCacheEntry GetProcData(MySqlConnection connection, string spName)
+    private ProcedureCacheEntry AddNew (MySqlConnection connection, string spName)
     {
-      SplitSchemaAndEntity(spName, out string schema, out string entity);
+        ProcedureCacheEntry procData = GetProcData (connection, spName);
 
-      string[] restrictions = new string[4];
-      restrictions[1] = string.IsNullOrEmpty(schema) ? connection.CurrentDatabase() : Utils.UnquoteString(schema);
-      restrictions[2] = Utils.UnquoteString(entity);
-      MySqlSchemaCollection proc = connection.GetSchemaCollection("procedures", restrictions);
-      if (proc.Rows.Count > 1)
-        throw new MySqlException(Resources.ProcAndFuncSameName);
-      if (proc.Rows.Count == 0)
-      {
-        string msg = string.Format(Resources.InvalidProcName, entity, schema) + " " +
-        string.Format(Resources.ExecuteProcedureUnauthorized, connection.Settings.UserID, connection.Settings.Server);
-        throw new MySqlException(msg);
-      }
+        if (this._maxSize <= 0)
+            return procData;
 
-      ProcedureCacheEntry entry = new ProcedureCacheEntry();
-      entry.procedure = proc;
+        string cacheKey = this.GetCacheKey (spName, procData);
+        int    hash     = cacheKey.GetHashCode ();
 
-      // we don't use GetSchema here because that would cause another
-      // query of procedures and we don't need that since we already
-      // know the procedure we care about.
-      ISSchemaProvider isp = new ISSchemaProvider(connection);
-      string[] rest = isp.CleanRestrictions(restrictions);
-      MySqlSchemaCollection parameters = isp.GetProcedureParameters(rest, proc);
-      entry.parameters = parameters;
+        lock (this._procHash)
+        {
+            if (this._procHash.Keys.Count >= this._maxSize)
+                this.TrimHash ();
 
-      return entry;
+            if (!this._procHash.ContainsKey (hash))
+            {
+                this._procHash [hash] = procData;
+                this._hashQueue.Enqueue (hash);
+            }
+        }
+
+        return procData;
+    }
+
+    private void TrimHash ()
+    {
+        int oldestHash = this._hashQueue.Dequeue ();
+        this._procHash.Remove (oldestHash);
+    }
+
+    private static ProcedureCacheEntry GetProcData (MySqlConnection connection, string spName)
+    {
+        SplitSchemaAndEntity (spName, out string schema, out string entity);
+
+        string [] restrictions = new string[4];
+        restrictions [1] = string.IsNullOrEmpty (schema) ? connection.CurrentDatabase () : Utils.UnquoteString (schema);
+        restrictions [2] = Utils.UnquoteString (entity);
+        MySqlSchemaCollection proc = connection.GetSchemaCollection ("procedures", restrictions);
+
+        if (proc.Rows.Count > 1)
+            throw new MySqlException (Resources.ProcAndFuncSameName);
+
+        if (proc.Rows.Count == 0)
+        {
+            string msg = string.Format (Resources.InvalidProcName,              entity,                     schema) + " " +
+                         string.Format (Resources.ExecuteProcedureUnauthorized, connection.Settings.UserID, connection.Settings.Server);
+
+            throw new MySqlException (msg);
+        }
+
+        ProcedureCacheEntry entry = new ProcedureCacheEntry ();
+        entry.procedure = proc;
+
+        // we don't use GetSchema here because that would cause another
+        // query of procedures and we don't need that since we already
+        // know the procedure we care about.
+        ISSchemaProvider      isp        = new ISSchemaProvider (connection);
+        string []             rest       = isp.CleanRestrictions (restrictions);
+        MySqlSchemaCollection parameters = isp.GetProcedureParameters (rest, proc);
+        entry.parameters = parameters;
+
+        return entry;
     }
 
     /// <summary>
@@ -173,20 +188,20 @@ namespace EVESharp.Database.MySql
     /// <param name="spName">string to inspect.</param>
     /// <param name="schema">The schema.</param>
     /// <param name="entity">The entity.</param>
-    private static void SplitSchemaAndEntity(string spName, out string schema, out string entity)
+    private static void SplitSchemaAndEntity (string spName, out string schema, out string entity)
     {
-      int dotIndex = ExtractDotIndex(spName);
+        int dotIndex = ExtractDotIndex (spName);
 
-      if (dotIndex != -1)
-      {
-        schema = spName.Substring(0, dotIndex);
-        entity = spName.Substring(dotIndex + 1);
-      }
-      else
-      {
-        schema = string.Empty;
-        entity = spName;
-      }
+        if (dotIndex != -1)
+        {
+            schema = spName.Substring (0, dotIndex);
+            entity = spName.Substring (dotIndex + 1);
+        }
+        else
+        {
+            schema = string.Empty;
+            entity = spName;
+        }
     }
 
     /// <summary>
@@ -196,35 +211,36 @@ namespace EVESharp.Database.MySql
     /// <param name="spName">string to inspect.</param>
     /// <param name="dotIndex">Value of the dot index.</param>
     /// <returns>The dot index.</returns>
-    private static int ExtractDotIndex(string spName, int dotIndex = -1)
+    private static int ExtractDotIndex (string spName, int dotIndex = -1)
     {
-      int backticks, _dotIndexTemp;
-      _dotIndexTemp = spName.IndexOf('.'); // looks for a '.' in the string passed as argument
-      string subString;
+        int backticks, _dotIndexTemp;
+        _dotIndexTemp = spName.IndexOf ('.'); // looks for a '.' in the string passed as argument
+        string subString;
 
-      if (_dotIndexTemp != -1)
-      {
-        subString = spName.Substring(_dotIndexTemp + 1);  // gets a substring from the found '.' to the end of the string
-        backticks = subString.Count(c => c == '`'); // counts backticks in the substring
+        if (_dotIndexTemp != -1)
+        {
+            subString = spName.Substring (_dotIndexTemp + 1); // gets a substring from the found '.' to the end of the string
+            backticks = subString.Count (c => c == '`'); // counts backticks in the substring
 
-        // if the count of backticks in the substring is an odd number,
-        // that means that this '.' is part of the schema or entity and will continue looking;
-        // otherwise, returns the index.
-        if (backticks % 2 == 0)
-          dotIndex = dotIndex == -1 ? _dotIndexTemp : dotIndex + _dotIndexTemp;
-        else
-          dotIndex = ExtractDotIndex(subString, _dotIndexTemp + 1);
-      }
-      else if (_dotIndexTemp == -1 && dotIndex != -1)
-        dotIndex = -1;
+            // if the count of backticks in the substring is an odd number,
+            // that means that this '.' is part of the schema or entity and will continue looking;
+            // otherwise, returns the index.
+            if (backticks % 2 == 0)
+                dotIndex = dotIndex == -1 ? _dotIndexTemp : dotIndex + _dotIndexTemp;
+            else
+                dotIndex = ExtractDotIndex (subString, _dotIndexTemp + 1);
+        }
+        else if (_dotIndexTemp == -1 && dotIndex != -1)
+        {
+            dotIndex = -1;
+        }
 
-      return dotIndex;
+        return dotIndex;
     }
 
-    internal void Clear()
+    internal void Clear ()
     {
-      _procHash.Clear();
-      _hashQueue.Clear();
+        this._procHash.Clear ();
+        this._hashQueue.Clear ();
     }
-  }
 }

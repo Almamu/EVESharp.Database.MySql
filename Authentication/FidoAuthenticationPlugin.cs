@@ -31,32 +31,32 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace EVESharp.Database.MySql.Authentication
+namespace EVESharp.Database.MySql.Authentication;
+
+internal class FidoAuthenticationPlugin : MySqlAuthenticationPlugin
 {
-  internal class FidoAuthenticationPlugin : MySqlAuthenticationPlugin
-  {
     public override string PluginName => "authentication_fido_client";
 
     // Constants
-    private const int CLIENT_DATA_LENGTH = 32;
+    private const int CLIENT_DATA_LENGTH          = 32;
     private const int RELYING_PARTY_ID_MAX_LENGTH = 255;
 
     // Fields
-    private byte[] _clientDataHash;
-    private byte[] _credentialId;
-    private string _relyingPartyId;
+    private byte [] _clientDataHash;
+    private byte [] _credentialId;
+    private string  _relyingPartyId;
 
-    protected override void SetAuthData(byte[] data)
+    protected override void SetAuthData (byte [] data)
     {
-      if (data.Length > 0)
-        ParseChallenge(data);
-      else
-        throw new MySqlException("FIDO registration missing.");
+        if (data.Length > 0)
+            this.ParseChallenge (data);
+        else
+            throw new MySqlException ("FIDO registration missing.");
     }
 
-    protected override byte[] MoreData(byte[] data)
+    protected override byte [] MoreData (byte [] data)
     {
-      return SignChallenge();
+        return this.SignChallenge ();
     }
 
     /// <summary>
@@ -65,76 +65,91 @@ namespace EVESharp.Database.MySql.Authentication
     /// </summary>
     /// <param name="challenge">Buffer holding the server challenge.</param>
     /// <exception cref="MySqlException">Thrown if an error occurs while parsing the challenge.</exception>
-    private void ParseChallenge(byte[] challenge)
+    private void ParseChallenge (byte [] challenge)
     {
-      // client_data_hash length should be 32 bytes
-      int clientDataLength = challenge[0];
-      if (clientDataLength != CLIENT_DATA_LENGTH) throw new MySqlException("Challenge received is corrupt.");
-      // client_data_hash
-      _clientDataHash = new byte[clientDataLength];
-      Array.Copy(challenge, 1, _clientDataHash, 0, clientDataLength);
+        // client_data_hash length should be 32 bytes
+        int clientDataLength = challenge [0];
 
-      // relyting_party_id length cannot be more than 255
-      int relyingPartyIdLength = challenge[clientDataLength + 1];
-      if (relyingPartyIdLength > RELYING_PARTY_ID_MAX_LENGTH) throw new MySqlException("Challenge received is corrupt.");
-      // relying_party_id
-      _relyingPartyId = Encoding.GetString(challenge, clientDataLength + 2, relyingPartyIdLength);
+        if (clientDataLength != CLIENT_DATA_LENGTH)
+            throw new MySqlException ("Challenge received is corrupt.");
 
-      // credential_id length
-      int credentialIdLength = challenge[clientDataLength + relyingPartyIdLength + 2];
-      // credential_id
-      _credentialId = new byte[credentialIdLength];
-      Array.Copy(challenge, clientDataLength + relyingPartyIdLength + 3, _credentialId, 0, credentialIdLength);
+        // client_data_hash
+        this._clientDataHash = new byte[clientDataLength];
+        Array.Copy (challenge, 1, this._clientDataHash, 0, clientDataLength);
+
+        // relyting_party_id length cannot be more than 255
+        int relyingPartyIdLength = challenge [clientDataLength + 1];
+
+        if (relyingPartyIdLength > RELYING_PARTY_ID_MAX_LENGTH)
+            throw new MySqlException ("Challenge received is corrupt.");
+
+        // relying_party_id
+        this._relyingPartyId = this.Encoding.GetString (challenge, clientDataLength + 2, relyingPartyIdLength);
+
+        // credential_id length
+        int credentialIdLength = challenge [clientDataLength + relyingPartyIdLength + 2];
+        // credential_id
+        this._credentialId = new byte[credentialIdLength];
+        Array.Copy (challenge, clientDataLength + relyingPartyIdLength + 3, this._credentialId, 0, credentialIdLength);
     }
 
     /// <summary>
     /// Method to obtains an assertion from a FIDO device.
     /// </summary>
-    private byte[] SignChallenge()
+    private byte [] SignChallenge ()
     {
-      string devicePath;
+        string devicePath;
 
-      using (var fidoDeviceInfo = new FidoDeviceInfo())
-        devicePath = fidoDeviceInfo.Path;
-
-      using (var fidoAssertion = new FidoAssertion())
-      {
-        using (var fidoDevice = new FidoDevice())
+        using (FidoDeviceInfo fidoDeviceInfo = new FidoDeviceInfo ())
         {
-          fidoAssertion.ClientDataHash = _clientDataHash;
-          fidoAssertion.Rp = _relyingPartyId;
-          fidoAssertion.AllowCredential(_credentialId);
-
-          fidoDevice.Open(devicePath);
-
-          if (_driver.Settings.FidoActionRequested != null)
-            _driver.Settings.FidoActionRequested?.Invoke();
-          else
-            throw new MySqlException("An event handler for FidoActionRequested was not specified.");
-
-          fidoDevice.GetAssert(fidoAssertion);
-
-          var fidoAssertionStatement = fidoAssertion.GetFidoAssertionStatement();
-          int responseLength = fidoAssertionStatement.SignatureLen + fidoAssertionStatement.AuthDataLen +
-            GetLengthSize((ulong)fidoAssertionStatement.SignatureLen) + GetLengthSize((ulong)fidoAssertionStatement.AuthDataLen);
-
-          var response = new MySqlPacket(new MemoryStream(responseLength));
-          response.WriteLength(fidoAssertionStatement.AuthDataLen);
-          response.Write(fidoAssertionStatement.AuthData.ToArray());
-          response.WriteLength(fidoAssertionStatement.SignatureLen);
-          response.Write(fidoAssertionStatement.Signature.ToArray());
-
-          return response.Buffer;
+            devicePath = fidoDeviceInfo.Path;
         }
-      }
+
+        using (FidoAssertion fidoAssertion = new FidoAssertion ())
+        {
+            using (FidoDevice fidoDevice = new FidoDevice ())
+            {
+                fidoAssertion.ClientDataHash = this._clientDataHash;
+                fidoAssertion.Rp             = this._relyingPartyId;
+                fidoAssertion.AllowCredential (this._credentialId);
+
+                fidoDevice.Open (devicePath);
+
+                if (this._driver.Settings.FidoActionRequested != null)
+                    this._driver.Settings.FidoActionRequested?.Invoke ();
+                else
+                    throw new MySqlException ("An event handler for FidoActionRequested was not specified.");
+
+                fidoDevice.GetAssert (fidoAssertion);
+
+                FidoAssertionStatement fidoAssertionStatement = fidoAssertion.GetFidoAssertionStatement ();
+
+                int responseLength = fidoAssertionStatement.SignatureLen + fidoAssertionStatement.AuthDataLen +
+                                     this.GetLengthSize ((ulong) fidoAssertionStatement.SignatureLen) +
+                                     this.GetLengthSize ((ulong) fidoAssertionStatement.AuthDataLen);
+
+                MySqlPacket response = new MySqlPacket (new MemoryStream (responseLength));
+                response.WriteLength (fidoAssertionStatement.AuthDataLen);
+                response.Write (fidoAssertionStatement.AuthData.ToArray ());
+                response.WriteLength (fidoAssertionStatement.SignatureLen);
+                response.Write (fidoAssertionStatement.Signature.ToArray ());
+
+                return response.Buffer;
+            }
+        }
     }
 
-    private int GetLengthSize(ulong length)
+    private int GetLengthSize (ulong length)
     {
-      if (length < 251UL) return 1;
-      if (length < 65536L) return 3;
-      if (length < 16777216UL) return 4;
-      return 9;
+        if (length < 251UL)
+            return 1;
+
+        if (length < 65536L)
+            return 3;
+
+        if (length < 16777216UL)
+            return 4;
+
+        return 9;
     }
-  }
 }

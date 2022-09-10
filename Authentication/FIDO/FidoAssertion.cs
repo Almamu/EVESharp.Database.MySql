@@ -30,19 +30,20 @@ using System;
 using EVESharp.Database.MySql.Authentication.FIDO.Native;
 using EVESharp.Database.MySql.Authentication.FIDO.Utility;
 
-namespace EVESharp.Database.MySql.Authentication.FIDO
+namespace EVESharp.Database.MySql.Authentication.FIDO;
+
+/// <summary>
+/// A reference struct representing a statement contained within a <see cref="FidoAssertion"/> object
+/// </summary>
+internal unsafe ref struct FidoAssertionStatement
 {
-  /// <summary>
-  /// A reference struct representing a statement contained within a <see cref="FidoAssertion"/> object
-  /// </summary>
-  internal unsafe ref struct FidoAssertionStatement
-  {
-    #region Properties
+#region Properties
+
     /// <summary>
     /// <para>WebAuthn §6.1 https://www.w3.org/TR/webauthn-1/#sec-authenticator-data</para>
     /// Gets the authenticator data for the assertion statement.
     /// </summary>
-    public ReadOnlySpan<byte> AuthData { get; }
+    public ReadOnlySpan <byte> AuthData { get; }
 
     /// <summary>
     /// Gets the authenticator data length for the assertion statement.
@@ -52,78 +53,88 @@ namespace EVESharp.Database.MySql.Authentication.FIDO
     /// <summary>
     /// Gets the ID for this assertion statement
     /// </summary>
-    public ReadOnlySpan<byte> Id { get; }
+    public ReadOnlySpan <byte> Id { get; }
 
     /// <summary>
     /// Gets the signature for this assertion statement
     /// </summary>
-    public ReadOnlySpan<byte> Signature { get; }
+    public ReadOnlySpan <byte> Signature { get; }
 
     /// <summary>
     /// Gets the signature length for this assertion statement
     /// </summary>
     public int SignatureLen { get; }
-    #endregion
 
-    #region Constructors
-    internal FidoAssertionStatement(fido_assert_t* native)
+#endregion
+
+#region Constructors
+
+    internal FidoAssertionStatement (fido_assert_t* native)
     {
-      var idx = IntPtr.Zero;
-      AuthDataLen = NativeMethods.fido_assert_authdata_len(native, idx);
-      AuthData = new ReadOnlySpan<byte>(NativeMethods.fido_assert_authdata_ptr(native, idx), AuthDataLen);
-      Id = new ReadOnlySpan<byte>(NativeMethods.fido_assert_id_ptr(native, idx), NativeMethods.fido_assert_id_len(native, idx));
-      SignatureLen = NativeMethods.fido_assert_sig_len(native, idx);
-      Signature = new ReadOnlySpan<byte>(NativeMethods.fido_assert_sig_ptr(native, idx), SignatureLen);
+        IntPtr idx = IntPtr.Zero;
+        this.AuthDataLen  = NativeMethods.fido_assert_authdata_len (native, idx);
+        this.AuthData     = new ReadOnlySpan <byte> (NativeMethods.fido_assert_authdata_ptr (native, idx), this.AuthDataLen);
+        this.Id           = new ReadOnlySpan <byte> (NativeMethods.fido_assert_id_ptr (native, idx),       NativeMethods.fido_assert_id_len (native, idx));
+        this.SignatureLen = NativeMethods.fido_assert_sig_len (native, idx);
+        this.Signature    = new ReadOnlySpan <byte> (NativeMethods.fido_assert_sig_ptr (native, idx), this.SignatureLen);
     }
-    #endregion
-  }
 
-  /// <summary>
-  /// Creates an object for holding data about a given assertion. In FIDO2, an assertion
-  /// is proof that the authenticator being used has knowledge of the private key associated
-  /// with the public key that the other party is in posession of.
-  /// </summary>
-  internal sealed unsafe class FidoAssertion : IDisposable
-  {
+#endregion
+}
+
+/// <summary>
+/// Creates an object for holding data about a given assertion. In FIDO2, an assertion
+/// is proof that the authenticator being used has knowledge of the private key associated
+/// with the public key that the other party is in posession of.
+/// </summary>
+internal sealed unsafe class FidoAssertion : IDisposable
+{
     private fido_assert_t* _assert;
 
-    #region Constructors
-    static FidoAssertion()
+#region Constructors
+
+    static FidoAssertion ()
     {
-      Init.Call();
+        Init.Call ();
     }
 
     /// <summary>
     /// Default Constructor
     /// </summary>
     /// <exception cref="OutOfMemoryException" />
-    public FidoAssertion()
+    public FidoAssertion ()
     {
-      _assert = NativeMethods.fido_assert_new();
-      if (_assert == null)
-        throw new OutOfMemoryException();
+        this._assert = NativeMethods.fido_assert_new ();
+
+        if (this._assert == null)
+            throw new OutOfMemoryException ();
     }
 
     /// <summary>
     /// Finalizer
     /// </summary>
-    ~FidoAssertion() => ReleaseUnmanagedResources();
-    #endregion
+    ~FidoAssertion ()
+    {
+        this.ReleaseUnmanagedResources ();
+    }
 
-    #region Properties
+#endregion
+
+#region Properties
+
     /// <summary>
     /// Gets or sets the hash of the client data object that the assertion is based on.
     /// </summary>
     /// <exception cref="CtapException">Thrown if an error occurs while setting the hash</exception>
-    public ReadOnlySpan<byte> ClientDataHash
+    public ReadOnlySpan <byte> ClientDataHash
     {
-      set
-      {
-        fixed (byte* value_ = value)
+        set
         {
-          NativeMethods.fido_assert_set_clientdata_hash(_assert, value_, (IntPtr)value.Length).Check();
+            fixed (byte* value_ = value)
+            {
+                NativeMethods.fido_assert_set_clientdata_hash (this._assert, value_, (IntPtr) value.Length).Check ();
+            }
         }
-      }
     }
 
     /// <summary>
@@ -132,9 +143,10 @@ namespace EVESharp.Database.MySql.Authentication.FIDO
     /// <exception cref="CtapException">Thrown if an error occurs while setting the relying party</exception>
     public string Rp
     {
-      set => NativeMethods.fido_assert_set_rp(_assert, value).Check();
+        set => NativeMethods.fido_assert_set_rp (this._assert, value).Check ();
     }
-    #endregion
+
+#endregion
 
     /// <summary>
     /// Adds an allowed credential to this assertion.  If used, only credential objects
@@ -142,21 +154,21 @@ namespace EVESharp.Database.MySql.Authentication.FIDO
     /// </summary>
     /// <param name="credentialId">The ID of the credential to add to the whitelist</param>
     /// <exception cref="CtapException">Thrown if an error occurs while adding the credential</exception>
-    public void AllowCredential(ReadOnlySpan<byte> credentialId)
+    public void AllowCredential (ReadOnlySpan <byte> credentialId)
     {
-      fixed (byte* cred = credentialId)
-      {
-        NativeMethods.fido_assert_allow_cred(_assert, cred, (IntPtr)credentialId.Length).Check();
-      }
+        fixed (byte* cred = credentialId)
+        {
+            NativeMethods.fido_assert_allow_cred (this._assert, cred, (IntPtr) credentialId.Length).Check ();
+        }
     }
 
     /// <summary>
     /// Cast operator for using this object as a native handle
     /// </summary>
     /// <param name="assert">The object to use</param>
-    public static explicit operator fido_assert_t*(FidoAssertion assert)
+    public static explicit operator fido_assert_t* (FidoAssertion assert)
     {
-      return assert._assert;
+        return assert._assert;
     }
 
     /// <summary>
@@ -165,24 +177,25 @@ namespace EVESharp.Database.MySql.Authentication.FIDO
     /// <param name="index">The index of the assertion statement to retrieve</param>
     /// <returns>The assertion statement object</returns>
     /// <exception cref="IndexOutOfRangeException">The index is not in the range [0, count)</exception>
-    public FidoAssertionStatement GetFidoAssertionStatement()
+    public FidoAssertionStatement GetFidoAssertionStatement ()
     {
-      return new FidoAssertionStatement(_assert);
+        return new FidoAssertionStatement (this._assert);
     }
 
-    private void ReleaseUnmanagedResources()
+    private void ReleaseUnmanagedResources ()
     {
-      var native = _assert;
-      NativeMethods.fido_assert_free(&native);
-      _assert = null;
+        fido_assert_t* native = this._assert;
+        NativeMethods.fido_assert_free (&native);
+        this._assert = null;
     }
 
-    #region IDisposable
-    public void Dispose()
+#region IDisposable
+
+    public void Dispose ()
     {
-      ReleaseUnmanagedResources();
-      GC.SuppressFinalize(this);
+        this.ReleaseUnmanagedResources ();
+        GC.SuppressFinalize (this);
     }
-    #endregion
-  }
+
+#endregion
 }

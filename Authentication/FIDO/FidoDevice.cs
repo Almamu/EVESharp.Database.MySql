@@ -30,69 +30,84 @@ using System;
 using EVESharp.Database.MySql.Authentication.FIDO.Native;
 using EVESharp.Database.MySql.Authentication.FIDO.Utility;
 
-namespace EVESharp.Database.MySql.Authentication.FIDO
+namespace EVESharp.Database.MySql.Authentication.FIDO;
+
+internal sealed unsafe class FidoDevice : IDisposable
 {
-  internal sealed unsafe class FidoDevice : IDisposable
-  {
     private fido_dev_t* _device;
 
-    #region Constructors
-    static FidoDevice()
+#region Constructors
+
+    static FidoDevice ()
     {
-      Init.Call();
+        Init.Call ();
     }
 
     /// <summary>
     /// Default constructor
     /// </summary>
     /// <exception cref="OutOfMemoryException" />
-    public FidoDevice()
+    public FidoDevice ()
     {
-      _device = NativeMethods.fido_dev_new();
-      if (_device == null)
-        throw new OutOfMemoryException();
+        this._device = NativeMethods.fido_dev_new ();
+
+        if (this._device == null)
+            throw new OutOfMemoryException ();
     }
 
     /// <summary>
     /// Finalizer
     /// </summary>
-    ~FidoDevice() => ReleaseUnmanagedResources();
-    #endregion
+    ~FidoDevice ()
+    {
+        this.ReleaseUnmanagedResources ();
+    }
+
+#endregion
 
     /// <summary>
     /// Opens the device at the given path.
     /// </summary>
     /// <param name="path">The path of the device</param>
     /// <exception cref="CtapException">Thrown if an error occurs while opening the device</exception>
-    public void Open(string path) => NativeMethods.fido_dev_open(_device, path).Check();
+    public void Open (string path)
+    {
+        NativeMethods.fido_dev_open (this._device, path).Check ();
+    }
 
     /// <summary>
     /// Closes the device, preventing further use
     /// </summary>
     /// <exception cref="CtapException">Thrown if an error occurs while closing</exception>
-    public void Close() => NativeMethods.fido_dev_close(_device).Check();
+    public void Close ()
+    {
+        NativeMethods.fido_dev_close (this._device).Check ();
+    }
 
     /// <summary>
     /// Uses the device to generate an assertion
     /// </summary>
     /// <param name="assert">The assertion object with its input properties properly set</param>
     /// <exception cref="CtapException">Thrown if an error occurs while generating the assertion</exception>
-    public void GetAssert(FidoAssertion assert) =>
-        NativeMethods.fido_dev_get_assert(_device, (fido_assert_t*)assert, null).Check();
-
-    private void ReleaseUnmanagedResources()
+    public void GetAssert (FidoAssertion assert)
     {
-      var native = _device;
-      NativeMethods.fido_dev_free(&native);
-      _device = null;
+        NativeMethods.fido_dev_get_assert (this._device, (fido_assert_t*) assert, null).Check ();
     }
 
-    #region IDisposable
-    public void Dispose()
+    private void ReleaseUnmanagedResources ()
     {
-      ReleaseUnmanagedResources();
-      GC.SuppressFinalize(this);
+        fido_dev_t* native = this._device;
+        NativeMethods.fido_dev_free (&native);
+        this._device = null;
     }
-    #endregion
-  }
+
+#region IDisposable
+
+    public void Dispose ()
+    {
+        this.ReleaseUnmanagedResources ();
+        GC.SuppressFinalize (this);
+    }
+
+#endregion
 }

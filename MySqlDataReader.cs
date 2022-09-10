@@ -37,43 +37,43 @@ using System.Text;
 using System.Threading;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+///  Provides a means of reading a forward-only stream of rows from a MySQL database. This class cannot be inherited.
+/// </summary>
+/// <remarks>
+///  <para>
+///    To create a <see cref="MySqlDataReader"/>, you must call the <see cref="MySqlCommand.ExecuteReader()"/>
+///    method of the <see cref="MySqlCommand"/> object, rather than directly using a constructor.
+///  </para>
+///  <para>
+///    While the <see cref="MySqlDataReader"/> is in use, the associated <see cref="MySqlConnection"/>
+///    is busy serving the <see cref="MySqlDataReader"/>, and no other operations can be performed
+///    on the <B>MySqlConnection</B> other than closing it. This is the case until the
+///    <see cref="Close"/> method of the <see cref="MySqlDataReader"/> is called.
+///  </para>
+///  <para>
+///    <see cref="IsClosed"/> and <see cref="RecordsAffected"/>
+///    are the only properties that you can call after the <see cref="MySqlDataReader"/> is
+///    closed. Though the <see cref="RecordsAffected"/> property may be accessed at any time
+///    while the <see cref="MySqlDataReader"/> exists, always call <B>Close</B> before returning
+///    the value of <see cref="RecordsAffected"/> to ensure an accurate return value.
+///  </para>
+///  <para>
+///    For optimal performance, <see cref="MySqlDataReader"/> avoids creating
+///    unnecessary objects or making unnecessary copies of data. As a result, multiple calls
+///    to methods such as <see cref="MySqlDataReader.GetValue"/> return a reference to the
+///    same object. Use caution if you are modifying the underlying value of the objects
+///    returned by methods such as <see cref="GetValue"/>.
+///  </para>
+/// </remarks>
+public sealed partial class MySqlDataReader : DbDataReader, IDataReader, IDataRecord, IDisposable
 {
-  /// <summary>
-  ///  Provides a means of reading a forward-only stream of rows from a MySQL database. This class cannot be inherited.
-  /// </summary>
-  /// <remarks>
-  ///  <para>
-  ///    To create a <see cref="MySqlDataReader"/>, you must call the <see cref="MySqlCommand.ExecuteReader()"/>
-  ///    method of the <see cref="MySqlCommand"/> object, rather than directly using a constructor.
-  ///  </para>
-  ///  <para>
-  ///    While the <see cref="MySqlDataReader"/> is in use, the associated <see cref="MySqlConnection"/>
-  ///    is busy serving the <see cref="MySqlDataReader"/>, and no other operations can be performed
-  ///    on the <B>MySqlConnection</B> other than closing it. This is the case until the
-  ///    <see cref="Close"/> method of the <see cref="MySqlDataReader"/> is called.
-  ///  </para>
-  ///  <para>
-  ///    <see cref="IsClosed"/> and <see cref="RecordsAffected"/>
-  ///    are the only properties that you can call after the <see cref="MySqlDataReader"/> is
-  ///    closed. Though the <see cref="RecordsAffected"/> property may be accessed at any time
-  ///    while the <see cref="MySqlDataReader"/> exists, always call <B>Close</B> before returning
-  ///    the value of <see cref="RecordsAffected"/> to ensure an accurate return value.
-  ///  </para>
-  ///  <para>
-  ///    For optimal performance, <see cref="MySqlDataReader"/> avoids creating
-  ///    unnecessary objects or making unnecessary copies of data. As a result, multiple calls
-  ///    to methods such as <see cref="MySqlDataReader.GetValue"/> return a reference to the
-  ///    same object. Use caution if you are modifying the underlying value of the objects
-  ///    returned by methods such as <see cref="GetValue"/>.
-  ///  </para>
-  /// </remarks>
-  public sealed partial class MySqlDataReader : DbDataReader, IDataReader, IDataRecord, IDisposable
-  {
     // The DataReader should always be open when returned to the user.
     private bool _isOpen = true;
 
-    internal long affectedRows;
+    internal long   affectedRows;
     internal Driver driver;
 
     // Used in special circumstances with stored procs to avoid exceptions from DbDataAdapter
@@ -92,24 +92,22 @@ namespace EVESharp.Database.MySql
      * DataReader object, the constructors are
      * marked as internal.
      */
-    internal MySqlDataReader(MySqlCommand cmd, PreparableStatement statement, CommandBehavior behavior)
+    internal MySqlDataReader (MySqlCommand cmd, PreparableStatement statement, CommandBehavior behavior)
     {
-      this.Command = cmd;
-      _connection = Command.Connection;
-      CommandBehavior = behavior;
-      driver = _connection.driver;
-      affectedRows = -1;
-      this.Statement = statement;
+        this.Command         = cmd;
+        this._connection     = this.Command.Connection;
+        this.CommandBehavior = behavior;
+        this.driver          = this._connection.driver;
+        this.affectedRows    = -1;
+        this.Statement       = statement;
 
-      if (cmd.CommandType == CommandType.StoredProcedure
-        && cmd.UpdatedRowSource == UpdateRowSource.FirstReturnedRecord
-      )
-      {
-        _disableZeroAffectedRows = true;
-      }
+        if (cmd.CommandType == CommandType.StoredProcedure
+            && cmd.UpdatedRowSource == UpdateRowSource.FirstReturnedRecord
+           )
+            this._disableZeroAffectedRows = true;
     }
 
-    #region Properties
+#region Properties
 
     internal PreparableStatement Statement { get; }
 
@@ -123,19 +121,19 @@ namespace EVESharp.Database.MySql
     /// Gets the number of columns in the current row.
     /// </summary>
     /// <returns>The number of columns in the current row.</returns>
-    public override int FieldCount => ResultSet?.Size ?? 0;
+    public override int FieldCount => this.ResultSet?.Size ?? 0;
 
     /// <summary>
     /// Gets a value indicating whether the MySqlDataReader contains one or more rows.
     /// </summary>
     /// <returns>true if the <see cref="MySqlDataReader"/> contains one or more rows; otherwise false.</returns>
-    public override bool HasRows => ResultSet?.HasRows ?? false;
+    public override bool HasRows => this.ResultSet?.HasRows ?? false;
 
     /// <summary>
     /// Gets a value indicating whether the data reader is closed.
     /// </summary>
     /// <returns>true if the <see cref="MySqlDataReader"/> is closed; otherwise false.</returns>
-    public override bool IsClosed => !_isOpen;
+    public override bool IsClosed => !this._isOpen;
 
     /// <summary>
     /// Gets the number of rows changed, inserted, or deleted by execution of the SQL statement.
@@ -144,20 +142,22 @@ namespace EVESharp.Database.MySql
     /// -1 for SELECT statements; 0 if no rows were affected or the statement failed.</returns>
     public override int RecordsAffected
     {
-      // RecordsAffected returns the number of rows affected in batch
-      // statments from insert/delete/update statments.  This property
-      // is not completely accurate until .Close() has been called.
-      get
-      {
-        if (!_disableZeroAffectedRows) return (int)affectedRows;
-        // In special case of updating stored procedure called from 
-        // within data adapter, we return -1 to avoid exceptions 
-        // (s. Bug#54895)
-        if (affectedRows == 0)
-          return -1;
+        // RecordsAffected returns the number of rows affected in batch
+        // statments from insert/delete/update statments.  This property
+        // is not completely accurate until .Close() has been called.
+        get
+        {
+            if (!this._disableZeroAffectedRows)
+                return (int) this.affectedRows;
 
-        return (int)affectedRows;
-      }
+            // In special case of updating stored procedure called from 
+            // within data adapter, we return -1 to avoid exceptions 
+            // (s. Bug#54895)
+            if (this.affectedRows == 0)
+                return -1;
+
+            return (int) this.affectedRows;
+        }
     }
 
     /// <summary>
@@ -165,14 +165,14 @@ namespace EVESharp.Database.MySql
     /// In C#, this property is the indexer for the <see cref="MySqlDataReader"/> class.
     /// </summary>
     /// <returns>The value of the specified column.</returns>
-    public override object this[int i] => GetValue(i);
+    public override object this [int i] => this.GetValue (i);
 
     /// <summary>
     /// Gets the value of a column in its native format.
     ///	[C#] In C#, this property is the indexer for the <see cref="MySqlDataReader"/> class.
     /// </summary>
     /// <returns>The value of the specified column.</returns>
-    public override object this[String name] => this[GetOrdinal(name)];
+    public override object this [string name] => this [this.GetOrdinal (name)];
 
     /// <summary>
     /// Gets a value indicating the depth of nesting for the current row.  This method is not 
@@ -181,95 +181,95 @@ namespace EVESharp.Database.MySql
     /// <returns>The depth of nesting for the current row.</returns>
     public override int Depth => 0;
 
-    #endregion
+#endregion
 
     /// <summary>
     /// Closes the MySqlDataReader object.
     /// </summary>
-    public override void Close()
+    public override void Close ()
     {
-      if (!_isOpen) return;
+        if (!this._isOpen)
+            return;
 
-      bool shouldCloseConnection = (CommandBehavior & CommandBehavior.CloseConnection) != 0;
-      CommandBehavior originalBehavior = CommandBehavior;
+        bool            shouldCloseConnection = (this.CommandBehavior & CommandBehavior.CloseConnection) != 0;
+        CommandBehavior originalBehavior      = this.CommandBehavior;
 
-      // clear all remaining resultsets
-      try
-      {
-        // Temporarily change to Default behavior to allow NextResult to finish properly.
-        if (!originalBehavior.Equals(CommandBehavior.SchemaOnly))
-          CommandBehavior = CommandBehavior.Default;
-        while (NextResult()) { }
-      }
-      catch (MySqlException ex)
-      {
-        // Ignore aborted queries
-        if (!ex.IsQueryAborted)
+        // clear all remaining resultsets
+        try
         {
-          // ignore IO exceptions.
-          // We are closing or disposing reader, and  do not
-          // want exception to be propagated to used. If socket is
-          // is closed on the server side, next query will run into
-          // IO exception. If reader is closed by GC, we also would 
-          // like to avoid any exception here. 
-          bool isIOException = false;
-          for (Exception exception = ex; exception != null;
-            exception = exception.InnerException)
-          {
-            if (exception is System.IO.IOException)
-            {
-              isIOException = true;
-              break;
-            }
-          }
-          if (!isIOException)
-          {
-            // Ordinary exception (neither IO nor query aborted)
-            throw;
-          }
+            // Temporarily change to Default behavior to allow NextResult to finish properly.
+            if (!originalBehavior.Equals (CommandBehavior.SchemaOnly))
+                this.CommandBehavior = CommandBehavior.Default;
+
+            while (this.NextResult ()) { }
         }
-      }
-      catch (System.IO.IOException)
-      {
-        // eat, on the same reason we eat IO exceptions wrapped into 
-        // MySqlExceptions reasons, described above.
-      }
-      finally
-      {
-        // always ensure internal reader is null (Bug #55558)
-        _connection.Reader = null;
-        CommandBehavior = originalBehavior;
-      }
-      // we now give the command a chance to terminate.  In the case of
-      // stored procedures it needs to update out and inout parameters
-      Command.Close(this);
-      CommandBehavior = CommandBehavior.Default;
+        catch (MySqlException ex)
+        {
+            // Ignore aborted queries
+            if (!ex.IsQueryAborted)
+            {
+                // ignore IO exceptions.
+                // We are closing or disposing reader, and  do not
+                // want exception to be propagated to used. If socket is
+                // is closed on the server side, next query will run into
+                // IO exception. If reader is closed by GC, we also would 
+                // like to avoid any exception here. 
+                bool isIOException = false;
 
-      if (this.Command.Canceled && _connection.driver.Version.isAtLeast(5, 1, 0))
-      {
-        // Issue dummy command to clear kill flag
-        ClearKillFlag();
-      }
+                for (Exception exception = ex;
+                     exception != null;
+                     exception = exception.InnerException)
+                    if (exception is IOException)
+                    {
+                        isIOException = true;
+                        break;
+                    }
 
-      if (shouldCloseConnection)
-        _connection.Close();
+                if (!isIOException)
+                    // Ordinary exception (neither IO nor query aborted)
+                    throw;
+            }
+        }
+        catch (IOException)
+        {
+            // eat, on the same reason we eat IO exceptions wrapped into 
+            // MySqlExceptions reasons, described above.
+        }
+        finally
+        {
+            // always ensure internal reader is null (Bug #55558)
+            this._connection.Reader = null;
+            this.CommandBehavior    = originalBehavior;
+        }
 
-      Command = null;
-      _connection.IsInUse = false;
-      _connection = null;
-      _isOpen = false;
+        // we now give the command a chance to terminate.  In the case of
+        // stored procedures it needs to update out and inout parameters
+        this.Command.Close (this);
+        this.CommandBehavior = CommandBehavior.Default;
+
+        if (this.Command.Canceled && this._connection.driver.Version.isAtLeast (5, 1, 0))
+            // Issue dummy command to clear kill flag
+            this.ClearKillFlag ();
+
+        if (shouldCloseConnection)
+            this._connection.Close ();
+
+        this.Command             = null;
+        this._connection.IsInUse = false;
+        this._connection         = null;
+        this._isOpen             = false;
     }
 
-    #region TypeSafe Accessors
+#region TypeSafe Accessors
 
     /// <summary>
     /// Gets the value of the specified column as a Boolean.
     /// </summary>
     /// <param name="name">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public bool GetBoolean(string name)
+    public bool GetBoolean (string name)
     {
-      return GetBoolean(GetOrdinal(name));
+        return this.GetBoolean (this.GetOrdinal (name));
     }
 
     /// <summary>
@@ -277,13 +277,15 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override bool GetBoolean(int i)
+    public override bool GetBoolean (int i)
     {
-      var asValue = GetValue(i);
-      int numericValue;
-      if (int.TryParse(asValue as string, out numericValue))
-        return Convert.ToBoolean(numericValue);
-      return Convert.ToBoolean(asValue);
+        object asValue = this.GetValue (i);
+        int    numericValue;
+
+        if (int.TryParse (asValue as string, out numericValue))
+            return Convert.ToBoolean (numericValue);
+
+        return Convert.ToBoolean (asValue);
     }
 
     /// <summary>
@@ -291,9 +293,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="name">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public byte GetByte(string name)
+    public byte GetByte (string name)
     {
-      return GetByte(GetOrdinal(name));
+        return this.GetByte (this.GetOrdinal (name));
     }
 
     /// <summary>
@@ -301,13 +303,14 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override byte GetByte(int i)
+    public override byte GetByte (int i)
     {
-      IMySqlValue v = GetFieldValue(i, false);
-      if (v is MySqlUByte)
-        return ((MySqlUByte)v).Value;
-      else
-        return (byte)((MySqlByte)v).Value;
+        IMySqlValue v = this.GetFieldValue (i, false);
+
+        if (v is MySqlUByte)
+            return ((MySqlUByte) v).Value;
+        else
+            return (byte) ((MySqlByte) v).Value;
     }
 
     /// <summary>
@@ -315,9 +318,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="name">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public sbyte GetSByte(string name)
+    public sbyte GetSByte (string name)
     {
-      return GetSByte(GetOrdinal(name));
+        return this.GetSByte (this.GetOrdinal (name));
     }
 
     /// <summary>
@@ -325,13 +328,14 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public sbyte GetSByte(int i)
+    public sbyte GetSByte (int i)
     {
-      IMySqlValue v = GetFieldValue(i, false);
-      if (v is MySqlByte)
-        return ((MySqlByte)v).Value;
-      else
-        return (sbyte)((MySqlByte)v).Value;
+        IMySqlValue v = this.GetFieldValue (i, false);
+
+        if (v is MySqlByte)
+            return ((MySqlByte) v).Value;
+        else
+            return (sbyte) ((MySqlByte) v).Value;
     }
 
     /// <summary>
@@ -343,48 +347,49 @@ namespace EVESharp.Database.MySql
     /// <param name="bufferoffset">The index for buffer to begin the read operation.</param>
     /// <param name="length">The maximum length to copy into the buffer.</param>
     /// <returns>The actual number of bytes read.</returns>
-    public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
+    public override long GetBytes (int i, long fieldOffset, byte [] buffer, int bufferoffset, int length)
     {
-      if (i >= FieldCount)
-        Throw(new IndexOutOfRangeException());
+        if (i >= this.FieldCount)
+            this.Throw (new IndexOutOfRangeException ());
 
-      IMySqlValue val = GetFieldValue(i, false);
+        IMySqlValue val = this.GetFieldValue (i, false);
 
-      if (!(val is MySqlBinary) && !(val is MySqlGuid))
-        Throw(new MySqlException("GetBytes can only be called on binary or guid columns"));
+        if (!(val is MySqlBinary) && !(val is MySqlGuid))
+            this.Throw (new MySqlException ("GetBytes can only be called on binary or guid columns"));
 
-      byte[] bytes = null;
-      if (val is MySqlBinary)
-        bytes = ((MySqlBinary)val).Value;
-      else
-        bytes = ((MySqlGuid)val).Bytes;
+        byte [] bytes = null;
 
-      if (buffer == null)
-        return bytes.Length;
+        if (val is MySqlBinary)
+            bytes = ((MySqlBinary) val).Value;
+        else
+            bytes = ((MySqlGuid) val).Bytes;
 
-      if (bufferoffset >= buffer.Length || bufferoffset < 0)
-        Throw(new IndexOutOfRangeException("Buffer index must be a valid index in buffer"));
-      if (buffer.Length < (bufferoffset + length))
-        Throw(new ArgumentException("Buffer is not large enough to hold the requested data"));
-      if (fieldOffset < 0 ||
-        ((ulong)fieldOffset >= (ulong)bytes.Length && (ulong)bytes.Length > 0))
-        Throw(new IndexOutOfRangeException("Data index must be a valid index in the field"));
+        if (buffer == null)
+            return bytes.Length;
 
-      // adjust the length so we don't run off the end
-      if ((ulong)bytes.Length < (ulong)(fieldOffset + length))
-      {
-        length = (int)((ulong)bytes.Length - (ulong)fieldOffset);
-      }
+        if (bufferoffset >= buffer.Length || bufferoffset < 0)
+            this.Throw (new IndexOutOfRangeException ("Buffer index must be a valid index in buffer"));
 
-      Buffer.BlockCopy(bytes, (int)fieldOffset, buffer, (int)bufferoffset, (int)length);
+        if (buffer.Length < bufferoffset + length)
+            this.Throw (new ArgumentException ("Buffer is not large enough to hold the requested data"));
 
-      return length;
+        if (fieldOffset < 0 ||
+            ((ulong) fieldOffset >= (ulong) bytes.Length && (ulong) bytes.Length > 0))
+            this.Throw (new IndexOutOfRangeException ("Data index must be a valid index in the field"));
+
+        // adjust the length so we don't run off the end
+        if ((ulong) bytes.Length < (ulong) (fieldOffset + length))
+            length = (int) ((ulong) bytes.Length - (ulong) fieldOffset);
+
+        Buffer.BlockCopy (bytes, (int) fieldOffset, buffer, (int) bufferoffset, (int) length);
+
+        return length;
     }
 
-    private object ChangeType(IMySqlValue value, int fieldIndex, Type newType)
+    private object ChangeType (IMySqlValue value, int fieldIndex, Type newType)
     {
-      ResultSet.Fields[fieldIndex].AddTypeConversion(newType);
-      return Convert.ChangeType(value.Value, newType, CultureInfo.InvariantCulture);
+        this.ResultSet.Fields [fieldIndex].AddTypeConversion (newType);
+        return Convert.ChangeType (value.Value, newType, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -392,9 +397,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="name">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public char GetChar(string name)
+    public char GetChar (string name)
     {
-      return GetChar(GetOrdinal(name));
+        return this.GetChar (this.GetOrdinal (name));
     }
 
     /// <summary>
@@ -402,10 +407,10 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override char GetChar(int i)
+    public override char GetChar (int i)
     {
-      string s = GetString(i);
-      return s[0];
+        string s = this.GetString (i);
+        return s [0];
     }
 
     /// <summary>
@@ -417,26 +422,30 @@ namespace EVESharp.Database.MySql
     /// <param name="bufferoffset">The index with the buffer to which the data will be copied.</param>
     /// <param name="length">The maximum number of characters to read.</param>
     /// <returns>The actual number of characters read.</returns>
-    public override long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
+    public override long GetChars (int i, long fieldoffset, char [] buffer, int bufferoffset, int length)
     {
-      if (i >= FieldCount)
-        Throw(new IndexOutOfRangeException());
+        if (i >= this.FieldCount)
+            this.Throw (new IndexOutOfRangeException ());
 
-      string valAsString = GetString(i);
+        string valAsString = this.GetString (i);
 
-      if (buffer == null) return valAsString.Length;
+        if (buffer == null)
+            return valAsString.Length;
 
-      if (bufferoffset >= buffer.Length || bufferoffset < 0)
-        Throw(new IndexOutOfRangeException("Buffer index must be a valid index in buffer"));
-      if (buffer.Length < (bufferoffset + length))
-        Throw(new ArgumentException("Buffer is not large enough to hold the requested data"));
-      if (fieldoffset < 0 || fieldoffset >= valAsString.Length)
-        Throw(new IndexOutOfRangeException("Field offset must be a valid index in the field"));
+        if (bufferoffset >= buffer.Length || bufferoffset < 0)
+            this.Throw (new IndexOutOfRangeException ("Buffer index must be a valid index in buffer"));
 
-      if (valAsString.Length < length)
-        length = valAsString.Length;
-      valAsString.CopyTo((int)fieldoffset, buffer, bufferoffset, length);
-      return length;
+        if (buffer.Length < bufferoffset + length)
+            this.Throw (new ArgumentException ("Buffer is not large enough to hold the requested data"));
+
+        if (fieldoffset < 0 || fieldoffset >= valAsString.Length)
+            this.Throw (new IndexOutOfRangeException ("Field offset must be a valid index in the field"));
+
+        if (valAsString.Length < length)
+            length = valAsString.Length;
+
+        valAsString.CopyTo ((int) fieldoffset, buffer, bufferoffset, length);
+        return length;
     }
 
     /// <summary>
@@ -444,16 +453,17 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>A string representing the name of the data type.</returns>
-    public override String GetDataTypeName(int i)
+    public override string GetDataTypeName (int i)
     {
-      if (!_isOpen)
-        Throw(new Exception("No current query in data reader"));
-      if (i >= FieldCount)
-        Throw(new IndexOutOfRangeException());
+        if (!this._isOpen)
+            this.Throw (new Exception ("No current query in data reader"));
 
-      // return the name of the type used on the backend
-      IMySqlValue v = ResultSet.Values[i];
-      return v.MySqlTypeName;
+        if (i >= this.FieldCount)
+            this.Throw (new IndexOutOfRangeException ());
+
+        // return the name of the type used on the backend
+        IMySqlValue v = this.ResultSet.Values [i];
+        return v.MySqlTypeName;
     }
 
     /// <summary>
@@ -465,9 +475,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public MySqlDateTime GetMySqlDateTime(string column)
+    public MySqlDateTime GetMySqlDateTime (string column)
     {
-      return GetMySqlDateTime(GetOrdinal(column));
+        return this.GetMySqlDateTime (this.GetOrdinal (column));
     }
 
     /// <summary>
@@ -479,9 +489,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public MySqlDateTime GetMySqlDateTime(int column)
+    public MySqlDateTime GetMySqlDateTime (int column)
     {
-      return (MySqlDateTime)GetFieldValue(column, true);
+        return (MySqlDateTime) this.GetFieldValue (column, true);
     }
 
     /// <summary>
@@ -506,9 +516,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public DateTime GetDateTime(string column)
+    public DateTime GetDateTime (string column)
     {
-      return GetDateTime(GetOrdinal(column));
+        return this.GetDateTime (this.GetOrdinal (column));
     }
 
     /// <summary>
@@ -533,25 +543,28 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override DateTime GetDateTime(int i)
+    public override DateTime GetDateTime (int i)
     {
-      IMySqlValue val = GetFieldValue(i, true);
-      MySqlDateTime dt;
+        IMySqlValue   val = this.GetFieldValue (i, true);
+        MySqlDateTime dt;
 
-      if (val is MySqlDateTime)
-        dt = (MySqlDateTime)val;
-      else
-      {
-        // we need to do this because functions like date_add return string
-        string s = GetString(i);
-        dt = MySqlDateTime.Parse(s);
-      }
+        if (val is MySqlDateTime)
+        {
+            dt = (MySqlDateTime) val;
+        }
+        else
+        {
+            // we need to do this because functions like date_add return string
+            string s = this.GetString (i);
+            dt = MySqlDateTime.Parse (s);
+        }
 
-      dt.TimezoneOffset = driver.timeZoneOffset;
-      if (_connection.Settings.ConvertZeroDateTime && !dt.IsValidDateTime)
-        return DateTime.MinValue;
-      else
-        return dt.GetDateTime();
+        dt.TimezoneOffset = this.driver.timeZoneOffset;
+
+        if (this._connection.Settings.ConvertZeroDateTime && !dt.IsValidDateTime)
+            return DateTime.MinValue;
+        else
+            return dt.GetDateTime ();
     }
 
     /// <summary>
@@ -559,9 +572,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="column">The name of the colum.</param>
     /// <returns>The value of the specified column as a <see cref="MySqlDecimal"/>.</returns>
-    public MySqlDecimal GetMySqlDecimal(string column)
+    public MySqlDecimal GetMySqlDecimal (string column)
     {
-      return GetMySqlDecimal(GetOrdinal(column));
+        return this.GetMySqlDecimal (this.GetOrdinal (column));
     }
 
     /// <summary>
@@ -569,9 +582,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The index of the colum.</param>
     /// <returns>The value of the specified column as a <see cref="MySqlDecimal"/>.</returns>
-    public MySqlDecimal GetMySqlDecimal(int i)
+    public MySqlDecimal GetMySqlDecimal (int i)
     {
-      return (MySqlDecimal)GetFieldValue(i, false);
+        return (MySqlDecimal) this.GetFieldValue (i, false);
     }
 
     /// <summary>
@@ -583,9 +596,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public Decimal GetDecimal(string column)
+    public decimal GetDecimal (string column)
     {
-      return GetDecimal(GetOrdinal(column));
+        return this.GetDecimal (this.GetOrdinal (column));
     }
 
     /// <summary>
@@ -597,12 +610,14 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="i">The zero-based column ordinal</param>
     /// <returns>The value of the specified column.</returns>
-    public override Decimal GetDecimal(int i)
+    public override decimal GetDecimal (int i)
     {
-      IMySqlValue v = GetFieldValue(i, true);
-      if (v is MySqlDecimal)
-        return ((MySqlDecimal)v).Value;
-      return Convert.ToDecimal(v.Value);
+        IMySqlValue v = this.GetFieldValue (i, true);
+
+        if (v is MySqlDecimal)
+            return ((MySqlDecimal) v).Value;
+
+        return Convert.ToDecimal (v.Value);
     }
 
     /// <summary>Gets the value of the specified column as a double-precision floating point number.</summary>
@@ -612,9 +627,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public double GetDouble(string column)
+    public double GetDouble (string column)
     {
-      return GetDouble(GetOrdinal(column));
+        return this.GetDouble (this.GetOrdinal (column));
     }
 
     /// <summary>Gets the value of the specified column as a double-precision floating point number.</summary>
@@ -624,12 +639,14 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override double GetDouble(int i)
+    public override double GetDouble (int i)
     {
-      IMySqlValue v = GetFieldValue(i, true);
-      if (v is MySqlDouble)
-        return ((MySqlDouble)v).Value;
-      return Convert.ToDouble(v.Value);
+        IMySqlValue v = this.GetFieldValue (i, true);
+
+        if (v is MySqlDouble)
+            return ((MySqlDouble) v).Value;
+
+        return Convert.ToDouble (v.Value);
     }
 
     /// <summary>
@@ -637,9 +654,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="column">The column name.</param>
     /// <returns>The data type of the specified column.</returns>
-    public Type GetFieldType(string column)
+    public Type GetFieldType (string column)
     {
-      return GetFieldType(GetOrdinal(column));
+        return this.GetFieldType (this.GetOrdinal (column));
     }
 
     /// <summary>
@@ -647,23 +664,27 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The data type of the specified column.</returns>
-    public override Type GetFieldType(int i)
+    public override Type GetFieldType (int i)
     {
-      if (!_isOpen)
-        Throw(new Exception("No current query in data reader"));
-      if (i >= FieldCount)
-        Throw(new IndexOutOfRangeException());
+        if (!this._isOpen)
+            this.Throw (new Exception ("No current query in data reader"));
 
-      // we have to use the values array directly because we can't go through
-      // GetValue
-      IMySqlValue v = ResultSet.Values[i];
-      if (v is MySqlDateTime)
-      {
-        if (!_connection.Settings.AllowZeroDateTime)
-          return typeof(DateTime);
-        return typeof(MySqlDateTime);
-      }
-      return v.SystemType;
+        if (i >= this.FieldCount)
+            this.Throw (new IndexOutOfRangeException ());
+
+        // we have to use the values array directly because we can't go through
+        // GetValue
+        IMySqlValue v = this.ResultSet.Values [i];
+
+        if (v is MySqlDateTime)
+        {
+            if (!this._connection.Settings.AllowZeroDateTime)
+                return typeof (DateTime);
+
+            return typeof (MySqlDateTime);
+        }
+
+        return v.SystemType;
     }
 
     /// <summary>
@@ -675,9 +696,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public float GetFloat(string column)
+    public float GetFloat (string column)
     {
-      return GetFloat(GetOrdinal(column));
+        return this.GetFloat (this.GetOrdinal (column));
     }
 
     /// <summary>
@@ -689,12 +710,14 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override float GetFloat(int i)
+    public override float GetFloat (int i)
     {
-      IMySqlValue v = GetFieldValue(i, true);
-      if (v is MySqlSingle)
-        return ((MySqlSingle)v).Value;
-      return Convert.ToSingle(v.Value);
+        IMySqlValue v = this.GetFieldValue (i, true);
+
+        if (v is MySqlSingle)
+            return ((MySqlSingle) v).Value;
+
+        return Convert.ToSingle (v.Value);
     }
 
     /// <summary>
@@ -702,17 +725,14 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="column">The column name.</param>
     /// <returns>The definition of the routine.</returns>
-    public string GetBodyDefinition(string column)
+    public string GetBodyDefinition (string column)
     {
-      var value = GetValue(GetOrdinal(column));
-      if (value.GetType().FullName.Equals("System.Byte[]"))
-      {
-        return GetString(column);
-      }
-      else
-      {
-        return GetValue(GetOrdinal(column)).ToString();
-      }
+        object value = this.GetValue (this.GetOrdinal (column));
+
+        if (value.GetType ().FullName.Equals ("System.Byte[]"))
+            return this.GetString (column);
+        else
+            return this.GetValue (this.GetOrdinal (column)).ToString ();
     }
 
     /// <summary>
@@ -720,9 +740,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="column">The name of the column.</param>
     /// <returns>The value of the specified column.</returns>
-    public Guid GetGuid(string column)
+    public Guid GetGuid (string column)
     {
-      return GetGuid(GetOrdinal(column));
+        return this.GetGuid (this.GetOrdinal (column));
     }
 
     /// <summary>
@@ -730,21 +750,26 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override Guid GetGuid(int i)
+    public override Guid GetGuid (int i)
     {
-      object v = GetValue(i);
-      if (v is Guid)
-        return (Guid)v;
-      if (v is string)
-        return new Guid(v as string);
-      if (v is byte[])
-      {
-        byte[] bytes = (byte[])v;
-        if (bytes.Length == 16)
-          return new Guid(bytes);
-      }
-      Throw(new MySqlException(Resources.ValueNotSupportedForGuid));
-      return Guid.Empty; // just to silence compiler
+        object v = this.GetValue (i);
+
+        if (v is Guid)
+            return (Guid) v;
+
+        if (v is string)
+            return new Guid (v as string);
+
+        if (v is byte [])
+        {
+            byte [] bytes = (byte []) v;
+
+            if (bytes.Length == 16)
+                return new Guid (bytes);
+        }
+
+        this.Throw (new MySqlException (Resources.ValueNotSupportedForGuid));
+        return Guid.Empty; // just to silence compiler
     }
 
     /// <summary>Gets the value of the specified column as a 16-bit signed integer.</summary>
@@ -754,9 +779,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public Int16 GetInt16(string column)
+    public short GetInt16 (string column)
     {
-      return GetInt16(GetOrdinal(column));
+        return this.GetInt16 (this.GetOrdinal (column));
     }
 
     /// <summary>Gets the value of the specified column as a 16-bit signed integer.</summary>
@@ -766,13 +791,14 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override Int16 GetInt16(int i)
+    public override short GetInt16 (int i)
     {
-      IMySqlValue v = GetFieldValue(i, true);
-      if (v is MySqlInt16)
-        return ((MySqlInt16)v).Value;
+        IMySqlValue v = this.GetFieldValue (i, true);
 
-      return (short)ChangeType(v, i, typeof(short));
+        if (v is MySqlInt16)
+            return ((MySqlInt16) v).Value;
+
+        return (short) this.ChangeType (v, i, typeof (short));
     }
 
     /// <summary>Gets the value of the specified column as a 32-bit signed integer.</summary>
@@ -782,9 +808,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public Int32 GetInt32(string column)
+    public int GetInt32 (string column)
     {
-      return GetInt32(GetOrdinal(column));
+        return this.GetInt32 (this.GetOrdinal (column));
     }
 
     /// <summary>Gets the value of the specified column as a 32-bit signed integer.</summary>
@@ -794,13 +820,14 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override Int32 GetInt32(int i)
+    public override int GetInt32 (int i)
     {
-      IMySqlValue v = GetFieldValue(i, true);
-      if (v is MySqlInt32)
-        return ((MySqlInt32)v).Value;
+        IMySqlValue v = this.GetFieldValue (i, true);
 
-      return (Int32)ChangeType(v, i, typeof(Int32));
+        if (v is MySqlInt32)
+            return ((MySqlInt32) v).Value;
+
+        return (int) this.ChangeType (v, i, typeof (int));
     }
 
     /// <summary>Gets the value of the specified column as a 64-bit signed integer.</summary>
@@ -810,9 +837,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public Int64 GetInt64(string column)
+    public long GetInt64 (string column)
     {
-      return GetInt64(GetOrdinal(column));
+        return this.GetInt64 (this.GetOrdinal (column));
     }
 
     /// <summary>Gets the value of the specified column as a 64-bit signed integer.</summary>
@@ -822,13 +849,14 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override Int64 GetInt64(int i)
+    public override long GetInt64 (int i)
     {
-      IMySqlValue v = GetFieldValue(i, true);
-      if (v is MySqlInt64)
-        return ((MySqlInt64)v).Value;
+        IMySqlValue v = this.GetFieldValue (i, true);
 
-      return (Int64)ChangeType(v, i, typeof(Int64));
+        if (v is MySqlInt64)
+            return ((MySqlInt64) v).Value;
+
+        return (long) this.ChangeType (v, i, typeof (long));
     }
 
     /// <summary>
@@ -836,14 +864,15 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The name of the specified column.</returns>
-    public override String GetName(int i)
+    public override string GetName (int i)
     {
-      if (!_isOpen)
-        Throw(new Exception("No current query in data reader"));
-      if (i >= FieldCount)
-        Throw(new IndexOutOfRangeException());
+        if (!this._isOpen)
+            this.Throw (new Exception ("No current query in data reader"));
 
-      return ResultSet.Fields[i].ColumnName;
+        if (i >= this.FieldCount)
+            this.Throw (new IndexOutOfRangeException ());
+
+        return this.ResultSet.Fields [i].ColumnName;
     }
 
     /// <summary>
@@ -851,12 +880,12 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="name">The name of the column.</param>
     /// <returns>The zero-based column ordinal.</returns>
-    public override int GetOrdinal(string name)
+    public override int GetOrdinal (string name)
     {
-      if (!_isOpen || ResultSet == null)
-        Throw(new Exception("No current query in data reader"));
+        if (!this._isOpen || this.ResultSet == null)
+            this.Throw (new Exception ("No current query in data reader"));
 
-      return ResultSet.GetOrdinal(name);
+        return this.ResultSet.GetOrdinal (name);
     }
 
     /// <summary>
@@ -864,23 +893,24 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="ordinal">The zero-based column ordinal.</param>
     /// <returns>A stream</returns>
-    public override Stream GetStream(int i)
+    public override Stream GetStream (int i)
     {
-      if (i >= FieldCount)
-        Throw(new IndexOutOfRangeException());
+        if (i >= this.FieldCount)
+            this.Throw (new IndexOutOfRangeException ());
 
-      IMySqlValue val = GetFieldValue(i, false);
+        IMySqlValue val = this.GetFieldValue (i, false);
 
-      if (!(val is MySqlBinary) && !(val is MySqlGuid))
-        Throw(new MySqlException("GetStream can only be called on binary or guid columns"));
+        if (!(val is MySqlBinary) && !(val is MySqlGuid))
+            this.Throw (new MySqlException ("GetStream can only be called on binary or guid columns"));
 
-      byte[] bytes = new byte[0];
-      if (val is MySqlBinary)
-        bytes = ((MySqlBinary)val).Value;
-      else
-        bytes = ((MySqlGuid)val).Bytes;
+        byte [] bytes = new byte[0];
 
-      return new MemoryStream(bytes, false);
+        if (val is MySqlBinary)
+            bytes = ((MySqlBinary) val).Value;
+        else
+            bytes = ((MySqlGuid) val).Bytes;
+
+        return new MemoryStream (bytes, false);
     }
 
     /// <summary>
@@ -892,9 +922,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public string GetString(string column)
+    public string GetString (string column)
     {
-      return GetString(GetOrdinal(column));
+        return this.GetString (this.GetOrdinal (column));
     }
 
     /// <summary>
@@ -906,17 +936,17 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override String GetString(int i)
+    public override string GetString (int i)
     {
-      IMySqlValue val = GetFieldValue(i, true);
+        IMySqlValue val = this.GetFieldValue (i, true);
 
-      if (val is MySqlBinary)
-      {
-        byte[] v = ((MySqlBinary)val).Value;
-        return ResultSet.Fields[i].Encoding.GetString(v, 0, v.Length);
-      }
+        if (val is MySqlBinary)
+        {
+            byte [] v = ((MySqlBinary) val).Value;
+            return this.ResultSet.Fields [i].Encoding.GetString (v, 0, v.Length);
+        }
 
-      return val.Value.ToString();
+        return val.Value.ToString ();
     }
 
     /// <summary>
@@ -928,9 +958,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public TimeSpan GetTimeSpan(string column)
+    public TimeSpan GetTimeSpan (string column)
     {
-      return GetTimeSpan(GetOrdinal(column));
+        return this.GetTimeSpan (this.GetOrdinal (column));
     }
 
     /// <summary>
@@ -942,12 +972,12 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public TimeSpan GetTimeSpan(int column)
+    public TimeSpan GetTimeSpan (int column)
     {
-      IMySqlValue val = GetFieldValue(column, true);
+        IMySqlValue val = this.GetFieldValue (column, true);
 
-      MySqlTimeSpan ts = (MySqlTimeSpan)val;
-      return ts.Value;
+        MySqlTimeSpan ts = (MySqlTimeSpan) val;
+        return ts.Value;
     }
 
     /// <summary>
@@ -955,34 +985,35 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public override object GetValue(int i)
+    public override object GetValue (int i)
     {
-      if (!_isOpen)
-        Throw(new Exception("No current query in data reader"));
-      if (i >= FieldCount)
-        Throw(new IndexOutOfRangeException());
+        if (!this._isOpen)
+            this.Throw (new Exception ("No current query in data reader"));
 
-      IMySqlValue val = GetFieldValue(i, false);
-      if (val.IsNull)
-      {
-        if (!(val.MySqlDbType == MySqlDbType.Time && val.Value.ToString() == "00:00:00"))
-          return DBNull.Value;
-      }
+        if (i >= this.FieldCount)
+            this.Throw (new IndexOutOfRangeException ());
 
-      // if the column is a date/time, then we return a MySqlDateTime
-      // so .ToString() will print '0000-00-00' correctly
-      if (val is MySqlDateTime)
-      {
-        MySqlDateTime dt = (MySqlDateTime)val;
-        if (!dt.IsValidDateTime && _connection.Settings.ConvertZeroDateTime)
-          return DateTime.MinValue;
-        else if (_connection.Settings.AllowZeroDateTime)
-          return val;
-        else
-          return dt.GetDateTime();
-      }
+        IMySqlValue val = this.GetFieldValue (i, false);
 
-      return val.Value;
+        if (val.IsNull)
+            if (!(val.MySqlDbType == MySqlDbType.Time && val.Value.ToString () == "00:00:00"))
+                return DBNull.Value;
+
+        // if the column is a date/time, then we return a MySqlDateTime
+        // so .ToString() will print '0000-00-00' correctly
+        if (val is MySqlDateTime)
+        {
+            MySqlDateTime dt = (MySqlDateTime) val;
+
+            if (!dt.IsValidDateTime && this._connection.Settings.ConvertZeroDateTime)
+                return DateTime.MinValue;
+            else if (this._connection.Settings.AllowZeroDateTime)
+                return val;
+            else
+                return dt.GetDateTime ();
+        }
+
+        return val.Value;
     }
 
     /// <summary>
@@ -990,13 +1021,14 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="values">An array of <see cref="Object"/> into which to copy the attribute columns.</param>
     /// <returns>The number of instances of <see cref="Object"/> in the array.</returns>
-    public override int GetValues(object[] values)
+    public override int GetValues (object [] values)
     {
-      int numCols = Math.Min(values.Length, FieldCount);
-      for (int i = 0; i < numCols; i++)
-        values[i] = GetValue(i);
+        int numCols = Math.Min (values.Length, this.FieldCount);
 
-      return numCols;
+        for (int i = 0; i < numCols; i++)
+            values [i] = this.GetValue (i);
+
+        return numCols;
     }
 
     /// <summary>Gets the value of the specified column as a 16-bit unsigned integer.</summary>
@@ -1006,9 +1038,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public UInt16 GetUInt16(string column)
+    public ushort GetUInt16 (string column)
     {
-      return GetUInt16(GetOrdinal(column));
+        return this.GetUInt16 (this.GetOrdinal (column));
     }
 
     /// <summary>Gets the value of the specified column as a 16-bit unsigned integer.</summary>
@@ -1018,13 +1050,14 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public UInt16 GetUInt16(int column)
+    public ushort GetUInt16 (int column)
     {
-      IMySqlValue v = GetFieldValue(column, true);
-      if (v is MySqlUInt16)
-        return ((MySqlUInt16)v).Value;
+        IMySqlValue v = this.GetFieldValue (column, true);
 
-      return (UInt16)ChangeType(v, column, typeof(UInt16));
+        if (v is MySqlUInt16)
+            return ((MySqlUInt16) v).Value;
+
+        return (ushort) this.ChangeType (v, column, typeof (ushort));
     }
 
     /// <summary>Gets the value of the specified column as a 32-bit unsigned integer.</summary>
@@ -1034,9 +1067,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public UInt32 GetUInt32(string column)
+    public uint GetUInt32 (string column)
     {
-      return GetUInt32(GetOrdinal(column));
+        return this.GetUInt32 (this.GetOrdinal (column));
     }
 
     /// <summary>Gets the value of the specified column as a 32-bit unsigned integer.</summary>
@@ -1046,12 +1079,14 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public UInt32 GetUInt32(int column)
+    public uint GetUInt32 (int column)
     {
-      IMySqlValue v = GetFieldValue(column, true);
-      if (v is MySqlUInt32)
-        return ((MySqlUInt32)v).Value;
-      return (uint)ChangeType(v, column, typeof(UInt32));
+        IMySqlValue v = this.GetFieldValue (column, true);
+
+        if (v is MySqlUInt32)
+            return ((MySqlUInt32) v).Value;
+
+        return (uint) this.ChangeType (v, column, typeof (uint));
     }
 
     /// <summary>Gets the value of the specified column as a 64-bit unsigned integer.</summary>
@@ -1061,9 +1096,9 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The column name.</param>
     /// <returns>The value of the specified column.</returns>
-    public UInt64 GetUInt64(string column)
+    public ulong GetUInt64 (string column)
     {
-      return GetUInt64(GetOrdinal(column));
+        return this.GetUInt64 (this.GetOrdinal (column));
     }
 
     /// <summary>Gets the value of the specified column as a 64-bit unsigned integer.</summary>
@@ -1073,25 +1108,26 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     /// <param name="column">The zero-based column ordinal.</param>
     /// <returns>The value of the specified column.</returns>
-    public UInt64 GetUInt64(int column)
+    public ulong GetUInt64 (int column)
     {
-      IMySqlValue v = GetFieldValue(column, true);
-      if (v is MySqlUInt64)
-        return ((MySqlUInt64)v).Value;
+        IMySqlValue v = this.GetFieldValue (column, true);
 
-      return (UInt64)ChangeType(v, column, typeof(UInt64));
+        if (v is MySqlUInt64)
+            return ((MySqlUInt64) v).Value;
+
+        return (ulong) this.ChangeType (v, column, typeof (ulong));
     }
 
-    #endregion
+#endregion
 
     /// <summary>
     /// Returns a <see cref="DbDataReader"/> object for the requested column ordinal.
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>A <see cref="DbDataReader"/> object.</returns>
-    IDataReader IDataRecord.GetData(int i)
+    IDataReader IDataRecord.GetData (int i)
     {
-      return base.GetData(i);
+        return base.GetData (i);
     }
 
     /// <summary>
@@ -1099,136 +1135,147 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The zero-based column ordinal.</param>
     /// <returns>true if the specified column is equivalent to <see cref="DBNull"/>; otherwise false.</returns>
-    public override bool IsDBNull(int i)
+    public override bool IsDBNull (int i)
     {
-      return DBNull.Value == GetValue(i);
+        return DBNull.Value == this.GetValue (i);
     }
 
     /// <summary>
     /// Advances the data reader to the next result, when reading the results of batch SQL statements.
     /// </summary>
     /// <returns>true if there are more result sets; otherwise false.</returns>
-    public override bool NextResult()
+    public override bool NextResult ()
     {
-      if (!_isOpen)
-        Throw(new MySqlException(Resources.NextResultIsClosed));
+        if (!this._isOpen)
+            this.Throw (new MySqlException (Resources.NextResultIsClosed));
 
-      bool isCaching = Command.CommandType == CommandType.TableDirect && Command.EnableCaching &&
-        (CommandBehavior & CommandBehavior.SequentialAccess) == 0;
+        bool isCaching = this.Command.CommandType == CommandType.TableDirect && this.Command.EnableCaching &&
+                         (this.CommandBehavior & CommandBehavior.SequentialAccess) == 0;
 
-      // this will clear out any unread data
-      if (ResultSet != null)
-      {
-        ResultSet.Close();
-        if (isCaching)
-          TableCache.AddToCache(Command.CommandText, ResultSet);
-      }
-
-      // single result means we only return a single resultset.  If we have already
-      // returned one, then we return false
-      // TableDirect is basically a select * from a single table so it will generate
-      // a single result also
-      if (ResultSet != null &&
-        ((CommandBehavior & CommandBehavior.SingleResult) != 0 || isCaching))
-        return false;
-
-      // next load up the next resultset if any
-      try
-      {
-        do
+        // this will clear out any unread data
+        if (this.ResultSet != null)
         {
-          ResultSet = null;
-          // if we are table caching, then try to retrieve the resultSet from the cache
-          if (isCaching)
-            ResultSet = TableCache.RetrieveFromCache(Command.CommandText,
-              Command.CacheAge);
+            this.ResultSet.Close ();
 
-          if (ResultSet == null)
-          {
-            ResultSet = driver.NextResult(Statement.StatementId, false);
-            if (ResultSet == null) return false;
-            if (ResultSet.IsOutputParameters && Command.CommandType == CommandType.StoredProcedure)
+            if (isCaching)
+                TableCache.AddToCache (this.Command.CommandText, this.ResultSet);
+        }
+
+        // single result means we only return a single resultset.  If we have already
+        // returned one, then we return false
+        // TableDirect is basically a select * from a single table so it will generate
+        // a single result also
+        if (this.ResultSet != null &&
+            ((this.CommandBehavior & CommandBehavior.SingleResult) != 0 || isCaching))
+            return false;
+
+        // next load up the next resultset if any
+        try
+        {
+            do
             {
-              StoredProcedure sp = Statement as StoredProcedure;
-              sp.ProcessOutputParameters(this);
-              ResultSet.Close();
-              for (int i = 0; i < ResultSet.Fields.Length; i++)
-              {
-                if (ResultSet.Fields[i].ColumnName.StartsWith("@" + StoredProcedure.ParameterPrefix, StringComparison.OrdinalIgnoreCase))
+                this.ResultSet = null;
+
+                // if we are table caching, then try to retrieve the resultSet from the cache
+                if (isCaching)
+                    this.ResultSet = TableCache.RetrieveFromCache (this.Command.CommandText, this.Command.CacheAge);
+
+                if (this.ResultSet == null)
                 {
-                  ResultSet = null;
-                  break;
+                    this.ResultSet = this.driver.NextResult (this.Statement.StatementId, false);
+
+                    if (this.ResultSet == null)
+                        return false;
+
+                    if (this.ResultSet.IsOutputParameters && this.Command.CommandType == CommandType.StoredProcedure)
+                    {
+                        StoredProcedure sp = this.Statement as StoredProcedure;
+                        sp.ProcessOutputParameters (this);
+                        this.ResultSet.Close ();
+
+                        for (int i = 0; i < this.ResultSet.Fields.Length; i++)
+                            if (this.ResultSet.Fields [i].ColumnName.StartsWith ("@" + StoredProcedure.ParameterPrefix, StringComparison.OrdinalIgnoreCase))
+                            {
+                                this.ResultSet = null;
+                                break;
+                            }
+
+                        if (!sp.ServerProvidingOutputParameters)
+                            return false;
+
+                        // if we are using server side output parameters then we will get our ok packet
+                        // *after* the output parameters resultset
+                        this.ResultSet = this.driver.NextResult (this.Statement.StatementId, true);
+                    }
+
+                    this.ResultSet.Cached = isCaching;
                 }
-              }
-              if (!sp.ServerProvidingOutputParameters) return false;
-              // if we are using server side output parameters then we will get our ok packet
-              // *after* the output parameters resultset
-              ResultSet = driver.NextResult(Statement.StatementId, true);
+
+                if (this.ResultSet.Size == 0)
+                {
+                    this.Command.LastInsertedId = this.ResultSet.InsertedId;
+
+                    if (this.affectedRows == -1)
+                        this.affectedRows = this.ResultSet.AffectedRows;
+                    else
+                        this.affectedRows += this.ResultSet.AffectedRows;
+                }
             }
-            ResultSet.Cached = isCaching;
-          }
+            while (this.ResultSet.Size == 0);
 
-          if (ResultSet.Size == 0)
-          {
-            Command.LastInsertedId = ResultSet.InsertedId;
-            if (affectedRows == -1)
-              affectedRows = ResultSet.AffectedRows;
-            else
-              affectedRows += ResultSet.AffectedRows;
-          }
-        } while (ResultSet.Size == 0);
+            return true;
+        }
+        catch (MySqlException ex)
+        {
+            if (ex.IsFatal)
+                this._connection.Abort ();
 
-        return true;
-      }
-      catch (MySqlException ex)
-      {
-        if (ex.IsFatal)
-          _connection.Abort();
-        if (ex.Number == 0)
-          throw new MySqlException(Resources.FatalErrorReadingResult, ex);
-        if ((CommandBehavior & CommandBehavior.CloseConnection) != 0)
-          Close();
-        throw;
-      }
+            if (ex.Number == 0)
+                throw new MySqlException (Resources.FatalErrorReadingResult, ex);
+
+            if ((this.CommandBehavior & CommandBehavior.CloseConnection) != 0)
+                this.Close ();
+
+            throw;
+        }
     }
 
     /// <summary>
     /// Advances the <see cref="MySqlDataReader"/> to the next record.
     /// </summary>
     /// <returns>true if there are more rows; otherwise false.</returns>
-    public override bool Read()
+    public override bool Read ()
     {
-      if (!_isOpen)
-        Throw(new MySqlException("Invalid attempt to Read when reader is closed."));
-      if (ResultSet == null)
-        return false;
+        if (!this._isOpen)
+            this.Throw (new MySqlException ("Invalid attempt to Read when reader is closed."));
 
-      try
-      {
-        return ResultSet.NextRow(CommandBehavior);
-      }
-      catch (TimeoutException tex)
-      {
-        _connection.HandleTimeoutOrThreadAbort(tex);
-        throw; // unreached
-      }
-      catch (ThreadAbortException taex)
-      {
-        _connection.HandleTimeoutOrThreadAbort(taex);
-        throw;
-      }
-      catch (MySqlException ex)
-      {
-        if (ex.IsFatal)
-          _connection.Abort();
+        if (this.ResultSet == null)
+            return false;
 
-        if (ex.IsQueryAborted)
+        try
         {
-          throw;
+            return this.ResultSet.NextRow (this.CommandBehavior);
         }
+        catch (TimeoutException tex)
+        {
+            this._connection.HandleTimeoutOrThreadAbort (tex);
+            throw; // unreached
+        }
+        catch (ThreadAbortException taex)
+        {
+            this._connection.HandleTimeoutOrThreadAbort (taex);
+            throw;
+        }
+        catch (MySqlException ex)
+        {
+            if (ex.IsFatal)
+                this._connection.Abort ();
 
-        throw new MySqlException(Resources.FatalErrorDuringRead, ex);
-      }
+            if (ex.IsQueryAborted)
+                throw;
+
+            throw new MySqlException (Resources.FatalErrorDuringRead, ex);
+        }
     }
 
     /// <summary>
@@ -1236,19 +1283,21 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="i">The index of the colum.</param>
     /// <returns>The value of the specified column as a <see cref="MySqlGeometry"/>.</returns>
-    public MySqlGeometry GetMySqlGeometry(int i)
+    public MySqlGeometry GetMySqlGeometry (int i)
     {
-      try
-      {
-        IMySqlValue v = GetFieldValue(i, false);
-        if (v is MySqlGeometry || v is MySqlBinary)
-          return new MySqlGeometry(MySqlDbType.Geometry, (Byte[])v.Value);
-      }
-      catch
-      {
-        Throw(new Exception("Can't get MySqlGeometry from value"));
-      }
-      return new MySqlGeometry(true);
+        try
+        {
+            IMySqlValue v = this.GetFieldValue (i, false);
+
+            if (v is MySqlGeometry || v is MySqlBinary)
+                return new MySqlGeometry (MySqlDbType.Geometry, (byte []) v.Value);
+        }
+        catch
+        {
+            this.Throw (new Exception ("Can't get MySqlGeometry from value"));
+        }
+
+        return new MySqlGeometry (true);
     }
 
     /// <summary>
@@ -1256,34 +1305,32 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="column">The name of the colum.</param>
     /// <returns>The value of the specified column as a <see cref="MySqlGeometry"/>.</returns>
-    public MySqlGeometry GetMySqlGeometry(string column)
+    public MySqlGeometry GetMySqlGeometry (string column)
     {
-      return GetMySqlGeometry(GetOrdinal(column));
+        return this.GetMySqlGeometry (this.GetOrdinal (column));
     }
 
     /// <summary>
     /// Returns an <see cref="IEnumerator"/> that iterates through the <see cref="MySqlDataReader"/>. 
     /// </summary>
     /// <returns>An <see cref="IEnumerator"/> that can be used to iterate through the rows in the data reader.</returns>
-    public override IEnumerator GetEnumerator()
+    public override IEnumerator GetEnumerator ()
     {
-      return new DbEnumerator(this, (CommandBehavior & CommandBehavior.CloseConnection) != 0);
+        return new DbEnumerator (this, (this.CommandBehavior & CommandBehavior.CloseConnection) != 0);
     }
 
-    private IMySqlValue GetFieldValue(int index, bool checkNull)
+    private IMySqlValue GetFieldValue (int index, bool checkNull)
     {
-      if (index < 0 || index >= FieldCount)
-        Throw(new ArgumentException(Resources.InvalidColumnOrdinal));
+        if (index < 0 || index >= this.FieldCount)
+            this.Throw (new ArgumentException (Resources.InvalidColumnOrdinal));
 
-      IMySqlValue v = ResultSet[index];
+        IMySqlValue v = this.ResultSet [index];
 
-      if (!(v.MySqlDbType is MySqlDbType.Time && v.Value.ToString() == "00:00:00"))
-      {
-        if (checkNull && v.IsNull)
-          throw new System.Data.SqlTypes.SqlNullValueException();
-      }
+        if (!(v.MySqlDbType is MySqlDbType.Time && v.Value.ToString () == "00:00:00"))
+            if (checkNull && v.IsNull)
+                throw new System.Data.SqlTypes.SqlNullValueException ();
 
-      return v;
+        return v;
     }
 
     /// <summary>
@@ -1293,30 +1340,29 @@ namespace EVESharp.Database.MySql
     /// <returns></returns>
     public Encoding GetEncoding (int index)
     {
-      if (index < 0 || index >= FieldCount)
-        Throw(new ArgumentException(Resources.InvalidColumnOrdinal));
-      
-      return ResultSet.Fields [index].Encoding;
+        if (index < 0 || index >= this.FieldCount)
+            this.Throw (new ArgumentException (Resources.InvalidColumnOrdinal));
+
+        return this.ResultSet.Fields [index].Encoding;
     }
 
-    private void ClearKillFlag()
+    private void ClearKillFlag ()
     {
-      // This query will silently crash because of the Kill call that happened before.
-      string dummyStatement = "SELECT * FROM bogus_table LIMIT 0"; /* dummy query used to clear kill flag */
-      MySqlCommand dummyCommand = new MySqlCommand(dummyStatement, _connection) { InternallyCreated = true };
+        // This query will silently crash because of the Kill call that happened before.
+        string       dummyStatement = "SELECT * FROM bogus_table LIMIT 0"; /* dummy query used to clear kill flag */
+        MySqlCommand dummyCommand   = new MySqlCommand (dummyStatement, this._connection) {InternallyCreated = true};
 
-      try
-      {
-        dummyCommand.ExecuteReader(); // ExecuteReader catches the exception and returns null, which is expected.
-      }
-      catch (MySqlException ex)
-      {
-        int[] errors = { (int)MySqlErrorCode.NoSuchTable, (int)MySqlErrorCode.TableAccessDenied, (int)MySqlErrorCode.UnknownTable };
-        if (Array.IndexOf(errors, (int)ex.Number) < 0)
+        try
         {
-          throw;
+            dummyCommand.ExecuteReader (); // ExecuteReader catches the exception and returns null, which is expected.
         }
-      }
+        catch (MySqlException ex)
+        {
+            int [] errors = {(int) MySqlErrorCode.NoSuchTable, (int) MySqlErrorCode.TableAccessDenied, (int) MySqlErrorCode.UnknownTable};
+
+            if (Array.IndexOf (errors, (int) ex.Number) < 0)
+                throw;
+        }
     }
 
     /// <summary>
@@ -1325,49 +1371,52 @@ namespace EVESharp.Database.MySql
     /// <typeparam name="T">Type.</typeparam>
     /// <param name="ordinal">The index of the column.</param>
     /// <returns>The value of the column.</returns>
-    public override T GetFieldValue<T>(int ordinal)
+    public override T GetFieldValue <T> (int ordinal)
     {
-      if (typeof(T).Equals(typeof(DateTimeOffset)))
-      {
-        var dtValue = new DateTime();
-        var result = DateTime.TryParse(this.GetValue(ordinal).ToString(), out dtValue);
-        DateTime datetime = result ? dtValue : DateTime.MinValue;
-        return (T)Convert.ChangeType(new DateTimeOffset(datetime), typeof(T));
-      }
-      else if (typeof(T).Equals(typeof(Stream)))
-        return (T)(object)GetStream(ordinal);
-      else
-        return base.GetFieldValue<T>(ordinal);
+        if (typeof (T).Equals (typeof (DateTimeOffset)))
+        {
+            DateTime dtValue  = new DateTime ();
+            bool     result   = DateTime.TryParse (this.GetValue (ordinal).ToString (), out dtValue);
+            DateTime datetime = result ? dtValue : DateTime.MinValue;
+            return (T) Convert.ChangeType (new DateTimeOffset (datetime), typeof (T));
+        }
+        else if (typeof (T).Equals (typeof (Stream)))
+        {
+            return (T) (object) this.GetStream (ordinal);
+        }
+        else
+        {
+            return base.GetFieldValue <T> (ordinal);
+        }
     }
 
-    private void Throw(Exception ex)
+    private void Throw (Exception ex)
     {
-      _connection?.Throw(ex);
-      throw ex;
+        this._connection?.Throw (ex);
+        throw ex;
     }
 
     /// <summary>
     /// Releases all resources used by the current instance of the <see cref="MySqlDataReader"/> class.
     /// </summary>
-    public new void Dispose()
+    public new void Dispose ()
     {
-      Dispose(true);
-      GC.SuppressFinalize(this);
+        this.Dispose (true);
+        GC.SuppressFinalize (this);
     }
 
-    internal new void Dispose(bool disposing)
+    internal new void Dispose (bool disposing)
     {
-      if (disposing)
-      {
-        Close();
-      }
+        if (disposing)
+            this.Close ();
     }
 
-    #region Destructor
-    ~MySqlDataReader()
+#region Destructor
+
+    ~MySqlDataReader ()
     {
-      Dispose(false);
+        this.Dispose (false);
     }
-    #endregion
-  }
+
+#endregion
 }

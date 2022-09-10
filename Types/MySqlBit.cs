@@ -30,20 +30,20 @@ using System;
 using System.Globalization;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Types
+namespace EVESharp.Database.MySql.Types;
+
+/// <summary>
+/// Summary description for MySqlUInt64.
+/// </summary>
+internal struct MySqlBit : IMySqlValue
 {
-  /// <summary>
-  /// Summary description for MySqlUInt64.
-  /// </summary>
-  internal struct MySqlBit : IMySqlValue
-  {
     private ulong _value;
 
-    public MySqlBit(bool isnull)
+    public MySqlBit (bool isnull)
     {
-      _value = 0;
-      IsNull = isnull;
-      ReadAsString = false;
+        this._value       = 0;
+        this.IsNull       = isnull;
+        this.ReadAsString = false;
     }
 
     public bool ReadAsString { get; set; }
@@ -52,72 +52,74 @@ namespace EVESharp.Database.MySql.Types
 
     MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.Bit;
 
-    object IMySqlValue.Value => _value;
+    object IMySqlValue.Value => this._value;
 
-    Type IMySqlValue.SystemType => typeof(ulong);
+    Type IMySqlValue.SystemType => typeof (ulong);
 
     string IMySqlValue.MySqlTypeName => "BIT";
 
-    public void WriteValue(MySqlPacket packet, bool binary, object value, int length)
+    public void WriteValue (MySqlPacket packet, bool binary, object value, int length)
     {
-      ulong v = value as ulong? ?? Convert.ToUInt64(value);
-      if (binary)
-        packet.WriteInteger((long)v, 8);
-      else
-        packet.WriteStringNoNull(v.ToString(CultureInfo.InvariantCulture));
+        ulong v = value as ulong? ?? Convert.ToUInt64 (value);
+
+        if (binary)
+            packet.WriteInteger ((long) v, 8);
+        else
+            packet.WriteStringNoNull (v.ToString (CultureInfo.InvariantCulture));
     }
 
-    public IMySqlValue ReadValue(MySqlPacket packet, long length, bool isNull)
+    public IMySqlValue ReadValue (MySqlPacket packet, long length, bool isNull)
     {
-      this.IsNull = isNull;
-      if (isNull)
+        this.IsNull = isNull;
+
+        if (isNull)
+            return this;
+
+        if (length == -1)
+            length = packet.ReadFieldLength ();
+
+        if (this.ReadAsString)
+            this._value = ulong.Parse (packet.ReadString (length), CultureInfo.InvariantCulture);
+        else
+            this._value = (ulong) packet.ReadBitValue ((int) length);
+
         return this;
-
-      if (length == -1)
-        length = packet.ReadFieldLength();
-
-      if (ReadAsString)
-        _value = UInt64.Parse(packet.ReadString(length), CultureInfo.InvariantCulture);
-      else
-        _value = (UInt64)packet.ReadBitValue((int)length);
-      return this;
     }
 
-    public void SkipValue(MySqlPacket packet)
+    public void SkipValue (MySqlPacket packet)
     {
-      int len = (int)packet.ReadFieldLength();
-      packet.Position += len;
+        int len = (int) packet.ReadFieldLength ();
+        packet.Position += len;
     }
 
-    internal static void SetDSInfo(MySqlSchemaCollection sc)
+    internal static void SetDSInfo (MySqlSchemaCollection sc)
     {
-      // we use name indexing because this method will only be called
-      // when GetSchema is called for the DataSourceInformation 
-      // collection and then it wil be cached.
-      MySqlSchemaRow row = sc.AddRow();
-      row["TypeName"] = "BIT";
-      row["ProviderDbType"] = MySqlDbType.Bit;
-      row["ColumnSize"] = 64;
-      row["CreateFormat"] = "BIT";
-      row["CreateParameters"] = DBNull.Value;
-      row["DataType"] = typeof(ulong).ToString();
-      row["IsAutoincrementable"] = false;
-      row["IsBestMatch"] = true;
-      row["IsCaseSensitive"] = false;
-      row["IsFixedLength"] = false;
-      row["IsFixedPrecisionScale"] = true;
-      row["IsLong"] = false;
-      row["IsNullable"] = true;
-      row["IsSearchable"] = true;
-      row["IsSearchableWithLike"] = false;
-      row["IsUnsigned"] = false;
-      row["MaximumScale"] = 0;
-      row["MinimumScale"] = 0;
-      row["IsConcurrencyType"] = DBNull.Value;
-      row["IsLiteralSupported"] = false;
-      row["LiteralPrefix"] = DBNull.Value;
-      row["LiteralSuffix"] = DBNull.Value;
-      row["NativeDataType"] = DBNull.Value;
+        // we use name indexing because this method will only be called
+        // when GetSchema is called for the DataSourceInformation 
+        // collection and then it wil be cached.
+        MySqlSchemaRow row = sc.AddRow ();
+        row ["TypeName"]              = "BIT";
+        row ["ProviderDbType"]        = MySqlDbType.Bit;
+        row ["ColumnSize"]            = 64;
+        row ["CreateFormat"]          = "BIT";
+        row ["CreateParameters"]      = DBNull.Value;
+        row ["DataType"]              = typeof (ulong).ToString ();
+        row ["IsAutoincrementable"]   = false;
+        row ["IsBestMatch"]           = true;
+        row ["IsCaseSensitive"]       = false;
+        row ["IsFixedLength"]         = false;
+        row ["IsFixedPrecisionScale"] = true;
+        row ["IsLong"]                = false;
+        row ["IsNullable"]            = true;
+        row ["IsSearchable"]          = true;
+        row ["IsSearchableWithLike"]  = false;
+        row ["IsUnsigned"]            = false;
+        row ["MaximumScale"]          = 0;
+        row ["MinimumScale"]          = 0;
+        row ["IsConcurrencyType"]     = DBNull.Value;
+        row ["IsLiteralSupported"]    = false;
+        row ["LiteralPrefix"]         = DBNull.Value;
+        row ["LiteralSuffix"]         = DBNull.Value;
+        row ["NativeDataType"]        = DBNull.Value;
     }
-  }
 }

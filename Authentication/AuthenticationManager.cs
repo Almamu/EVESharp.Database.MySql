@@ -31,67 +31,66 @@ using System.Collections.Generic;
 using System.Reflection;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Authentication
+namespace EVESharp.Database.MySql.Authentication;
+
+internal partial class AuthenticationPluginManager
 {
-  internal partial class AuthenticationPluginManager
-  {
-    private static readonly Dictionary<string, PluginInfo> Plugins = new Dictionary<string, PluginInfo>();
+    private static readonly Dictionary <string, PluginInfo> Plugins = new Dictionary <string, PluginInfo> ();
 
-    static partial void AuthenticationManagerCtorConfiguration();
+    static partial void AuthenticationManagerCtorConfiguration ();
 
-    static AuthenticationPluginManager()
+    static AuthenticationPluginManager ()
     {
-      Plugins["mysql_native_password"] = new PluginInfo("EVESharp.Database.MySql.Authentication.MySqlNativePasswordPlugin");
-      Plugins["sha256_password"] = new PluginInfo("EVESharp.Database.MySql.Authentication.Sha256AuthenticationPlugin");
-      Plugins["authentication_windows_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.MySqlWindowsAuthenticationPlugin");
-      Plugins["caching_sha2_password"] = new PluginInfo("EVESharp.Database.MySql.Authentication.CachingSha2AuthenticationPlugin");
-      Plugins["authentication_ldap_sasl_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.MySqlSASLPlugin");
-      Plugins["mysql_clear_password"] = new PluginInfo("EVESharp.Database.MySql.Authentication.MySqlClearPasswordPlugin");
-      Plugins["authentication_kerberos_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.KerberosAuthenticationPlugin");
-      Plugins["authentication_oci_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.OciAuthenticationPlugin");
-      Plugins["authentication_fido_client"] = new PluginInfo("EVESharp.Database.MySql.Authentication.FidoAuthenticationPlugin");
+        Plugins ["mysql_native_password"]           = new PluginInfo ("EVESharp.Database.MySql.Authentication.MySqlNativePasswordPlugin");
+        Plugins ["sha256_password"]                 = new PluginInfo ("EVESharp.Database.MySql.Authentication.Sha256AuthenticationPlugin");
+        Plugins ["authentication_windows_client"]   = new PluginInfo ("EVESharp.Database.MySql.Authentication.MySqlWindowsAuthenticationPlugin");
+        Plugins ["caching_sha2_password"]           = new PluginInfo ("EVESharp.Database.MySql.Authentication.CachingSha2AuthenticationPlugin");
+        Plugins ["authentication_ldap_sasl_client"] = new PluginInfo ("EVESharp.Database.MySql.Authentication.MySqlSASLPlugin");
+        Plugins ["mysql_clear_password"]            = new PluginInfo ("EVESharp.Database.MySql.Authentication.MySqlClearPasswordPlugin");
+        Plugins ["authentication_kerberos_client"]  = new PluginInfo ("EVESharp.Database.MySql.Authentication.KerberosAuthenticationPlugin");
+        Plugins ["authentication_oci_client"]       = new PluginInfo ("EVESharp.Database.MySql.Authentication.OciAuthenticationPlugin");
+        Plugins ["authentication_fido_client"]      = new PluginInfo ("EVESharp.Database.MySql.Authentication.FidoAuthenticationPlugin");
 
-      AuthenticationManagerCtorConfiguration();
+        AuthenticationManagerCtorConfiguration ();
     }
 
-    public static MySqlAuthenticationPlugin GetPlugin(string method)
+    public static MySqlAuthenticationPlugin GetPlugin (string method)
     {
-      ValidateAuthenticationPlugin(method);
-      return CreatePlugin(method);
+        ValidateAuthenticationPlugin (method);
+        return CreatePlugin (method);
     }
 
-    private static MySqlAuthenticationPlugin CreatePlugin(string method)
+    private static MySqlAuthenticationPlugin CreatePlugin (string method)
     {
-      PluginInfo pi = Plugins[method];
+        PluginInfo pi = Plugins [method];
 
-      try
-      {
-        Type t = Type.GetType(pi.Type);
-        MySqlAuthenticationPlugin o = (MySqlAuthenticationPlugin)Activator.CreateInstance(t);
-        return o;
-      }
-      catch (Exception e)
-      {
-        throw new MySqlException(String.Format(Resources.UnableToCreateAuthPlugin, method), e);
-      }
+        try
+        {
+            Type                      t = Type.GetType (pi.Type);
+            MySqlAuthenticationPlugin o = (MySqlAuthenticationPlugin) Activator.CreateInstance (t);
+            return o;
+        }
+        catch (Exception e)
+        {
+            throw new MySqlException (string.Format (Resources.UnableToCreateAuthPlugin, method), e);
+        }
     }
 
-    public static void ValidateAuthenticationPlugin(string method)
+    public static void ValidateAuthenticationPlugin (string method)
     {
-      if (!Plugins.ContainsKey(method))
-        throw new MySqlException(String.Format(Resources.AuthenticationMethodNotSupported, method));
+        if (!Plugins.ContainsKey (method))
+            throw new MySqlException (string.Format (Resources.AuthenticationMethodNotSupported, method));
     }
-  }
+}
 
-  struct PluginInfo
-  {
-    public string Type;
+internal struct PluginInfo
+{
+    public string   Type;
     public Assembly Assembly;
 
-    public PluginInfo(string type)
+    public PluginInfo (string type)
     {
-      Type = type;
-      Assembly = null;
+        this.Type     = type;
+        this.Assembly = null;
     }
-  }
 }

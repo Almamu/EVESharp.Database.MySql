@@ -32,197 +32,208 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility;
+
+/// <summary>
+/// Gets the Kerberos configuration from the "krb5.conf/krb5.ini" file
+/// </summary>
+internal class KerberosConfig
 {
-  /// <summary>
-  /// Gets the Kerberos configuration from the "krb5.conf/krb5.ini" file
-  /// </summary>
-  internal class KerberosConfig
-  {
     private const string KRBCONFIG_LINUX = @"/etc/krb5.conf";
 
-    private const char COMMENT_HASH = '#';
-    private const char COMMENT_SEMI = ';';
-    private const char SECTION_OPEN = '[';
-    private const char SECTION_CLOSE = ']';
-    private const char GROUP_OPEN = '{';
-    private const char GROUP_CLOSE = '}';
-    private static readonly char[] Equal = new char[] { '=' };
+    private const           char    COMMENT_HASH  = '#';
+    private const           char    COMMENT_SEMI  = ';';
+    private const           char    SECTION_OPEN  = '[';
+    private const           char    SECTION_CLOSE = ']';
+    private const           char    GROUP_OPEN    = '{';
+    private const           char    GROUP_CLOSE   = '}';
+    private static readonly char [] Equal         = new char [] {'='};
 
-    static List<KeyValuePair<string, string>> LibDefaults = new List<KeyValuePair<string, string>>();
-    static List<KeyValuePair<string, string>> Realms = new List<KeyValuePair<string, string>>();
-    static List<KeyValuePair<string, string>> AppDefaults = new List<KeyValuePair<string, string>>();
+    private static List <KeyValuePair <string, string>> LibDefaults = new List <KeyValuePair <string, string>> ();
+    private static List <KeyValuePair <string, string>> Realms      = new List <KeyValuePair <string, string>> ();
+    private static List <KeyValuePair <string, string>> AppDefaults = new List <KeyValuePair <string, string>> ();
 
-    private const string SERVICE_NAME = "ldap/";
+    private const  string SERVICE_NAME = "ldap/";
     private static string Domain;
 
-    private static void ReadConfig()
+    private static void ReadConfig ()
     {
-      StringReader reader;
+        StringReader reader;
 
-      // Tries to get Kerberos configuration file path from environment variables, otherwise
-      // set the default path.
-      string krbConfigPath = Environment.GetEnvironmentVariable("KRB5_CONFIG");
+        // Tries to get Kerberos configuration file path from environment variables, otherwise
+        // set the default path.
+        string krbConfigPath = Environment.GetEnvironmentVariable ("KRB5_CONFIG");
 
-      if (string.IsNullOrEmpty(krbConfigPath))
-        krbConfigPath = KRBCONFIG_LINUX;
+        if (string.IsNullOrEmpty (krbConfigPath))
+            krbConfigPath = KRBCONFIG_LINUX;
 
-      if (File.Exists(krbConfigPath))
-      {
-        try { reader = new StringReader(File.ReadAllText(krbConfigPath)); }
-        catch { throw new MySqlException("Unable to read Kerberos configuration file."); }
-      }
-      else
-        throw new MySqlException("Kerberos configuration file is missing.");
+        if (File.Exists (krbConfigPath))
+            try
+            {
+                reader = new StringReader (File.ReadAllText (krbConfigPath));
+            }
+            catch
+            {
+                throw new MySqlException ("Unable to read Kerberos configuration file.");
+            }
+        else
+            throw new MySqlException ("Kerberos configuration file is missing.");
 
-      while (TryReadLine(reader, out string currentLine))
-      {
-        if (CanSkip(currentLine))
-          continue;
-
-        while (IsSectionLine(currentLine))
-          currentLine = ReadSection(currentLine, reader);
-      }
-    }
-
-    internal static string GetServicePrincipalName(string username)
-    {
-      Domain = SplitUserNameDomain(username);
-      ReadConfig();
-
-      string kdc;
-
-      // Try to obtain the LDAP server hostname from AppDefaults section first then on the Realms section
-      try { kdc = AppDefaults.First(e => e.Key == "ldap_server_host").Value.Trim().Replace("\"", string.Empty).ToLowerInvariant(); }
-      catch { kdc = Realms.First(e => e.Key == "kdc").Value.Trim().ToLowerInvariant(); }
-
-      if (kdc.IndexOf('.') > 0)
-        kdc = kdc.Substring(0, kdc.IndexOf('.')).ToLowerInvariant();
-
-      return SERVICE_NAME + kdc;
-    }
-
-    private static string SplitUserNameDomain(string original)
-    {
-      if (string.IsNullOrWhiteSpace(original))
-        throw new InvalidOperationException("Username cannot be an empty string.");
-
-      var index = original.IndexOf('@');
-      string domain;
-
-      if (index == 0)
-        throw new InvalidOperationException("Domain cannot be an empty string.");
-      else
-        domain = original.Substring(index + 1, original.Length - index - 1);
-
-      return domain;
-    }
-
-    #region ReadConfigFile
-    private static bool TryReadLine(StringReader reader, out string currentLine)
-    {
-      currentLine = reader.ReadLine();
-
-      if (currentLine == null)
-        return false;
-
-      for (var i = 0; i < currentLine.Length; i++)
-      {
-        if (IsComment(currentLine[i]))
+        while (TryReadLine (reader, out string currentLine))
         {
-          currentLine = currentLine.Substring(0, i);
-          break;
+            if (CanSkip (currentLine))
+                continue;
+
+            while (IsSectionLine (currentLine))
+                currentLine = ReadSection (currentLine, reader);
         }
-      }
-
-      currentLine = currentLine.Trim().Trim('\uFEFF', '\u200B');
-
-      return true;
     }
 
-    private static bool IsComment(char ch)
+    internal static string GetServicePrincipalName (string username)
     {
-      return ch.Equals(COMMENT_HASH) || ch.Equals(COMMENT_SEMI);
+        Domain = SplitUserNameDomain (username);
+        ReadConfig ();
+
+        string kdc;
+
+        // Try to obtain the LDAP server hostname from AppDefaults section first then on the Realms section
+        try
+        {
+            kdc = AppDefaults.First (e => e.Key == "ldap_server_host").Value.Trim ().Replace ("\"", string.Empty).ToLowerInvariant ();
+        }
+        catch
+        {
+            kdc = Realms.First (e => e.Key == "kdc").Value.Trim ().ToLowerInvariant ();
+        }
+
+        if (kdc.IndexOf ('.') > 0)
+            kdc = kdc.Substring (0, kdc.IndexOf ('.')).ToLowerInvariant ();
+
+        return SERVICE_NAME + kdc;
     }
 
-    private static bool CanSkip(string trimmed)
+    private static string SplitUserNameDomain (string original)
     {
-      if (trimmed.Length == 0)
+        if (string.IsNullOrWhiteSpace (original))
+            throw new InvalidOperationException ("Username cannot be an empty string.");
+
+        int    index = original.IndexOf ('@');
+        string domain;
+
+        if (index == 0)
+            throw new InvalidOperationException ("Domain cannot be an empty string.");
+        else
+            domain = original.Substring (index + 1, original.Length - index - 1);
+
+        return domain;
+    }
+
+#region ReadConfigFile
+
+    private static bool TryReadLine (StringReader reader, out string currentLine)
+    {
+        currentLine = reader.ReadLine ();
+
+        if (currentLine == null)
+            return false;
+
+        for (int i = 0; i < currentLine.Length; i++)
+            if (IsComment (currentLine [i]))
+            {
+                currentLine = currentLine.Substring (0, i);
+                break;
+            }
+
+        currentLine = currentLine.Trim ().Trim ('\uFEFF', '\u200B');
+
         return true;
-
-      return IsComment(trimmed[0]);
     }
 
-    private static bool IsSectionLine(string currentLine)
+    private static bool IsComment (char ch)
     {
-      if (string.IsNullOrWhiteSpace(currentLine))
-        return false;
-
-      return currentLine[0] == SECTION_OPEN && currentLine[currentLine.Length - 1] == SECTION_CLOSE;
+        return ch.Equals (COMMENT_HASH) || ch.Equals (COMMENT_SEMI);
     }
 
-    private static string ReadSection(string currentLine, StringReader reader)
+    private static bool CanSkip (string trimmed)
     {
-      string name = currentLine.Substring(1, currentLine.Length - 2).ToLower();
+        if (trimmed.Length == 0)
+            return true;
 
-      while (TryReadLine(reader, out currentLine))
-      {
-        if (CanSkip(currentLine))
-          continue;
+        return IsComment (trimmed [0]);
+    }
 
-        if (currentLine[0] == SECTION_OPEN)
-          break;
+    private static bool IsSectionLine (string currentLine)
+    {
+        if (string.IsNullOrWhiteSpace (currentLine))
+            return false;
 
-        switch (name)
+        return currentLine [0] == SECTION_OPEN && currentLine [currentLine.Length - 1] == SECTION_CLOSE;
+    }
+
+    private static string ReadSection (string currentLine, StringReader reader)
+    {
+        string name = currentLine.Substring (1, currentLine.Length - 2).ToLower ();
+
+        while (TryReadLine (reader, out currentLine))
         {
-          case "libdefaults":
-            ReadValue(currentLine, reader, LibDefaults);
-            break;
-          case "realms":
-            ReadValue(currentLine, reader, Realms);
-            break;
-          case "appdefaults":
-            ReadValue(currentLine, reader, AppDefaults);
-            break;
+            if (CanSkip (currentLine))
+                continue;
+
+            if (currentLine [0] == SECTION_OPEN)
+                break;
+
+            switch (name)
+            {
+                case "libdefaults":
+                    ReadValue (currentLine, reader, LibDefaults);
+                    break;
+                case "realms":
+                    ReadValue (currentLine, reader, Realms);
+                    break;
+                case "appdefaults":
+                    ReadValue (currentLine, reader, AppDefaults);
+                    break;
+            }
         }
-      }
 
-      return currentLine;
+        return currentLine;
     }
 
-    private static void ReadValue(string currentLine, StringReader reader, List<KeyValuePair<string, string>> section)
+    private static void ReadValue (string currentLine, StringReader reader, List <KeyValuePair <string, string>> section)
     {
-      if (currentLine.IndexOf(GROUP_OPEN) >= 0)
-        ReadValues(currentLine, reader, section);
-      else
-      {
-        var split = currentLine.Split(Equal, 2);
+        if (currentLine.IndexOf (GROUP_OPEN) >= 0)
+        {
+            ReadValues (currentLine, reader, section);
+        }
+        else
+        {
+            string [] split = currentLine.Split (Equal, 2);
 
-        if (split.Length == 2)
-          section.Add(new KeyValuePair<string, string>(split[0].Trim(), split[1].Trim()));
-      }
+            if (split.Length == 2)
+                section.Add (new KeyValuePair <string, string> (split [0].Trim (), split [1].Trim ()));
+        }
     }
 
-    private static void ReadValues(string currentLine, StringReader reader, List<KeyValuePair<string, string>> section)
+    private static void ReadValues (string currentLine, StringReader reader, List <KeyValuePair <string, string>> section)
     {
-      var split = currentLine.Split(Equal, 2);
+        string [] split = currentLine.Split (Equal, 2);
 
-      if (split.Length != 2)
-        return;
+        if (split.Length != 2)
+            return;
 
-      while (TryReadLine(reader, out currentLine))
-      {
-        if (CanSkip(currentLine))
-          continue;
+        while (TryReadLine (reader, out currentLine))
+        {
+            if (CanSkip (currentLine))
+                continue;
 
-        if (currentLine[0] == GROUP_CLOSE)
-          break;
+            if (currentLine [0] == GROUP_CLOSE)
+                break;
 
-        if (split[0].Trim().Equals(Domain, StringComparison.OrdinalIgnoreCase)
-          || split[0].Trim().Equals("mysql", StringComparison.OrdinalIgnoreCase))
-          ReadValue(currentLine, reader, section);
-      }
+            if (split [0].Trim ().Equals (Domain,     StringComparison.OrdinalIgnoreCase)
+                || split [0].Trim ().Equals ("mysql", StringComparison.OrdinalIgnoreCase))
+                ReadValue (currentLine, reader, section);
+        }
     }
-    #endregion
-  }
+
+#endregion
 }

@@ -35,129 +35,137 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace EVESharp.Database.MySql.Common
+namespace EVESharp.Database.MySql.Common;
+
+/// <summary>
+/// Summary description for StreamCreator.
+/// </summary>
+internal class StreamCreator
 {
-  /// <summary>
-  /// Summary description for StreamCreator.
-  /// </summary>
-  internal class StreamCreator
-  {
-    readonly string _hostList;
-    uint _port;
-    string pipeName;
-    uint keepalive;
-    DBVersion driverVersion;
+    private readonly string    _hostList;
+    private          uint      _port;
+    private          string    pipeName;
+    private          uint      keepalive;
+    private          DBVersion driverVersion;
 
-    public StreamCreator(string hosts, uint port, string pipeName, uint keepalive, DBVersion driverVersion)
+    public StreamCreator (string hosts, uint port, string pipeName, uint keepalive, DBVersion driverVersion)
     {
-      _hostList = hosts;
-      if (string.IsNullOrEmpty(_hostList))
-        _hostList = "localhost";
-      this._port = port;
-      this.pipeName = pipeName;
-      this.keepalive = keepalive;
-      this.driverVersion = driverVersion;
+        this._hostList = hosts;
+
+        if (string.IsNullOrEmpty (this._hostList))
+            this._hostList = "localhost";
+
+        this._port         = port;
+        this.pipeName      = pipeName;
+        this.keepalive     = keepalive;
+        this.driverVersion = driverVersion;
     }
 
-    public static Stream GetStream(string server, uint port, string pipename, uint keepalive, DBVersion v, uint timeout)
+    public static Stream GetStream (string server, uint port, string pipename, uint keepalive, DBVersion v, uint timeout)
     {
-      MySqlConnectionStringBuilder settings = new MySqlConnectionStringBuilder
-      {
-        Server = server,
-        Port = port,
-        PipeName = pipename,
-        Keepalive = keepalive,
-        ConnectionTimeout = timeout
-      };
-      MyNetworkStream networkStream = null;
-      return GetStream(settings, ref networkStream);
+        MySqlConnectionStringBuilder settings = new MySqlConnectionStringBuilder
+        {
+            Server            = server,
+            Port              = port,
+            PipeName          = pipename,
+            Keepalive         = keepalive,
+            ConnectionTimeout = timeout
+        };
+
+        MyNetworkStream networkStream = null;
+        return GetStream (settings, ref networkStream);
     }
 
-    public static Stream GetStream(MySqlConnectionStringBuilder settings, ref MyNetworkStream networkStream)
+    public static Stream GetStream (MySqlConnectionStringBuilder settings, ref MyNetworkStream networkStream)
     {
-      switch (settings.ConnectionProtocol)
-      {
-        case MySqlConnectionProtocol.Tcp: return GetTcpStream(settings, ref networkStream);
-        case MySqlConnectionProtocol.UnixSocket: return GetUnixSocketStream(settings, ref networkStream);
-        case MySqlConnectionProtocol.SharedMemory: return GetSharedMemoryStream(settings);
-        case MySqlConnectionProtocol.NamedPipe: return GetNamedPipeStream(settings);
-      }
-      throw new InvalidOperationException(Resources.UnknownConnectionProtocol);
+        switch (settings.ConnectionProtocol)
+        {
+            case MySqlConnectionProtocol.Tcp:          return GetTcpStream (settings, ref networkStream);
+            case MySqlConnectionProtocol.UnixSocket:   return GetUnixSocketStream (settings, ref networkStream);
+            case MySqlConnectionProtocol.SharedMemory: return GetSharedMemoryStream (settings);
+            case MySqlConnectionProtocol.NamedPipe:    return GetNamedPipeStream (settings);
+        }
+
+        throw new InvalidOperationException (Resources.UnknownConnectionProtocol);
     }
 
-    private static Stream GetTcpStream(MySqlConnectionStringBuilder settings, ref MyNetworkStream networkStream)
+    private static Stream GetTcpStream (MySqlConnectionStringBuilder settings, ref MyNetworkStream networkStream)
     {
-      Task<IPAddress[]> dnsTask = Dns.GetHostAddressesAsync(settings.Server);
-      dnsTask.Wait();
-      if (dnsTask.Result == null || dnsTask.Result.Length == 0)
-        throw new ArgumentException(Resources.InvalidHostNameOrAddress);
-      IPAddress addr = dnsTask.Result.FirstOrDefault(c => c.AddressFamily == AddressFamily.InterNetwork);
-      if (addr == null)
-        addr = dnsTask.Result[0];
-      TcpClient client = new TcpClient(addr.AddressFamily);
-      Task task = client.ConnectAsync(settings.Server, (int)settings.Port);
+        Task <IPAddress []> dnsTask = Dns.GetHostAddressesAsync (settings.Server);
+        dnsTask.Wait ();
 
-      if (!task.Wait(((int)settings.ConnectionTimeout * 1000)))
-        throw new TimeoutException(Resources.Timeout);
-      if (settings.Keepalive > 0)
-      {
-        SetKeepAlive(client.Client, settings.Keepalive);
-      }
-      networkStream = new MyNetworkStream(client.Client, true);
-      var result = client.GetStream();
-      GC.SuppressFinalize(result);
+        if (dnsTask.Result == null || dnsTask.Result.Length == 0)
+            throw new ArgumentException (Resources.InvalidHostNameOrAddress);
 
-      return result;
+        IPAddress addr = dnsTask.Result.FirstOrDefault (c => c.AddressFamily == AddressFamily.InterNetwork);
+
+        if (addr == null)
+            addr = dnsTask.Result [0];
+
+        TcpClient client = new TcpClient (addr.AddressFamily);
+        Task      task   = client.ConnectAsync (settings.Server, (int) settings.Port);
+
+        if (!task.Wait ((int) settings.ConnectionTimeout * 1000))
+            throw new TimeoutException (Resources.Timeout);
+
+        if (settings.Keepalive > 0)
+            SetKeepAlive (client.Client, settings.Keepalive);
+
+        networkStream = new MyNetworkStream (client.Client, true);
+        NetworkStream result = client.GetStream ();
+        GC.SuppressFinalize (result);
+
+        return result;
     }
 
-    internal static Stream GetUnixSocketStream(MySqlConnectionStringBuilder settings, ref MyNetworkStream networkStream)
+    internal static Stream GetUnixSocketStream (MySqlConnectionStringBuilder settings, ref MyNetworkStream networkStream)
     {
-      try
-      {
-        networkStream = new MyNetworkStream(GetUnixSocket(settings.Server, settings.ConnectionTimeout, settings.Keepalive), true);
-        return new NetworkStream(networkStream.Socket, true);
-      }
-      catch (Exception)
-      {
-        throw;
-      }
+        try
+        {
+            networkStream = new MyNetworkStream (GetUnixSocket (settings.Server, settings.ConnectionTimeout, settings.Keepalive), true);
+            return new NetworkStream (networkStream.Socket, true);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
-    internal static Socket GetUnixSocket(string server, uint connectionTimeout, uint keepAlive)
+    internal static Socket GetUnixSocket (string server, uint connectionTimeout, uint keepAlive)
     {
-      if (Platform.IsWindows())
-        throw new InvalidOperationException(Resources.NoUnixSocketsOnWindows);
+        if (Platform.IsWindows ())
+            throw new InvalidOperationException (Resources.NoUnixSocketsOnWindows);
 
-      EndPoint endPoint = new UnixEndPoint(server);
-      Socket socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
-      if (keepAlive > 0)
-      {
-        SetKeepAlive(socket, keepAlive);
-      }
-      try
-      {
-        socket.ReceiveTimeout = (int)connectionTimeout * 1000;
-        socket.Connect(endPoint);
-        return socket;
-      }
-      catch (Exception)
-      {
-        socket.Dispose();
-        throw;
-      }
+        EndPoint endPoint = new UnixEndPoint (server);
+        Socket   socket   = new Socket (AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
+
+        if (keepAlive > 0)
+            SetKeepAlive (socket, keepAlive);
+
+        try
+        {
+            socket.ReceiveTimeout = (int) connectionTimeout * 1000;
+            socket.Connect (endPoint);
+            return socket;
+        }
+        catch (Exception)
+        {
+            socket.Dispose ();
+            throw;
+        }
     }
 
-    private static Stream GetSharedMemoryStream(MySqlConnectionStringBuilder settings)
+    private static Stream GetSharedMemoryStream (MySqlConnectionStringBuilder settings)
     {
-      SharedMemoryStream str = new SharedMemoryStream(settings.SharedMemoryName);
-      str.Open(settings.ConnectionTimeout);
-      return str;
+        SharedMemoryStream str = new SharedMemoryStream (settings.SharedMemoryName);
+        str.Open (settings.ConnectionTimeout);
+        return str;
     }
 
-    private static Stream GetNamedPipeStream(MySqlConnectionStringBuilder settings)
+    private static Stream GetNamedPipeStream (MySqlConnectionStringBuilder settings)
     {
-      Stream stream = NamedPipeStream.Create(settings.PipeName, settings.Server, settings.ConnectionTimeout);
-      return stream;
+        Stream stream = NamedPipeStream.Create (settings.PipeName, settings.Server, settings.ConnectionTimeout);
+        return stream;
     }
 
     /// <summary>
@@ -165,46 +173,48 @@ namespace EVESharp.Database.MySql.Common
     /// </summary>
     /// <param name="s">The socket object.</param>
     /// <param name="time">The keepalive timeout, in seconds.</param>
-    internal static void SetKeepAlive(Socket s, uint time)
+    internal static void SetKeepAlive (Socket s, uint time)
     {
-      uint on = 1;
-      uint interval = 1000; // default interval = 1 sec
+        uint on       = 1;
+        uint interval = 1000; // default interval = 1 sec
 
-      uint timeMilliseconds;
-      if (time > UInt32.MaxValue / 1000)
-        timeMilliseconds = UInt32.MaxValue;
-      else
-        timeMilliseconds = time * 1000;
+        uint timeMilliseconds;
 
-      // Use Socket.IOControl to implement equivalent of
-      // WSAIoctl with  SOL_KEEPALIVE_VALS 
+        if (time > uint.MaxValue / 1000)
+            timeMilliseconds = uint.MaxValue;
+        else
+            timeMilliseconds = time * 1000;
 
-      // the native structure passed to WSAIoctl is
-      //struct tcp_keepalive {
-      //    ULONG onoff;
-      //    ULONG keepalivetime;
-      //    ULONG keepaliveinterval;
-      //};
-      // marshal the equivalent of the native structure into a byte array
+        // Use Socket.IOControl to implement equivalent of
+        // WSAIoctl with  SOL_KEEPALIVE_VALS 
 
-      byte[] inOptionValues = new byte[12];
-      BitConverter.GetBytes(on).CopyTo(inOptionValues, 0);
-      BitConverter.GetBytes(timeMilliseconds).CopyTo(inOptionValues, 4);
-      BitConverter.GetBytes(interval).CopyTo(inOptionValues, 8);
-      try
-      {
-        // call WSAIoctl via IOControl
-        s.IOControl(IOControlCode.KeepAliveValues, inOptionValues, null);
-        return;
-      }
-      catch (NotImplementedException)
-      {
-        // Mono throws not implemented currently
-      }
-      // Fallback if Socket.IOControl is not available ( Compact Framework )
-      // or not implemented ( Mono ). Keepalive option will still be set, but
-      // with timeout is kept default.
-      s.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, 1);
+        // the native structure passed to WSAIoctl is
+        //struct tcp_keepalive {
+        //    ULONG onoff;
+        //    ULONG keepalivetime;
+        //    ULONG keepaliveinterval;
+        //};
+        // marshal the equivalent of the native structure into a byte array
+
+        byte [] inOptionValues = new byte[12];
+        BitConverter.GetBytes (on).CopyTo (inOptionValues, 0);
+        BitConverter.GetBytes (timeMilliseconds).CopyTo (inOptionValues, 4);
+        BitConverter.GetBytes (interval).CopyTo (inOptionValues, 8);
+
+        try
+        {
+            // call WSAIoctl via IOControl
+            s.IOControl (IOControlCode.KeepAliveValues, inOptionValues, null);
+            return;
+        }
+        catch (NotImplementedException)
+        {
+            // Mono throws not implemented currently
+        }
+
+        // Fallback if Socket.IOControl is not available ( Compact Framework )
+        // or not implemented ( Mono ). Keepalive option will still be set, but
+        // with timeout is kept default.
+        s.SetSocketOption (SocketOptionLevel.Socket, SocketOptionName.KeepAlive, 1);
     }
-  }
 }

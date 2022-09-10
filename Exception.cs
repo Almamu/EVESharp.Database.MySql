@@ -30,74 +30,64 @@ using System;
 using System.Data.Common;
 using System.Runtime.Serialization;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// The exception that is thrown when MySQL returns an error. This class cannot be inherited.
+/// </summary>
+/// <remarks>
+///    <para>
+///      This class is created whenever the MySQL Data Provider encounters an error generated from the server.
+///    </para>
+///    <para>
+///      Any open connections are not automatically closed when an exception is thrown.  If
+///      the client application determines that the exception is fatal, it should close any open
+///      <see cref="MySqlDataReader"/> objects or <see cref="MySqlConnection"/> objects.
+///    </para>
+/// </remarks>
+[Serializable]
+public sealed class MySqlException : DbException
 {
-  /// <summary>
-  /// The exception that is thrown when MySQL returns an error. This class cannot be inherited.
-  /// </summary>
-  /// <remarks>
-  ///    <para>
-  ///      This class is created whenever the MySQL Data Provider encounters an error generated from the server.
-  ///    </para>
-  ///    <para>
-  ///      Any open connections are not automatically closed when an exception is thrown.  If
-  ///      the client application determines that the exception is fatal, it should close any open
-  ///      <see cref="MySqlDataReader"/> objects or <see cref="MySqlConnection"/> objects.
-  ///    </para>
-  /// </remarks>
-  [Serializable]
-  public sealed class MySqlException : DbException
-  {
-    internal MySqlException()
+    internal MySqlException () { }
+
+    internal MySqlException (string msg)
+        : base (msg) { }
+
+    internal MySqlException (string msg, Exception ex)
+        : base (msg, ex) { }
+
+    internal MySqlException (string msg, bool isFatal, Exception inner)
+        : base (msg, inner)
     {
+        this.IsFatal = isFatal;
     }
 
-    internal MySqlException(string msg)
-      : base(msg)
+    internal MySqlException (string msg, int errno, Exception inner)
+        : this (msg, inner)
     {
+        this.Number = errno;
+        this.Data.Add ("Server Error Code", errno);
     }
 
-    internal MySqlException(string msg, Exception ex)
-      : base(msg, ex)
+    internal MySqlException (string msg, int errno, bool isFatal)
+        : this (msg)
     {
+        this.Number  = errno;
+        this.IsFatal = isFatal;
+        this.Data.Add ("Server Error Code", errno);
     }
 
-    internal MySqlException(string msg, bool isFatal, Exception inner)
-      : base(msg, inner)
+    internal MySqlException (string msg, int errno)
+        : this (msg, errno, null) { }
+
+    internal MySqlException (uint code, string sqlState, string msg) : base (msg)
     {
-      IsFatal = isFatal;
+        this.Code     = code;
+        this.SqlState = sqlState;
     }
 
-    internal MySqlException(string msg, int errno, Exception inner)
-      : this(msg, inner)
-    {
-      Number = errno;
-      Data.Add("Server Error Code", errno);
-    }
-
-    internal MySqlException(string msg, int errno, bool isFatal)
-      : this(msg)
-    {
-      Number = errno;
-      IsFatal = isFatal;
-      Data.Add("Server Error Code", errno);
-    }
-
-    internal MySqlException(string msg, int errno)
-      : this(msg, errno, null)
-    {
-    }
-
-    internal MySqlException(UInt32 code, string sqlState, string msg) : base(msg)
-    {
-      Code = code;
-      SqlState = sqlState;
-    }
-
-    private MySqlException(SerializationInfo info, StreamingContext context)
-      : base(info, context)
-    {
-    }
+    private MySqlException (SerializationInfo info, StreamingContext context)
+        : base (info, context) { }
 
     /// <summary>
     /// Gets a number that identifies the type of error.
@@ -109,8 +99,7 @@ namespace EVESharp.Database.MySql
     /// </summary>
     internal bool IsFatal { get; }
 
-    internal bool IsQueryAborted => (Number == (int)MySqlErrorCode.QueryInterrupted ||
-                                     Number == (int)MySqlErrorCode.FileSortAborted);
+    internal bool IsQueryAborted => this.Number == (int) MySqlErrorCode.QueryInterrupted || this.Number == (int) MySqlErrorCode.FileSortAborted;
 
     /// <summary>
     /// Gets the SQL state.
@@ -120,6 +109,5 @@ namespace EVESharp.Database.MySql
     /// <summary>
     /// Gets an integer that representes the MySQL error code.
     /// </summary>
-    public UInt32 Code { get; private set; }
-  }
+    public uint Code { get; private set; }
 }

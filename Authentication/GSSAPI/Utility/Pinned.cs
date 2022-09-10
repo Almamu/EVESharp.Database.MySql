@@ -29,28 +29,31 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility;
+
+/// <summary>
+/// Memory pinned object
+/// </summary>
+internal static class Pinned
 {
-  /// <summary>
-  /// Memory pinned object
-  /// </summary>
-  internal static class Pinned
-  {
     /// <summary>
     /// Create memory pinned object from <paramref name="value"/>
     /// </summary>
     /// <typeparam name="T">Any class type</typeparam>
     /// <param name="value">Value to pin</param>
     /// <returns>Pinned value</returns>
-    internal static Pinned<T> From<T>(T value) where T : class => new Pinned<T>(value);
-  }
+    internal static Pinned <T> From <T> (T value) where T : class
+    {
+        return new Pinned <T> (value);
+    }
+}
 
-  /// <summary>
-  /// Memory pinned object
-  /// </summary>
-  /// <typeparam name="T">Any class type</typeparam>
-  internal sealed class Pinned<T> : IDisposable where T : class
-  {
+/// <summary>
+/// Memory pinned object
+/// </summary>
+/// <typeparam name="T">Any class type</typeparam>
+internal sealed class Pinned <T> : IDisposable where T : class
+{
     /// <summary>
     /// Original object value, can be used with <code>ref</code>
     /// </summary>
@@ -67,32 +70,31 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility
     /// Create memory pinned object from <paramref name="value"/>
     /// </summary>
     /// <param name="value">Value to pin</param>
-    internal Pinned(T value)
+    internal Pinned (T value)
     {
-      Value = value;
-      _handle = GCHandle.Alloc(value, GCHandleType.Pinned);
-      Address = _handle.AddrOfPinnedObject();
+        this.Value   = value;
+        this._handle = GCHandle.Alloc (value, GCHandleType.Pinned);
+        this.Address = this._handle.AddrOfPinnedObject ();
     }
 
     /// <summary>
     /// Returns address of object in memory
     /// </summary>
-    public static implicit operator IntPtr(Pinned<T> p)
+    public static implicit operator IntPtr (Pinned <T> p)
     {
-      return p.Address;
+        return p.Address;
     }
 
     /// <summary>
     /// Returns original object value
     /// </summary>
-    public static implicit operator T(Pinned<T> p)
+    public static implicit operator T (Pinned <T> p)
     {
-      return p.Value;
+        return p.Value;
     }
 
-    public void Dispose()
+    public void Dispose ()
     {
-      _handle.Free();
+        this._handle.Free ();
     }
-  }
 }

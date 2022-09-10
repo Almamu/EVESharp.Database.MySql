@@ -31,15 +31,15 @@ using System.Collections.Generic;
 using System.Data;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// BaseCommandInterceptor is the base class that should be used for all userland 
+/// command interceptors
+/// </summary>
+public abstract class BaseCommandInterceptor
 {
-  /// <summary>
-  /// BaseCommandInterceptor is the base class that should be used for all userland 
-  /// command interceptors
-  /// </summary>
-  public abstract class BaseCommandInterceptor
-  {
-	  /// <summary>
+    /// <summary>
     /// Gets the active connection.
     /// </summary>
     protected MySqlConnection ActiveConnection { get; private set; }
@@ -51,9 +51,9 @@ namespace EVESharp.Database.MySql
     /// <param name="returnValue">A scalar value that represents the result returned by the execution of the SQL statement.</param>
     /// <returns><c>false</c>.</returns>
     /// <remarks>This method is intended to be overriden.</remarks>
-    public virtual bool ExecuteScalar(string sql, ref object returnValue)
+    public virtual bool ExecuteScalar (string sql, ref object returnValue)
     {
-      return false;
+        return false;
     }
 
     /// <summary>
@@ -63,9 +63,9 @@ namespace EVESharp.Database.MySql
     /// <param name="returnValue">The number of affected rows.</param>
     /// <returns><c>false</c>.</returns>
     /// <remarks>This method is intended to be overriden.</remarks>
-    public virtual bool ExecuteNonQuery(string sql, ref int returnValue)
+    public virtual bool ExecuteNonQuery (string sql, ref int returnValue)
     {
-      return false;
+        return false;
     }
 
     /// <summary>
@@ -76,101 +76,112 @@ namespace EVESharp.Database.MySql
     /// <param name="returnValue">A <see cref="MySqlDataReader"/> object containing the result of the statement execution.</param>
     /// <returns><c>false</c>.</returns>
     /// <remarks>This method is intended to be overriden.</remarks>
-    public virtual bool ExecuteReader(string sql, CommandBehavior behavior, ref MySqlDataReader returnValue)
+    public virtual bool ExecuteReader (string sql, CommandBehavior behavior, ref MySqlDataReader returnValue)
     {
-      return false;
+        return false;
     }
 
     /// <summary>
     /// Sets the active connection.
     /// </summary>
     /// <param name="connection">The active connection.</param>
-    public virtual void Init(MySqlConnection connection)
+    public virtual void Init (MySqlConnection connection)
     {
-      ActiveConnection = connection;
+        this.ActiveConnection = connection;
     }
-  }
+}
 
-  /// <summary>
-  /// CommandInterceptor is the "manager" class that keeps the list of registered interceptors
-  /// for the given connection.
-  /// </summary>
-  internal sealed partial class CommandInterceptor : Interceptor
-  {
-    bool _insideInterceptor = false;
-    readonly List<BaseCommandInterceptor> _interceptors = new List<BaseCommandInterceptor>();
+/// <summary>
+/// CommandInterceptor is the "manager" class that keeps the list of registered interceptors
+/// for the given connection.
+/// </summary>
+internal sealed partial class CommandInterceptor : Interceptor
+{
+    private          bool                          _insideInterceptor = false;
+    private readonly List <BaseCommandInterceptor> _interceptors      = new List <BaseCommandInterceptor> ();
 
-    public CommandInterceptor(MySqlConnection connection)
+    public CommandInterceptor (MySqlConnection connection)
     {
-      Connection = connection;
+        this.Connection = connection;
 
-      LoadInterceptors(connection.Settings.CommandInterceptors);
-    }
-
-    public bool ExecuteScalar(string sql, ref object returnValue)
-    {
-      if (_insideInterceptor) return false;
-      _insideInterceptor = true;
-
-      bool handled = false;
-
-      foreach (BaseCommandInterceptor bci in _interceptors)
-        handled |= bci.ExecuteScalar(sql, ref returnValue);
-
-      _insideInterceptor = false;
-      return handled;
+        this.LoadInterceptors (connection.Settings.CommandInterceptors);
     }
 
-    public bool ExecuteNonQuery(string sql, ref int returnValue)
+    public bool ExecuteScalar (string sql, ref object returnValue)
     {
-      if (_insideInterceptor) return false;
-      _insideInterceptor = true;
+        if (this._insideInterceptor)
+            return false;
 
-      bool handled = false;
+        this._insideInterceptor = true;
 
-      foreach (BaseCommandInterceptor bci in _interceptors)
-        handled |= bci.ExecuteNonQuery(sql, ref returnValue);
+        bool handled = false;
 
-      _insideInterceptor = false;
-      return handled;
+        foreach (BaseCommandInterceptor bci in this._interceptors)
+            handled |= bci.ExecuteScalar (sql, ref returnValue);
+
+        this._insideInterceptor = false;
+        return handled;
     }
 
-    public bool ExecuteReader(string sql, CommandBehavior behavior, ref MySqlDataReader returnValue)
+    public bool ExecuteNonQuery (string sql, ref int returnValue)
     {
-      if (_insideInterceptor) return false;
-      _insideInterceptor = true;
+        if (this._insideInterceptor)
+            return false;
 
-      bool handled = false;
+        this._insideInterceptor = true;
 
-      foreach (BaseCommandInterceptor bci in _interceptors)
-        handled |= bci.ExecuteReader(sql, behavior, ref returnValue);
+        bool handled = false;
 
-      _insideInterceptor = false;
-      return handled;
+        foreach (BaseCommandInterceptor bci in this._interceptors)
+            handled |= bci.ExecuteNonQuery (sql, ref returnValue);
+
+        this._insideInterceptor = false;
+        return handled;
     }
 
-    protected override void AddInterceptor(object o)
+    public bool ExecuteReader (string sql, CommandBehavior behavior, ref MySqlDataReader returnValue)
     {
-      if (o == null)
-        throw new ArgumentException("Unable to instantiate CommandInterceptor");
+        if (this._insideInterceptor)
+            return false;
 
-      if (!(o is BaseCommandInterceptor))
-        throw new InvalidOperationException(String.Format(Resources.TypeIsNotCommandInterceptor,
-          o.GetType()));
-      BaseCommandInterceptor ie = (BaseCommandInterceptor) o;
-      ie.Init(Connection);
-      _interceptors.Insert(0, (BaseCommandInterceptor)o);
+        this._insideInterceptor = true;
+
+        bool handled = false;
+
+        foreach (BaseCommandInterceptor bci in this._interceptors)
+            handled |= bci.ExecuteReader (sql, behavior, ref returnValue);
+
+        this._insideInterceptor = false;
+        return handled;
     }
 
-
-    protected override string ResolveType(string nameOrType)
+    protected override void AddInterceptor (object o)
     {
-      if (MySqlConfiguration.Settings == null || MySqlConfiguration.Settings.CommandInterceptors == null)
-        return base.ResolveType(nameOrType);
-      foreach (InterceptorConfigurationElement e in MySqlConfiguration.Settings.CommandInterceptors)
-        if (String.Compare(e.Name, nameOrType, true) == 0)
-          return e.Type;
-      return base.ResolveType(nameOrType);
+        if (o == null)
+            throw new ArgumentException ("Unable to instantiate CommandInterceptor");
+
+        if (!(o is BaseCommandInterceptor))
+            throw new InvalidOperationException (
+                string.Format (
+                    Resources.TypeIsNotCommandInterceptor,
+                    o.GetType ()
+                )
+            );
+
+        BaseCommandInterceptor ie = (BaseCommandInterceptor) o;
+        ie.Init (this.Connection);
+        this._interceptors.Insert (0, (BaseCommandInterceptor) o);
     }
-  }
+
+    protected override string ResolveType (string nameOrType)
+    {
+        if (MySqlConfiguration.Settings == null || MySqlConfiguration.Settings.CommandInterceptors == null)
+            return base.ResolveType (nameOrType);
+
+        foreach (InterceptorConfigurationElement e in MySqlConfiguration.Settings.CommandInterceptors)
+            if (string.Compare (e.Name, nameOrType, true) == 0)
+                return e.Type;
+
+        return base.ResolveType (nameOrType);
+    }
 }

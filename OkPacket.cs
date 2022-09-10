@@ -28,74 +28,74 @@
 
 using System.Collections.Generic;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Struct that represents the response OK Packet
+/// https://dev.mysql.com/doc/internals/en/packet-OK_Packet.html
+/// </summary>
+internal struct OkPacket
 {
-  /// <summary>
-  /// Struct that represents the response OK Packet
-  /// https://dev.mysql.com/doc/internals/en/packet-OK_Packet.html
-  /// </summary>
-  internal struct OkPacket
-  {
-    internal long AffectedRows { get; }
-    internal long LastInsertId { get; }
-    internal ServerStatusFlags ServerStatusFlags { get; }
-    internal int WarningCount { get; }
-    internal string Info { get; }
-    internal List<SessionTracker> SessionTrackers { get; }
+    internal long                  AffectedRows      { get; }
+    internal long                  LastInsertId      { get; }
+    internal ServerStatusFlags     ServerStatusFlags { get; }
+    internal int                   WarningCount      { get; }
+    internal string                Info              { get; }
+    internal List <SessionTracker> SessionTrackers   { get; }
 
     /// <summary>
     /// Creates an instance of the OKPacket object with all of its metadata
     /// </summary>
     /// <param name="packet">The packet to parse</param>
-    internal OkPacket(MySqlPacket packet)
+    internal OkPacket (MySqlPacket packet)
     {
-      AffectedRows = packet.ReadFieldLength(); // affected rows
-      LastInsertId = packet.ReadFieldLength(); // last insert-id
-      ServerStatusFlags = (ServerStatusFlags)packet.ReadInteger(2); // status flags
-      WarningCount = packet.ReadInteger(2); // warning count
-      Info = packet.ReadLenString(); // info
-      SessionTrackers = new List<SessionTracker>();
+        this.AffectedRows      = packet.ReadFieldLength (); // affected rows
+        this.LastInsertId      = packet.ReadFieldLength (); // last insert-id
+        this.ServerStatusFlags = (ServerStatusFlags) packet.ReadInteger (2); // status flags
+        this.WarningCount      = packet.ReadInteger (2); // warning count
+        this.Info              = packet.ReadLenString (); // info
+        this.SessionTrackers   = new List <SessionTracker> ();
 
-      if ((ServerStatusFlags & ServerStatusFlags.SessionStateChanged) != 0)
-      {
-        int totalLen = packet.ReadPackedInteger();
-        int start = packet.Position;
-        int end = start + totalLen;
-
-        while (totalLen > 0 && end > start)
+        if ((this.ServerStatusFlags & ServerStatusFlags.SessionStateChanged) != 0)
         {
-          SessionTrackType type = (SessionTrackType)packet.ReadByte();
-          int dataLength = (int)packet.ReadByte();
-          string name, value;
+            int totalLen = packet.ReadPackedInteger ();
+            int start    = packet.Position;
+            int end      = start + totalLen;
 
-          // for specification of the packet structure, see WL#4797
-          switch (type)
-          {
-            case SessionTrackType.SystemVariables:
-              name = packet.ReadString(packet.ReadByte());
-              value = packet.ReadString(packet.ReadByte());
-              AddTracker(type, name, value);
-              break;
-            case SessionTrackType.GTIDS:
-              packet.ReadByte(); // skip the byte reserved for the encoding specification, see WL#6128 
-              name = packet.ReadString(packet.ReadByte());
-              AddTracker(type, name, null);
-              break;
-            case SessionTrackType.Schema:
-            case SessionTrackType.TransactionCharacteristics:
-            case SessionTrackType.TransactionState:
-              name = packet.ReadString(packet.ReadByte());
-              AddTracker(type, name, null);
-              break;
-            case SessionTrackType.StateChange:
-            default:
-              AddTracker(type, packet.ReadString(), null);
-              break;
-          }
+            while (totalLen > 0 && end > start)
+            {
+                SessionTrackType type       = (SessionTrackType) packet.ReadByte ();
+                int              dataLength = (int) packet.ReadByte ();
+                string           name, value;
 
-          start = packet.Position;
+                // for specification of the packet structure, see WL#4797
+                switch (type)
+                {
+                    case SessionTrackType.SystemVariables:
+                        name  = packet.ReadString (packet.ReadByte ());
+                        value = packet.ReadString (packet.ReadByte ());
+                        this.AddTracker (type, name, value);
+                        break;
+                    case SessionTrackType.GTIDS:
+                        packet.ReadByte (); // skip the byte reserved for the encoding specification, see WL#6128 
+                        name = packet.ReadString (packet.ReadByte ());
+                        this.AddTracker (type, name, null);
+                        break;
+                    case SessionTrackType.Schema:
+                    case SessionTrackType.TransactionCharacteristics:
+                    case SessionTrackType.TransactionState:
+                        name = packet.ReadString (packet.ReadByte ());
+                        this.AddTracker (type, name, null);
+                        break;
+                    case SessionTrackType.StateChange:
+                    default:
+                        this.AddTracker (type, packet.ReadString (), null);
+                        break;
+                }
+
+                start = packet.Position;
+            }
         }
-      }
     }
 
     /// <summary>
@@ -104,20 +104,19 @@ namespace EVESharp.Database.MySql
     /// <param name="type">Type of the session tracker</param>
     /// <param name="name">Name of the element changed</param>
     /// <param name="value">Value of the changed system variable (only for SessionTrackType.SystemVariables; otherwise, null)</param>
-    private void AddTracker(SessionTrackType type, string name, string value)
+    private void AddTracker (SessionTrackType type, string name, string value)
     {
-      SessionTracker tracker;
-      tracker.TrackType = type;
-      tracker.Name = name;
-      tracker.Value = value;
-      SessionTrackers.Add(tracker);
+        SessionTracker tracker;
+        tracker.TrackType = type;
+        tracker.Name      = name;
+        tracker.Value     = value;
+        this.SessionTrackers.Add (tracker);
     }
-  }
+}
 
-  internal struct SessionTracker
-  {
+internal struct SessionTracker
+{
     internal SessionTrackType TrackType;
-    internal string Name;
-    internal string Value;
-  }
+    internal string           Name;
+    internal string           Value;
 }

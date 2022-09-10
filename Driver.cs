@@ -36,23 +36,23 @@ using EVESharp.Database.MySql.Types;
 using System.IO;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Summary description for BaseDriver.
+/// </summary>
+internal partial class Driver : IDisposable
 {
-  /// <summary>
-  /// Summary description for BaseDriver.
-  /// </summary>
-  internal partial class Driver : IDisposable
-  {
-    protected Encoding encoding;
+    protected Encoding                     encoding;
     protected MySqlConnectionStringBuilder ConnectionString;
-    protected DateTime creationTime;
-    protected string serverCharSet;
-    protected Dictionary<string, string> serverProps;
-    internal int timeZoneOffset;
-    private bool firstResult;
-    protected IDriver handler;
-    internal MySqlDataReader reader;
-    private bool disposed;
+    protected DateTime                     creationTime;
+    protected string                       serverCharSet;
+    protected Dictionary <string, string>  serverProps;
+    internal  int                          timeZoneOffset;
+    private   bool                         firstResult;
+    protected IDriver                      handler;
+    internal  MySqlDataReader              reader;
+    private   bool                         disposed;
 
     /// <summary>
     /// For pooled connections, time when the driver was
@@ -60,38 +60,40 @@ namespace EVESharp.Database.MySql
     /// </summary>
     public DateTime IdleSince { get; set; }
 
-    public Driver(MySqlConnectionStringBuilder settings)
+    public Driver (MySqlConnectionStringBuilder settings)
     {
-      encoding = Encoding.GetEncoding("UTF-8");
-      if (encoding == null)
-        throw new MySqlException(Resources.DefaultEncodingNotFound);
-      ConnectionString = settings;
-      serverCharSet = "utf8";
-      ConnectionCharSetIndex = -1;
-      MaxPacketSize = 1024;
-      handler = new NativeDriver(this);
+        this.encoding = Encoding.GetEncoding ("UTF-8");
+
+        if (this.encoding == null)
+            throw new MySqlException (Resources.DefaultEncodingNotFound);
+
+        this.ConnectionString       = settings;
+        this.serverCharSet          = "utf8";
+        this.ConnectionCharSetIndex = -1;
+        this.MaxPacketSize          = 1024;
+        this.handler                = new NativeDriver (this);
     }
 
-    ~Driver()
+    ~Driver ()
     {
-      Dispose(false);
+        this.Dispose (false);
     }
 
-    #region Properties
+#region Properties
 
-    public int ThreadID => handler.ThreadId;
+    public int ThreadID => this.handler.ThreadId;
 
-    public DBVersion Version => handler.Version;
+    public DBVersion Version => this.handler.Version;
 
     public MySqlConnectionStringBuilder Settings
     {
-      get { return ConnectionString; }
-      set { ConnectionString = value; }
+        get => this.ConnectionString;
+        set => this.ConnectionString = value;
     }
     public Encoding Encoding
     {
-      get { return encoding; }
-      set { encoding = value; }
+        get => this.encoding;
+        set => this.encoding = value;
     }
 
     public MySqlPromotableTransaction currentTransaction { get; set; }
@@ -106,172 +108,188 @@ namespace EVESharp.Database.MySql
 
     protected internal int ConnectionCharSetIndex { get; set; }
 
-    protected internal Dictionary<int, string> CharacterSets { get; protected set; }
+    protected internal Dictionary <int, string> CharacterSets { get; protected set; }
 
-    public bool SupportsOutputParameters => Version.isAtLeast(5, 5, 0);
+    public bool SupportsOutputParameters => this.Version.isAtLeast (5, 5, 0);
 
-    public bool SupportsBatch => (handler.Flags & ClientFlags.MULTI_STATEMENTS) != 0;
+    public bool SupportsBatch => (this.handler.Flags & ClientFlags.MULTI_STATEMENTS) != 0;
 
-    public bool SupportsConnectAttrs => (handler.Flags & ClientFlags.CONNECT_ATTRS) != 0;
+    public bool SupportsConnectAttrs => (this.handler.Flags & ClientFlags.CONNECT_ATTRS) != 0;
 
-    public bool SupportsPasswordExpiration => (handler.Flags & ClientFlags.CAN_HANDLE_EXPIRED_PASSWORD) != 0;
+    public bool SupportsPasswordExpiration => (this.handler.Flags & ClientFlags.CAN_HANDLE_EXPIRED_PASSWORD) != 0;
 
-    public bool SupportsQueryAttributes => (handler.Flags & ClientFlags.CLIENT_QUERY_ATTRIBUTES) != 0;
+    public bool SupportsQueryAttributes => (this.handler.Flags & ClientFlags.CLIENT_QUERY_ATTRIBUTES) != 0;
 
     public bool IsPasswordExpired { get; internal set; }
-    #endregion
 
-    public string Property(string key)
+#endregion
+
+    public string Property (string key)
     {
-      return serverProps[key];
+        return this.serverProps [key];
     }
 
-    public bool ConnectionLifetimeExpired()
+    public bool ConnectionLifetimeExpired ()
     {
-      TimeSpan ts = DateTime.Now.Subtract(creationTime);
-      return Settings.ConnectionLifeTime != 0 &&
-             ts.TotalSeconds > Settings.ConnectionLifeTime;
+        TimeSpan ts = DateTime.Now.Subtract (this.creationTime);
+
+        return this.Settings.ConnectionLifeTime != 0 &&
+               ts.TotalSeconds > this.Settings.ConnectionLifeTime;
     }
 
-    public static Driver Create(MySqlConnectionStringBuilder settings)
+    public static Driver Create (MySqlConnectionStringBuilder settings)
     {
-      Driver d = null;
+        Driver d = null;
 
-      try
-      {
-        if (MySqlTrace.QueryAnalysisEnabled || settings.Logging || settings.UseUsageAdvisor)
-          d = new TracingDriver(settings);
-      }
-      catch (TypeInitializationException ex)
-      {
-        if (!(ex.InnerException is SecurityException))
-          throw;
-        //Only rethrow if InnerException is not a SecurityException. If it is a SecurityException then 
-        //we couldn't initialize MySqlTrace because we don't have unmanaged code permissions. 
-      }
-      if (d == null)
-        d = new Driver(settings);
-
-      //this try was added as suggested fix submitted on MySql Bug 72025, socket connections are left in CLOSE_WAIT status when connector fails to open a new connection.
-      //the bug is present when the client try to get more connections that the server support or has configured in the max_connections variable.
-      try
-      {
-        d.Open();
-      }
-      catch
-      {
-        d.Dispose();
-        throw;
-      }
-      return d;
-    }
-
-    public bool HasStatus(ServerStatusFlags flag)
-    {
-      return (handler.ServerStatus & flag) != 0;
-    }
-
-    public virtual void Open()
-    {
-      int count = 0;
-      do
-      {
         try
         {
-          creationTime = DateTime.Now;
-          handler.Open();
-          IsOpen = true;
-          break;
+            if (MySqlTrace.QueryAnalysisEnabled || settings.Logging || settings.UseUsageAdvisor)
+                d = new TracingDriver (settings);
         }
-        catch (IOException)
+        catch (TypeInitializationException ex)
         {
-          if (count++ >= 5) throw;
+            if (!(ex.InnerException is SecurityException))
+                throw;
+            //Only rethrow if InnerException is not a SecurityException. If it is a SecurityException then 
+            //we couldn't initialize MySqlTrace because we don't have unmanaged code permissions. 
         }
-      } while (true);
-    }
 
-    public virtual void Close()
-    {
-      Dispose();
-    }
+        if (d == null)
+            d = new Driver (settings);
 
-    public virtual void Configure(MySqlConnection connection)
-    {
-      bool firstConfigure = false;
-
-      // if we have not already configured our server variables
-      // then do so now
-      if (serverProps == null)
-      {
-        firstConfigure = true;
-
-        // if we are in a pool and the user has said it's ok to cache the
-        // properties, then grab it from the pool
+        //this try was added as suggested fix submitted on MySql Bug 72025, socket connections are left in CLOSE_WAIT status when connector fails to open a new connection.
+        //the bug is present when the client try to get more connections that the server support or has configured in the max_connections variable.
         try
         {
-          if (Pool != null && Settings.CacheServerProperties)
-          {
-            if (Pool.ServerProperties == null)
-              Pool.ServerProperties = LoadServerProperties(connection);
-            serverProps = Pool.ServerProperties;
-          }
-          else
-            serverProps = LoadServerProperties(connection);
-
-          LoadCharacterSets(connection);
+            d.Open ();
         }
-        catch (MySqlException ex)
+        catch
         {
-          // expired password capability
-          if (ex.Number == 1820)
-          {
-            IsPasswordExpired = true;
+            d.Dispose ();
+            throw;
+        }
+
+        return d;
+    }
+
+    public bool HasStatus (ServerStatusFlags flag)
+    {
+        return (this.handler.ServerStatus & flag) != 0;
+    }
+
+    public virtual void Open ()
+    {
+        int count = 0;
+
+        do
+        {
+            try
+            {
+                this.creationTime = DateTime.Now;
+                this.handler.Open ();
+                this.IsOpen = true;
+                break;
+            }
+            catch (IOException)
+            {
+                if (count++ >= 5)
+                    throw;
+            }
+        }
+        while (true);
+    }
+
+    public virtual void Close ()
+    {
+        this.Dispose ();
+    }
+
+    public virtual void Configure (MySqlConnection connection)
+    {
+        bool firstConfigure = false;
+
+        // if we have not already configured our server variables
+        // then do so now
+        if (this.serverProps == null)
+        {
+            firstConfigure = true;
+
+            // if we are in a pool and the user has said it's ok to cache the
+            // properties, then grab it from the pool
+            try
+            {
+                if (this.Pool != null && this.Settings.CacheServerProperties)
+                {
+                    if (this.Pool.ServerProperties == null)
+                        this.Pool.ServerProperties = this.LoadServerProperties (connection);
+
+                    this.serverProps = this.Pool.ServerProperties;
+                }
+                else
+                {
+                    this.serverProps = this.LoadServerProperties (connection);
+                }
+
+                this.LoadCharacterSets (connection);
+            }
+            catch (MySqlException ex)
+            {
+                // expired password capability
+                if (ex.Number == 1820)
+                {
+                    this.IsPasswordExpired = true;
+                    return;
+                }
+
+                throw;
+            }
+        }
+
+        // if the user has indicated that we are not to reset
+        // the connection and this is not our first time through,
+        // then we are done.
+        if (!this.Settings.ConnectionReset && !firstConfigure)
             return;
-          }
-          throw;
+
+        string charSet = this.ConnectionString.CharacterSet;
+
+        if (string.IsNullOrEmpty (charSet))
+        {
+            if (this.ConnectionCharSetIndex >= 0 && this.CharacterSets.ContainsKey (this.ConnectionCharSetIndex))
+                charSet = this.CharacterSets [this.ConnectionCharSetIndex];
+            else
+                charSet = this.serverCharSet;
         }
-      }
 
-      // if the user has indicated that we are not to reset
-      // the connection and this is not our first time through,
-      // then we are done.
-      if (!Settings.ConnectionReset && !firstConfigure) return;
+        if (this.serverProps.ContainsKey ("max_allowed_packet"))
+            this.MaxPacketSize = Convert.ToInt64 (this.serverProps ["max_allowed_packet"]);
 
-      string charSet = ConnectionString.CharacterSet;
-      if (string.IsNullOrEmpty(charSet))
-      {
-        if (ConnectionCharSetIndex >= 0 && CharacterSets.ContainsKey(ConnectionCharSetIndex))
-          charSet = CharacterSets[ConnectionCharSetIndex];
-        else
-          charSet = serverCharSet;
-      }
+        // now tell the server which character set we will send queries in and which charset we
+        // want results in
+        MySqlCommand charSetCmd = new MySqlCommand (
+            "SET character_set_results=NULL",
+            connection
+        ) {InternallyCreated = true};
 
-      if (serverProps.ContainsKey("max_allowed_packet"))
-        MaxPacketSize = Convert.ToInt64(serverProps["max_allowed_packet"]);
+        string clientCharSet;
+        this.serverProps.TryGetValue ("character_set_client", out clientCharSet);
+        string connCharSet;
+        this.serverProps.TryGetValue ("character_set_connection", out connCharSet);
 
-      // now tell the server which character set we will send queries in and which charset we
-      // want results in
-      MySqlCommand charSetCmd = new MySqlCommand("SET character_set_results=NULL",
-        connection)
-      { InternallyCreated = true };
+        if ((clientCharSet != null && clientCharSet.ToString () != charSet) ||
+            (connCharSet != null && connCharSet.ToString () != charSet))
+        {
+            MySqlCommand setNamesCmd = new MySqlCommand ("SET NAMES " + charSet, connection);
+            setNamesCmd.InternallyCreated = true;
+            setNamesCmd.ExecuteNonQuery ();
+        }
 
-      string clientCharSet;
-      serverProps.TryGetValue("character_set_client", out clientCharSet);
-      string connCharSet;
-      serverProps.TryGetValue("character_set_connection", out connCharSet);
-      if ((clientCharSet != null && clientCharSet.ToString() != charSet) ||
-        (connCharSet != null && connCharSet.ToString() != charSet))
-      {
-        MySqlCommand setNamesCmd = new MySqlCommand("SET NAMES " + charSet, connection);
-        setNamesCmd.InternallyCreated = true;
-        setNamesCmd.ExecuteNonQuery();
-      }
-      // sets character_set_results to null to return values in their original character set
-      charSetCmd.ExecuteNonQuery();
+        // sets character_set_results to null to return values in their original character set
+        charSetCmd.ExecuteNonQuery ();
 
-      Encoding = CharSetMap.GetEncoding(charSet ?? "utf-8");
+        this.Encoding = CharSetMap.GetEncoding (charSet ?? "utf-8");
 
-      handler.Configure();
+        this.handler.Configure ();
     }
 
     /// <summary>
@@ -279,277 +297,289 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="connection"></param>
     /// <returns></returns>
-    private Dictionary<string, string> LoadServerProperties(MySqlConnection connection)
+    private Dictionary <string, string> LoadServerProperties (MySqlConnection connection)
     {
-      // load server properties
-      Dictionary<string, string> hash = new Dictionary<string, string>();
-      MySqlCommand cmd = new MySqlCommand(@"SELECT @@max_allowed_packet, @@character_set_client, 
-        @@character_set_connection, @@license, @@sql_mode, @@lower_case_table_names, @@autocommit;", connection);
-      try
-      {
-        using (MySqlDataReader reader = cmd.ExecuteReader())
+        // load server properties
+        Dictionary <string, string> hash = new Dictionary <string, string> ();
+
+        MySqlCommand cmd = new MySqlCommand (
+            @"SELECT @@max_allowed_packet, @@character_set_client, 
+        @@character_set_connection, @@license, @@sql_mode, @@lower_case_table_names, @@autocommit;", connection
+        );
+
+        try
         {
-          while (reader.Read())
-          {
-            for (int i = 0; i <= reader.FieldCount - 1; i++)
+            using (MySqlDataReader reader = cmd.ExecuteReader ())
             {
-              string key = reader.GetName(i).Remove(0, 2);
-              string value = reader[i].ToString();
-              hash[key] = value;
+                while (reader.Read ())
+                    for (int i = 0; i <= reader.FieldCount - 1; i++)
+                    {
+                        string key   = reader.GetName (i).Remove (0, 2);
+                        string value = reader [i].ToString ();
+                        hash [key] = value;
+                    }
             }
-          }
+
+            // Get time zone offset as numerical value
+            this.timeZoneOffset = this.GetTimeZoneOffset (connection);
+            return hash;
         }
-        // Get time zone offset as numerical value
-        timeZoneOffset = GetTimeZoneOffset(connection);
-        return hash;
-      }
-      catch (Exception ex)
-      {
-        MySqlTrace.LogError(ThreadID, ex.Message);
-        throw;
-      }
+        catch (Exception ex)
+        {
+            MySqlTrace.LogError (this.ThreadID, ex.Message);
+            throw;
+        }
     }
 
-    private int GetTimeZoneOffset(MySqlConnection con)
+    private int GetTimeZoneOffset (MySqlConnection con)
     {
-      MySqlCommand cmd = new MySqlCommand("SELECT TIMEDIFF(NOW(), UTC_TIMESTAMP())", con);
-      TimeSpan? timeZoneDiff = cmd.ExecuteScalar() as TimeSpan?;
-      string timeZoneString = "0:00";
-      if (timeZoneDiff.HasValue)
-        timeZoneString = timeZoneDiff.ToString();
+        MySqlCommand cmd            = new MySqlCommand ("SELECT TIMEDIFF(NOW(), UTC_TIMESTAMP())", con);
+        TimeSpan?    timeZoneDiff   = cmd.ExecuteScalar () as TimeSpan?;
+        string       timeZoneString = "0:00";
 
-      return int.Parse(timeZoneString.Substring(0, timeZoneString.IndexOf(':')), CultureInfo.InvariantCulture);
+        if (timeZoneDiff.HasValue)
+            timeZoneString = timeZoneDiff.ToString ();
+
+        return int.Parse (timeZoneString.Substring (0, timeZoneString.IndexOf (':')), CultureInfo.InvariantCulture);
     }
 
     /// <summary>
     /// Loads all the current character set names and ids for this server 
     /// into the charSets hashtable
     /// </summary>
-    private void LoadCharacterSets(MySqlConnection connection)
+    private void LoadCharacterSets (MySqlConnection connection)
     {
-      serverProps.TryGetValue("autocommit", out var serverAutocommit);
-      MySqlCommand cmd = new MySqlCommand("SHOW COLLATION", connection);
+        this.serverProps.TryGetValue ("autocommit", out string serverAutocommit);
+        MySqlCommand cmd = new MySqlCommand ("SHOW COLLATION", connection);
 
-      // now we load all the currently active collations
-      try
-      {
-        using (MySqlDataReader reader = cmd.ExecuteReader())
+        // now we load all the currently active collations
+        try
         {
-          CharacterSets = new Dictionary<int, string>();
-          while (reader.Read())
-          {
-            CharacterSets[Convert.ToInt32(reader["id"], NumberFormatInfo.InvariantInfo)] =
-              reader.GetString(reader.GetOrdinal("charset"));
-          }
+            using (MySqlDataReader reader = cmd.ExecuteReader ())
+            {
+                this.CharacterSets = new Dictionary <int, string> ();
+
+                while (reader.Read ())
+                    this.CharacterSets [Convert.ToInt32 (reader ["id"], NumberFormatInfo.InvariantInfo)] =
+                        reader.GetString (reader.GetOrdinal ("charset"));
+            }
+
+            if (Convert.ToInt32 (serverAutocommit) == 0 && this.Version.isAtLeast (8, 0, 0))
+            {
+                cmd = new MySqlCommand ("commit", connection);
+                cmd.ExecuteNonQuery ();
+            }
+        }
+        catch (Exception ex)
+        {
+            MySqlTrace.LogError (this.ThreadID, ex.Message);
+            throw;
+        }
+    }
+
+    public virtual List <MySqlError> ReportWarnings (MySqlConnection connection)
+    {
+        List <MySqlError> warnings = new List <MySqlError> ();
+
+        MySqlCommand cmd = new MySqlCommand ("SHOW WARNINGS", connection) {InternallyCreated = true};
+
+        using (MySqlDataReader reader = cmd.ExecuteReader ())
+        {
+            while (reader.Read ())
+                warnings.Add (
+                    new MySqlError (
+                        reader.GetString (0),
+                        reader.GetInt32 (1), reader.GetString (2)
+                    )
+                );
         }
 
-        if (Convert.ToInt32(serverAutocommit) == 0 && Version.isAtLeast(8, 0, 0))
+        MySqlInfoMessageEventArgs args = new MySqlInfoMessageEventArgs ();
+        args.errors = warnings.ToArray ();
+        connection?.OnInfoMessage (args);
+        return warnings;
+    }
+
+    public virtual void SendQuery (MySqlPacket p, int paramsPosition)
+    {
+        this.handler.SendQuery (p, paramsPosition);
+        this.firstResult = true;
+    }
+
+    public virtual ResultSet NextResult (int statementId, bool force)
+    {
+        if (!force && !this.firstResult && !this.HasStatus (ServerStatusFlags.AnotherQuery | ServerStatusFlags.MoreResults))
+            return null;
+
+        this.firstResult = false;
+
+        int  affectedRows = -1;
+        long insertedId   = -1;
+        int  fieldCount   = this.GetResult (statementId, ref affectedRows, ref insertedId);
+
+        if (fieldCount == -1)
+            return null;
+
+        if (fieldCount > 0)
+            return new ResultSet (this, statementId, fieldCount);
+        else
+            return new ResultSet (affectedRows, insertedId);
+    }
+
+    protected virtual int GetResult (int statementId, ref int affectedRows, ref long insertedId)
+    {
+        return this.handler.GetResult (ref affectedRows, ref insertedId);
+    }
+
+    public virtual bool FetchDataRow (int statementId, int columns)
+    {
+        return this.handler.FetchDataRow (statementId, columns);
+    }
+
+    public virtual bool SkipDataRow ()
+    {
+        return this.FetchDataRow (-1, 0);
+    }
+
+    public virtual void ExecuteDirect (string sql)
+    {
+        MySqlPacket p = new MySqlPacket (this.Encoding);
+        p.WriteString (sql);
+        this.SendQuery (p, 0);
+        this.NextResult (0, false);
+    }
+
+    public MySqlField [] GetColumns (int count)
+    {
+        MySqlField [] fields = new MySqlField[count];
+
+        for (int i = 0; i < count; i++)
+            fields [i] = new MySqlField (this);
+
+        this.handler.GetColumnsData (fields);
+
+        return fields;
+    }
+
+    public virtual int PrepareStatement (string sql, ref MySqlField [] parameters)
+    {
+        return this.handler.PrepareStatement (sql, ref parameters);
+    }
+
+    public IMySqlValue ReadColumnValue (int index, MySqlField field, IMySqlValue value)
+    {
+        return this.handler.ReadColumnValue (index, field, value);
+    }
+
+    public void SkipColumnValue (IMySqlValue valObject)
+    {
+        this.handler.SkipColumnValue (valObject);
+    }
+
+    public void ResetTimeout (int timeoutMilliseconds)
+    {
+        this.handler.ResetTimeout (timeoutMilliseconds);
+    }
+
+    public bool Ping ()
+    {
+        return this.handler.Ping ();
+    }
+
+    public virtual void SetDatabase (string dbName)
+    {
+        this.handler.SetDatabase (dbName);
+    }
+
+    public virtual void ExecuteStatement (MySqlPacket packetToExecute)
+    {
+        this.handler.ExecuteStatement (packetToExecute);
+    }
+
+    public virtual void CloseStatement (int id)
+    {
+        this.handler.CloseStatement (id);
+    }
+
+    public virtual void Reset ()
+    {
+        this.handler.Reset ();
+    }
+
+    public virtual void CloseQuery (MySqlConnection connection, int statementId)
+    {
+        if (this.handler.WarningCount > 0)
+            this.ReportWarnings (connection);
+    }
+
+#region IDisposable Members
+
+    protected virtual void Dispose (bool disposing)
+    {
+        if (this.disposed)
+            return;
+
+        // Avoid cyclic calls to Dispose.
+        this.disposed = true;
+
+        try
         {
-          cmd = new MySqlCommand("commit", connection);
-          cmd.ExecuteNonQuery();
+            this.ResetTimeout (1000);
+            this.handler.Close (this.IsOpen);
+
+            // if we are pooling, then release ourselves
+            if (this.ConnectionString.Pooling)
+                MySqlPoolManager.RemoveConnection (this);
         }
-      }
-      catch (Exception ex)
-      {
-        MySqlTrace.LogError(ThreadID, ex.Message);
-        throw;
-      }
-    }
-
-    public virtual List<MySqlError> ReportWarnings(MySqlConnection connection)
-    {
-      List<MySqlError> warnings = new List<MySqlError>();
-
-      MySqlCommand cmd = new MySqlCommand("SHOW WARNINGS", connection) { InternallyCreated = true };
-      using (MySqlDataReader reader = cmd.ExecuteReader())
-      {
-        while (reader.Read())
+        catch (Exception ex)
         {
-          warnings.Add(new MySqlError(reader.GetString(0),
-                        reader.GetInt32(1), reader.GetString(2)));
+            if (disposing)
+            {
+                MySqlException mysqlEx = ex as MySqlException;
+
+                if (mysqlEx == null)
+                    MySqlTrace.LogError (0, ex.GetBaseException ().Message);
+                else
+                    MySqlTrace.LogError (mysqlEx.Number, ex.GetBaseException ().Message);
+            }
         }
-      }
-
-      MySqlInfoMessageEventArgs args = new MySqlInfoMessageEventArgs();
-      args.errors = warnings.ToArray();
-      connection?.OnInfoMessage(args);
-      return warnings;
-    }
-
-    public virtual void SendQuery(MySqlPacket p, int paramsPosition)
-    {
-      handler.SendQuery(p, paramsPosition);
-      firstResult = true;
-    }
-
-    public virtual ResultSet NextResult(int statementId, bool force)
-    {
-      if (!force && !firstResult && !HasStatus(ServerStatusFlags.AnotherQuery | ServerStatusFlags.MoreResults))
-        return null;
-      firstResult = false;
-
-      int affectedRows = -1;
-      long insertedId = -1;
-      int fieldCount = GetResult(statementId, ref affectedRows, ref insertedId);
-      if (fieldCount == -1)
-        return null;
-      if (fieldCount > 0)
-        return new ResultSet(this, statementId, fieldCount);
-      else
-        return new ResultSet(affectedRows, insertedId);
-    }
-
-    protected virtual int GetResult(int statementId, ref int affectedRows, ref long insertedId)
-    {
-      return handler.GetResult(ref affectedRows, ref insertedId);
-    }
-
-    public virtual bool FetchDataRow(int statementId, int columns)
-    {
-      return handler.FetchDataRow(statementId, columns);
-    }
-
-    public virtual bool SkipDataRow()
-    {
-      return FetchDataRow(-1, 0);
-    }
-
-    public virtual void ExecuteDirect(string sql)
-    {
-      MySqlPacket p = new MySqlPacket(Encoding);
-      p.WriteString(sql);
-      SendQuery(p, 0);
-      NextResult(0, false);
-    }
-
-    public MySqlField[] GetColumns(int count)
-    {
-      MySqlField[] fields = new MySqlField[count];
-      for (int i = 0; i < count; i++)
-        fields[i] = new MySqlField(this);
-      handler.GetColumnsData(fields);
-
-      return fields;
-    }
-
-    public virtual int PrepareStatement(string sql, ref MySqlField[] parameters)
-    {
-      return handler.PrepareStatement(sql, ref parameters);
-    }
-
-    public IMySqlValue ReadColumnValue(int index, MySqlField field, IMySqlValue value)
-    {
-      return handler.ReadColumnValue(index, field, value);
-    }
-
-    public void SkipColumnValue(IMySqlValue valObject)
-    {
-      handler.SkipColumnValue(valObject);
-    }
-
-    public void ResetTimeout(int timeoutMilliseconds)
-    {
-      handler.ResetTimeout(timeoutMilliseconds);
-    }
-
-    public bool Ping()
-    {
-      return handler.Ping();
-    }
-
-    public virtual void SetDatabase(string dbName)
-    {
-      handler.SetDatabase(dbName);
-    }
-
-    public virtual void ExecuteStatement(MySqlPacket packetToExecute)
-    {
-      handler.ExecuteStatement(packetToExecute);
-    }
-
-
-    public virtual void CloseStatement(int id)
-    {
-      handler.CloseStatement(id);
-    }
-
-    public virtual void Reset()
-    {
-      handler.Reset();
-    }
-
-    public virtual void CloseQuery(MySqlConnection connection, int statementId)
-    {
-      if (handler.WarningCount > 0)
-        ReportWarnings(connection);
-    }
-
-    #region IDisposable Members
-
-    protected virtual void Dispose(bool disposing)
-    {
-      if (disposed)
-        return;
-
-      // Avoid cyclic calls to Dispose.
-      disposed = true;
-      try
-      {
-        ResetTimeout(1000);
-        handler.Close(IsOpen);
-        // if we are pooling, then release ourselves
-        if (ConnectionString.Pooling)
-          MySqlPoolManager.RemoveConnection(this);
-      }
-      catch (Exception ex)
-      {
-        if (disposing)
+        finally
         {
-          MySqlException mysqlEx = ex as MySqlException;
-          if (mysqlEx == null)
-            MySqlTrace.LogError(0, ex.GetBaseException().Message);
-          else
-            MySqlTrace.LogError(mysqlEx.Number, ex.GetBaseException().Message);
+            this.reader = null;
+            this.IsOpen = false;
         }
-      }
-      finally
-      {
-        reader = null;
-        IsOpen = false;
-      }
     }
 
-    public void Dispose()
+    public void Dispose ()
     {
-      Dispose(true);
-      GC.SuppressFinalize(this);
+        this.Dispose (true);
+        GC.SuppressFinalize (this);
     }
 
-    #endregion
-  }
+#endregion
+}
 
-  internal interface IDriver
-  {
-    int ThreadId { get; }
-    DBVersion Version { get; }
+internal interface IDriver
+{
+    int               ThreadId     { get; }
+    DBVersion         Version      { get; }
     ServerStatusFlags ServerStatus { get; }
-    ClientFlags Flags { get; }
-    void Configure();
-    void Open();
-    void SendQuery(MySqlPacket packet, int paramsPosition = 0);
-    void Close(bool isOpen);
-    bool Ping();
-    int GetResult(ref int affectedRows, ref long insertedId);
-    bool FetchDataRow(int statementId, int columns);
-    int PrepareStatement(string sql, ref MySqlField[] parameters);
-    void ExecuteStatement(MySqlPacket packet);
-    void CloseStatement(int statementId);
-    void SetDatabase(string dbName);
-    void Reset();
-    IMySqlValue ReadColumnValue(int index, MySqlField field, IMySqlValue valObject);
-    void SkipColumnValue(IMySqlValue valueObject);
-    void GetColumnsData(MySqlField[] columns);
-    void ResetTimeout(int timeout);
-    int WarningCount { get; }
-  }
+    ClientFlags       Flags        { get; }
+    void              Configure ();
+    void              Open ();
+    void              SendQuery (MySqlPacket packet, int paramsPosition = 0);
+    void              Close (bool            isOpen);
+    bool              Ping ();
+    int               GetResult (ref int            affectedRows, ref long          insertedId);
+    bool              FetchDataRow (int             statementId,  int               columns);
+    int               PrepareStatement (string      sql,          ref MySqlField [] parameters);
+    void              ExecuteStatement (MySqlPacket packet);
+    void              CloseStatement (int           statementId);
+    void              SetDatabase (string           dbName);
+    void              Reset ();
+    IMySqlValue       ReadColumnValue (int          index, MySqlField field, IMySqlValue valObject);
+    void              SkipColumnValue (IMySqlValue  valueObject);
+    void              GetColumnsData (MySqlField [] columns);
+    void              ResetTimeout (int             timeout);
+    int               WarningCount { get; }
 }

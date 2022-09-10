@@ -32,22 +32,23 @@ using System.Linq;
 using System.Reflection;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
-{
-  /// <summary>
-  /// Traces information about the client execution.
-  /// </summary>
-  public class MySqlTrace
-  {
-    private static TraceSource source = new TraceSource("mysql");
+namespace EVESharp.Database.MySql;
 
-    static MySqlTrace()
+/// <summary>
+/// Traces information about the client execution.
+/// </summary>
+public class MySqlTrace
+{
+    private static TraceSource source = new TraceSource ("mysql");
+
+    static MySqlTrace ()
     {
-      foreach (TraceListener listener in source.Listeners.Cast<TraceListener>().Where(listener => listener.GetType().ToString().Contains("MySql.EMTrace.EMTraceListener")))
-      {
-        QueryAnalysisEnabled = true;
-        break;
-      }
+        foreach (TraceListener listener in source.Listeners.Cast <TraceListener> ()
+                                                 .Where (listener => listener.GetType ().ToString ().Contains ("MySql.EMTrace.EMTraceListener")))
+        {
+            QueryAnalysisEnabled = true;
+            break;
+        }
     }
 
     /// <summary>
@@ -60,8 +61,8 @@ namespace EVESharp.Database.MySql
     /// </summary>
     public static SourceSwitch Switch
     {
-      get { return source.Switch; }
-      set { source.Switch = value; }
+        get => source.Switch;
+        set => source.Switch = value;
     }
 
     /// <summary>
@@ -74,70 +75,70 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="host">The host on which to enable query analysis.</param>
     /// <param name="postInterval">The interval of time for logging trace information.</param>
-    public static void EnableQueryAnalyzer(string host, int postInterval)
+    public static void EnableQueryAnalyzer (string host, int postInterval)
     {
-      if (QueryAnalysisEnabled) return;
-      // create a EMTraceListener and add it to our source
-      TraceListener l = (TraceListener)Activator.CreateInstance(Type.GetType("MySql.EMTrace.EMTraceListener"), host, postInterval);
+        if (QueryAnalysisEnabled)
+            return;
 
-      if (l == null)
-        throw new MySqlException(Resources.UnableToEnableQueryAnalysis);
+        // create a EMTraceListener and add it to our source
+        TraceListener l = (TraceListener) Activator.CreateInstance (Type.GetType ("MySql.EMTrace.EMTraceListener"), host, postInterval);
 
-      source.Listeners.Add(l);
-      Switch.Level = SourceLevels.All;
+        if (l == null)
+            throw new MySqlException (Resources.UnableToEnableQueryAnalysis);
+
+        source.Listeners.Add (l);
+        Switch.Level = SourceLevels.All;
     }
 
     /// <summary>
     /// Disables query analysis.
     /// </summary>
-    public static void DisableQueryAnalyzer()
+    public static void DisableQueryAnalyzer ()
     {
-      QueryAnalysisEnabled = false;
-      foreach (TraceListener l in from TraceListener l in Source.Listeners where l.GetType().ToString().Contains("EMTraceListener") select l)
-      {
-        source.Listeners.Remove(l);
-        break;
-      }
-    }
+        QueryAnalysisEnabled = false;
 
-    internal static TraceSource Source
-    {
-      get 
-        { 
-            return source; 
+        foreach (TraceListener l in from TraceListener l in Source.Listeners where l.GetType ().ToString ().Contains ("EMTraceListener") select l)
+        {
+            source.Listeners.Remove (l);
+            break;
         }
     }
 
-    internal static void LogInformation(int id, string msg)
+    internal static TraceSource Source => source;
+
+    internal static void LogInformation (int id, string msg)
     {
-      Source.TraceEvent(TraceEventType.Information, id, msg, MySqlTraceEventType.NonQuery, -1);
-      Trace.TraceInformation(msg);
+        Source.TraceEvent (TraceEventType.Information, id, msg, MySqlTraceEventType.NonQuery, -1);
+        Trace.TraceInformation (msg);
     }
 
-    internal static void LogWarning(int id, string msg)
+    internal static void LogWarning (int id, string msg)
     {
-      Source.TraceEvent(TraceEventType.Warning, id, msg, MySqlTraceEventType.NonQuery, -1);
-      Trace.TraceWarning(msg);
+        Source.TraceEvent (TraceEventType.Warning, id, msg, MySqlTraceEventType.NonQuery, -1);
+        Trace.TraceWarning (msg);
     }
 
-    internal static void LogError(int id, string msg)
+    internal static void LogError (int id, string msg)
     {
-      Source.TraceEvent(TraceEventType.Error, id, msg, MySqlTraceEventType.NonQuery, -1);
-      Trace.TraceError(msg);
+        Source.TraceEvent (TraceEventType.Error, id, msg, MySqlTraceEventType.NonQuery, -1);
+        Trace.TraceError (msg);
     }
 
-    internal static void TraceEvent(TraceEventType eventType,
-        MySqlTraceEventType mysqlEventType, string msgFormat, params object[] args)
+    internal static void TraceEvent
+    (
+        TraceEventType      eventType,
+        MySqlTraceEventType mysqlEventType, string msgFormat, params object [] args
+    )
     {
-      Source.TraceEvent(eventType, (int)mysqlEventType, msgFormat, args);
+        Source.TraceEvent (eventType, (int) mysqlEventType, msgFormat, args);
     }
-  }
+}
 
-  /// <summary>
-  /// Specifies the types of warning flags.
-  /// </summary>
-  public enum UsageAdvisorWarningFlags
-  {
+/// <summary>
+/// Specifies the types of warning flags.
+/// </summary>
+public enum UsageAdvisorWarningFlags
+{
     /// <summary>
     /// No index exists.
     /// </summary>
@@ -158,13 +159,13 @@ namespace EVESharp.Database.MySql
     /// Type conversions took place.
     /// </summary>
     FieldConversion
-  }
+}
 
-  /// <summary>
-  /// Specifies the event that triggered the trace.
-  /// </summary>
-  public enum MySqlTraceEventType : int
-  {
+/// <summary>
+/// Specifies the event that triggered the trace.
+/// </summary>
+public enum MySqlTraceEventType : int
+{
     /// <summary>
     /// A connection has been opened.
     /// </summary>
@@ -221,5 +222,4 @@ namespace EVESharp.Database.MySql
     /// The query has been normalized.
     /// </summary>
     QueryNormalized
-  }
 }

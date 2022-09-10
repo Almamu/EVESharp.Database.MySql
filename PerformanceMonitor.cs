@@ -29,24 +29,18 @@
 using System;
 using System.Diagnostics;
 
+namespace EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+internal class PerformanceMonitor
 {
-  internal class PerformanceMonitor
-  {
-    public PerformanceMonitor(MySqlConnection connection)
+    public PerformanceMonitor (MySqlConnection connection)
     {
-      Connection = connection;
+        this.Connection = connection;
     }
 
     public MySqlConnection Connection { get; private set; }
 
-    public virtual void AddHardProcedureQuery()
-    {
-    }
+    public virtual void AddHardProcedureQuery () { }
 
-    public virtual void AddSoftProcedureQuery()
-    {
-    }
-  }
+    public virtual void AddSoftProcedureQuery () { }
 }

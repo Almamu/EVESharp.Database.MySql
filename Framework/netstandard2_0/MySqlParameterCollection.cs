@@ -32,40 +32,28 @@ using System.ComponentModel;
 using System.Data.Common;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
-{
+namespace EVESharp.Database.MySql;
 #if NET452
-  [Editor("MySql.Data.MySqlClient.Design.DBParametersEditor,MySql.Design", typeof(System.Drawing.Design.UITypeEditor))]
+[Editor ("MySql.Data.MySqlClient.Design.DBParametersEditor,MySql.Design", typeof (System.Drawing.Design.UITypeEditor))]
 #endif
-  [ListBindable(true)]
-  public sealed partial class MySqlParameterCollection : DbParameterCollection
-  {
+[ListBindable (true)]
+public sealed partial class MySqlParameterCollection : DbParameterCollection
+{
     /// <summary>
     /// Gets a value that indicates whether the <see cref="MySqlParameterCollection"/>
     /// has a fixed size. 
     /// </summary>
-    public override bool IsFixedSize
-    {
-      get { return (_items as IList).IsFixedSize; }
-    }
+    public override bool IsFixedSize => (this._items as IList).IsFixedSize;
 
     /// <summary>
     /// Gets a value that indicates whether the <see cref="MySqlParameterCollection"/>
     /// is read-only. 
     /// </summary>
-    public override bool IsReadOnly
-    {
-      get { return (_items as IList).IsReadOnly; }
-    }
+    public override bool IsReadOnly => (this._items as IList).IsReadOnly;
 
     /// <summary>
     /// Gets a value that indicates whether the <see cref="MySqlParameterCollection"/>
     /// is synchronized. 
     /// </summary>
-    public override bool IsSynchronized
-    {
-      get { return (_items as IList).IsSynchronized; }
-    }
-
-  }
+    public override bool IsSynchronized => (this._items as IList).IsSynchronized;
 }

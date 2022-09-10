@@ -34,174 +34,176 @@ using System.Data;
 using System.Data.Common;
 using System.Threading;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Represents a single(not nested) TransactionScope
+/// </summary>
+internal class MySqlTransactionScope
 {
-  /// <summary>
-  /// Represents a single(not nested) TransactionScope
-  /// </summary>
-  internal class MySqlTransactionScope
-  {
-    public MySqlConnection connection;
-    public Transaction baseTransaction;
+    public MySqlConnection  connection;
+    public Transaction      baseTransaction;
     public MySqlTransaction simpleTransaction;
-    public int rollbackThreadId;
+    public int              rollbackThreadId;
 
-    public MySqlTransactionScope(MySqlConnection con, Transaction trans,
-        MySqlTransaction simpleTransaction)
+    public MySqlTransactionScope
+    (
+        MySqlConnection  con, Transaction trans,
+        MySqlTransaction simpleTransaction
+    )
     {
-      connection = con;
-      baseTransaction = trans;
-      this.simpleTransaction = simpleTransaction;
+        this.connection        = con;
+        this.baseTransaction   = trans;
+        this.simpleTransaction = simpleTransaction;
     }
 
-    public void Rollback(SinglePhaseEnlistment singlePhaseEnlistment)
+    public void Rollback (SinglePhaseEnlistment singlePhaseEnlistment)
     {
-      // prevent commands in main thread to run concurrently
-      Driver driver = connection.driver;
-      lock (driver)
-      {
-        rollbackThreadId = Thread.CurrentThread.ManagedThreadId;
-        while (connection.Reader != null)
+        // prevent commands in main thread to run concurrently
+        Driver driver = this.connection.driver;
+
+        lock (driver)
         {
-          // wait for reader to finish. Maybe we should not wait 
-          // forever and cancel it after some time?
-          System.Threading.Thread.Sleep(100);
+            this.rollbackThreadId = Thread.CurrentThread.ManagedThreadId;
+
+            while (this.connection.Reader != null)
+                // wait for reader to finish. Maybe we should not wait 
+                // forever and cancel it after some time?
+                Thread.Sleep (100);
+
+            this.simpleTransaction.Rollback ();
+            singlePhaseEnlistment.Aborted ();
+            DriverTransactionManager.RemoveDriverInTransaction (this.baseTransaction);
+
+            driver.currentTransaction = null;
+
+            if (this.connection.State == ConnectionState.Closed)
+                this.connection.CloseFully ();
+
+            this.rollbackThreadId = 0;
         }
-        simpleTransaction.Rollback();
-        singlePhaseEnlistment.Aborted();
-        DriverTransactionManager.RemoveDriverInTransaction(baseTransaction);
-
-        driver.currentTransaction = null;
-
-        if (connection.State == ConnectionState.Closed)
-          connection.CloseFully();
-        rollbackThreadId = 0;
-      }
     }
 
-    public void SinglePhaseCommit(SinglePhaseEnlistment singlePhaseEnlistment)
+    public void SinglePhaseCommit (SinglePhaseEnlistment singlePhaseEnlistment)
     {
-      simpleTransaction.Commit();
-      singlePhaseEnlistment.Committed();
-      DriverTransactionManager.RemoveDriverInTransaction(baseTransaction);
-      connection.driver.currentTransaction = null;
+        this.simpleTransaction.Commit ();
+        singlePhaseEnlistment.Committed ();
+        DriverTransactionManager.RemoveDriverInTransaction (this.baseTransaction);
+        this.connection.driver.currentTransaction = null;
 
-      if (connection.State == ConnectionState.Closed)
-        connection.CloseFully();
+        if (this.connection.State == ConnectionState.Closed)
+            this.connection.CloseFully ();
     }
-  }
+}
 
-  internal sealed class MySqlPromotableTransaction : IPromotableSinglePhaseNotification, ITransactionPromoter
-  {
+internal sealed class MySqlPromotableTransaction : IPromotableSinglePhaseNotification, ITransactionPromoter
+{
     // Per-thread stack to manage nested transaction scopes
-    [ThreadStatic]
-    static Stack<MySqlTransactionScope> globalScopeStack;
+    [ThreadStatic] private static Stack <MySqlTransactionScope> globalScopeStack;
 
-    MySqlConnection connection;
-    Transaction baseTransaction;
-    Stack<MySqlTransactionScope> scopeStack;
+    private MySqlConnection               connection;
+    private Transaction                   baseTransaction;
+    private Stack <MySqlTransactionScope> scopeStack;
 
-
-    public MySqlPromotableTransaction(MySqlConnection connection, Transaction baseTransaction)
+    public MySqlPromotableTransaction (MySqlConnection connection, Transaction baseTransaction)
     {
-      this.connection = connection;
-      this.baseTransaction = baseTransaction;
+        this.connection      = connection;
+        this.baseTransaction = baseTransaction;
     }
 
     public Transaction BaseTransaction
     {
-      get
-      {
-        if (scopeStack.Count > 0)
-          return scopeStack.Peek().baseTransaction;
-        else
-          return null;
-      }
+        get
+        {
+            if (this.scopeStack.Count > 0)
+                return this.scopeStack.Peek ().baseTransaction;
+            else
+                return null;
+        }
     }
 
     public bool InRollback
     {
-      get
-      {
-        if (scopeStack.Count > 0)
+        get
         {
-          MySqlTransactionScope currentScope = scopeStack.Peek();
-          if (currentScope.rollbackThreadId == Thread.CurrentThread.ManagedThreadId)
-          {
-            return true;
-          }
+            if (this.scopeStack.Count > 0)
+            {
+                MySqlTransactionScope currentScope = this.scopeStack.Peek ();
+
+                if (currentScope.rollbackThreadId == Thread.CurrentThread.ManagedThreadId)
+                    return true;
+            }
+
+            return false;
         }
-        return false;
-      }
     }
-    void IPromotableSinglePhaseNotification.Initialize()
+
+    void IPromotableSinglePhaseNotification.Initialize ()
     {
-      string valueName = Enum.GetName(
-      typeof(System.Transactions.IsolationLevel), baseTransaction.IsolationLevel);
-      System.Data.IsolationLevel dataLevel = (System.Data.IsolationLevel)Enum.Parse(
-           typeof(System.Data.IsolationLevel), valueName);
-      MySqlTransaction simpleTransaction = connection.BeginTransaction(dataLevel,"SESSION");
+        string                     valueName         = Enum.GetName (typeof (System.Transactions.IsolationLevel), this.baseTransaction.IsolationLevel);
+        System.Data.IsolationLevel dataLevel         = (System.Data.IsolationLevel) Enum.Parse (typeof (System.Data.IsolationLevel), valueName);
+        MySqlTransaction           simpleTransaction = this.connection.BeginTransaction (dataLevel, "SESSION");
 
-      // We need to save the per-thread scope stack locally.
-      // We cannot always use thread static variable in rollback: when scope
-      // times out, rollback is issued by another thread.
-      if (globalScopeStack == null)
-      {
-        globalScopeStack = new Stack<MySqlTransactionScope>();
-      }
+        // We need to save the per-thread scope stack locally.
+        // We cannot always use thread static variable in rollback: when scope
+        // times out, rollback is issued by another thread.
+        if (globalScopeStack == null)
+            globalScopeStack = new Stack <MySqlTransactionScope> ();
 
-      scopeStack = globalScopeStack;
-      scopeStack.Push(new MySqlTransactionScope(connection, baseTransaction,
-         simpleTransaction));
+        this.scopeStack = globalScopeStack;
+
+        this.scopeStack.Push (
+            new MySqlTransactionScope (
+                this.connection, this.baseTransaction,
+                simpleTransaction
+            )
+        );
     }
 
-    void IPromotableSinglePhaseNotification.Rollback(SinglePhaseEnlistment singlePhaseEnlistment)
+    void IPromotableSinglePhaseNotification.Rollback (SinglePhaseEnlistment singlePhaseEnlistment)
     {
-
-      MySqlTransactionScope current = scopeStack.Peek();
-      current.Rollback(singlePhaseEnlistment);
-      scopeStack.Pop();
+        MySqlTransactionScope current = this.scopeStack.Peek ();
+        current.Rollback (singlePhaseEnlistment);
+        this.scopeStack.Pop ();
     }
 
-    void IPromotableSinglePhaseNotification.SinglePhaseCommit(SinglePhaseEnlistment singlePhaseEnlistment)
+    void IPromotableSinglePhaseNotification.SinglePhaseCommit (SinglePhaseEnlistment singlePhaseEnlistment)
     {
-      scopeStack.Pop().SinglePhaseCommit(singlePhaseEnlistment);
+        this.scopeStack.Pop ().SinglePhaseCommit (singlePhaseEnlistment);
     }
 
-    byte[] ITransactionPromoter.Promote()
+    byte [] ITransactionPromoter.Promote ()
     {
-      throw new NotSupportedException();
+        throw new NotSupportedException ();
     }
-  }
-
-  internal class DriverTransactionManager
-  {
-    private static Hashtable driversInUse = new Hashtable();
-
-    public static Driver GetDriverInTransaction(Transaction transaction)
-    {
-      lock (driversInUse.SyncRoot)
-      {
-        Driver d = (Driver)driversInUse[transaction.GetHashCode()];
-        return d;
-      }
-    }
-
-    public static void SetDriverInTransaction(Driver driver)
-    {
-      lock (driversInUse.SyncRoot)
-      {
-        driversInUse[driver.currentTransaction.BaseTransaction.GetHashCode()] = driver;
-      }
-    }
-
-    public static void RemoveDriverInTransaction(Transaction transaction)
-    {
-      lock (driversInUse.SyncRoot)
-      {
-        driversInUse.Remove(transaction.GetHashCode());
-      }
-    }
-  }
 }
 
+internal class DriverTransactionManager
+{
+    private static Hashtable driversInUse = new Hashtable ();
+
+    public static Driver GetDriverInTransaction (Transaction transaction)
+    {
+        lock (driversInUse.SyncRoot)
+        {
+            Driver d = (Driver) driversInUse [transaction.GetHashCode ()];
+            return d;
+        }
+    }
+
+    public static void SetDriverInTransaction (Driver driver)
+    {
+        lock (driversInUse.SyncRoot)
+        {
+            driversInUse [driver.currentTransaction.BaseTransaction.GetHashCode ()] = driver;
+        }
+    }
+
+    public static void RemoveDriverInTransaction (Transaction transaction)
+    {
+        lock (driversInUse.SyncRoot)
+        {
+            driversInUse.Remove (transaction.GetHashCode ());
+        }
+    }
+}

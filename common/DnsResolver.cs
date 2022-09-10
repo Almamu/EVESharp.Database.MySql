@@ -32,14 +32,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Ubiety.Dns.Core.Common;
 using EVESharp.Database.MySql;
+using Ubiety.Dns.Core.Records;
 
-namespace EVESharp.Database.MySql.Common
+namespace EVESharp.Database.MySql.Common;
+
+/// <summary>
+/// DNS resolver that runs queries against a server.
+/// </summary>
+internal static class DnsResolver
 {
-  /// <summary>
-  /// DNS resolver that runs queries against a server.
-  /// </summary>
-  internal static class DnsResolver
-  {
     // Resolver object that looks up for DNS SRV records.
     private static Resolver _resolver;
     // DNS domain.
@@ -48,44 +49,46 @@ namespace EVESharp.Database.MySql.Common
     /// <summary>
     /// Initializes a new instance of the <see cref="Ubiety.Dns.Core.Resolver"/> class.
     /// </summary>
-    internal static void CreateResolver(string serviceName)
+    internal static void CreateResolver (string serviceName)
     {
-      _resolver = new Resolver
-      {
-        Recursion = true,
-        UseCache = true,
-        Retries = 3,
-        TransportType = TransportType.Udp
-      };
+        _resolver = new Resolver
+        {
+            Recursion     = true,
+            UseCache      = true,
+            Retries       = 3,
+            TransportType = TransportType.Udp
+        };
 
-      ServiceName = serviceName;
+        ServiceName = serviceName;
     }
 
     /// <summary>
     /// Gets the DNS SVR records of the service name that is provided.
     /// </summary>
     /// <returns>A list of <see cref="DnsSrvRecord"/>s sorted as described in RFC2782.</returns>
-    internal static List<DnsSrvRecord> GetDnsSrvRecords(string serviceName)
+    internal static List <DnsSrvRecord> GetDnsSrvRecords (string serviceName)
     {
-      if (_resolver == null)
-        CreateResolver(serviceName);
+        if (_resolver == null)
+            CreateResolver (serviceName);
 
-      List<DnsSrvRecord> records = new List<DnsSrvRecord>();
-      const QuestionType qType = QuestionType.SRV;
-      const QuestionClass qClass = QuestionClass.IN;
+        List <DnsSrvRecord> records = new List <DnsSrvRecord> ();
+        const QuestionType  qType   = QuestionType.SRV;
+        const QuestionClass qClass  = QuestionClass.IN;
 
-      Response response = _resolver.Query(ServiceName, qType, qClass);
+        Response response = _resolver.Query (ServiceName, qType, qClass);
 
-      foreach (var record in response.RecordSrv)
-        records.Add(record);
+        foreach (RecordSrv record in response.RecordSrv)
+            records.Add (record);
 
-      if (records.Count > 0)
-      {
-        Reset();
-        return SortSrvRecords(records);
-      }
-      else
-        throw new MySqlException(string.Format(Resources.DnsSrvNoHostsAvailable, ServiceName));
+        if (records.Count > 0)
+        {
+            Reset ();
+            return SortSrvRecords (records);
+        }
+        else
+        {
+            throw new MySqlException (string.Format (Resources.DnsSrvNoHostsAvailable, ServiceName));
+        }
     }
 
     /// <summary>
@@ -93,45 +96,52 @@ namespace EVESharp.Database.MySql.Common
     /// </summary>
     /// <param name="srvRecords">List of <see cref="DnsSrvRecord"/>s to sort.</param>
     /// <returns>A new list of sorted <see cref="DnsSrvRecord"/>s.</returns>
-    internal static List<DnsSrvRecord> SortSrvRecords(List<DnsSrvRecord> srvRecords)
+    internal static List <DnsSrvRecord> SortSrvRecords (List <DnsSrvRecord> srvRecords)
     {
-      srvRecords.Sort(new DnsSrvRecord());
+        srvRecords.Sort (new DnsSrvRecord ());
 
-      Random random = new Random();
-      List<DnsSrvRecord> srvRecordsSortedRfc2782 = new List<DnsSrvRecord>();
+        Random              random                  = new Random ();
+        List <DnsSrvRecord> srvRecordsSortedRfc2782 = new List <DnsSrvRecord> ();
 
-      List<int> priorities = srvRecords.Select(s => s.Priority).Distinct().ToList();
-      foreach (int priority in priorities)
-      {
-        List<DnsSrvRecord> srvRecordsSamePriority = srvRecords.Where(r => r.Priority == priority).ToList();
-        while (srvRecordsSamePriority.Count > 1)
+        List <int> priorities = srvRecords.Select (s => s.Priority).Distinct ().ToList ();
+
+        foreach (int priority in priorities)
         {
-          int recCount = srvRecordsSamePriority.Count;
-          int sumOfWeights = 0;
-          int[] weights = new int[recCount];
-          for (int i = 0; i < recCount; i++)
-          {
-            sumOfWeights += srvRecordsSamePriority[i].Weight;
-            weights[i] = sumOfWeights;
-          }
-          int selection = random.Next(sumOfWeights + 1);
-          int pos = 0;
-          for (; pos < recCount && weights[pos] < selection; pos++) { }
-          srvRecordsSortedRfc2782.Add(srvRecordsSamePriority[pos]);
-          srvRecordsSamePriority.RemoveAt(pos);
+            List <DnsSrvRecord> srvRecordsSamePriority = srvRecords.Where (r => r.Priority == priority).ToList ();
+
+            while (srvRecordsSamePriority.Count > 1)
+            {
+                int    recCount     = srvRecordsSamePriority.Count;
+                int    sumOfWeights = 0;
+                int [] weights      = new int[recCount];
+
+                for (int i = 0; i < recCount; i++)
+                {
+                    sumOfWeights += srvRecordsSamePriority [i].Weight;
+                    weights [i]  =  sumOfWeights;
+                }
+
+                int selection = random.Next (sumOfWeights + 1);
+                int pos       = 0;
+
+                for (; pos < recCount && weights [pos] < selection; pos++) { }
+
+                srvRecordsSortedRfc2782.Add (srvRecordsSamePriority [pos]);
+                srvRecordsSamePriority.RemoveAt (pos);
+            }
+
+            srvRecordsSortedRfc2782.Add (srvRecordsSamePriority [0]);
         }
-        srvRecordsSortedRfc2782.Add(srvRecordsSamePriority[0]);
-      }
-      return srvRecordsSortedRfc2782;
+
+        return srvRecordsSortedRfc2782;
     }
 
     /// <summary>
     /// Resets the DnsSrvResolver
     /// </summary>
-    private static void Reset()
+    private static void Reset ()
     {
-      if (_resolver != null)
-        _resolver = null;
+        if (_resolver != null)
+            _resolver = null;
     }
-  }
 }

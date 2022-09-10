@@ -26,22 +26,22 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Collection of error codes that can be returned by the server
+/// </summary>
+public class MySqlError
 {
-  /// <summary>
-  /// Collection of error codes that can be returned by the server
-  /// </summary>
-  public class MySqlError
-  {
     /// <summary></summary>
     /// <param name="level"></param>
     /// <param name="code"></param>
     /// <param name="message"></param>
-    public MySqlError(string level, int code, string message)
+    public MySqlError (string level, int code, string message)
     {
-      this.Level = level;
-      this.Code = code;
-      this.Message = message;
+        this.Level   = level;
+        this.Code    = code;
+        this.Message = message;
     }
 
     /// <summary>
@@ -58,13 +58,13 @@ namespace EVESharp.Database.MySql
     /// Error message
     /// </summary>
     public string Message { get; }
-  };
+};
 
-  /// <summary>
-  /// Provides a reference to error codes returned by MySQL.
-  /// </summary>
-  public enum MySqlErrorCode
-  {
+/// <summary>
+/// Provides a reference to error codes returned by MySQL.
+/// </summary>
+public enum MySqlErrorCode
+{
     None = 0,
     ///<summary></summary>
     ///<remarks>ER_HASHCHK</remarks>
@@ -2005,6 +2005,5 @@ namespace EVESharp.Database.MySql
     ErrorLast = 1640,
     ///<summary></summary>
     ///<remarks>ER_CLIENT_INTERACTION_TIMEOUT</remarks>
-    ErrorClientInteractionTimeout  = 4031
-  }
+    ErrorClientInteractionTimeout = 4031
 }

@@ -26,20 +26,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
+namespace EVESharp.Database.MySql.Common;
 
-namespace EVESharp.Database.MySql.Common
+internal class StringUtility
 {
-  internal class StringUtility
-  {
-    public static string ToUpperInvariant(string s)
+    public static string ToUpperInvariant (string s)
     {
-      return s.ToUpperInvariant();
+        return s.ToUpperInvariant ();
     }
 
-    public static string ToLowerInvariant(string s)
+    public static string ToLowerInvariant (string s)
     {
-      return s.ToLowerInvariant();
+        return s.ToLowerInvariant ();
     }
-  
-  }
 }

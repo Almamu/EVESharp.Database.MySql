@@ -33,54 +33,53 @@ using System.Runtime.InteropServices;
 
 namespace EVESharp.Database.MySql.Common
 {
-  internal class Platform
-  {
-    private static bool _inited;
-    private static bool _isMono;
-
-    /// <summary>
-    /// By creating a private ctor, we keep the compiler from creating a default ctor
-    /// </summary>
-    private Platform()
+    internal class Platform
     {
-    }
+        private static bool _inited;
+        private static bool _isMono;
 
-    public static bool IsWindows()
-    {
-      OperatingSystem os = Environment.OSVersion;
-      switch (os.Platform)
-      {
-        case PlatformID.Win32NT:
-        case PlatformID.Win32S:
-        case PlatformID.Win32Windows:
-          return true;
-      }
-      return false;
+        /// <summary>
+        /// By creating a private ctor, we keep the compiler from creating a default ctor
+        /// </summary>
+        private Platform () { }
 
-    }
+        public static bool IsWindows ()
+        {
+            OperatingSystem os = Environment.OSVersion;
 
-    public static bool IsMacOSX()
-    {
+            switch (os.Platform)
+            {
+                case PlatformID.Win32NT:
+                case PlatformID.Win32S:
+                case PlatformID.Win32Windows:
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsMacOSX ()
+        {
 #if NET452
-      return Environment.OSVersion.Platform == PlatformID.MacOSX;
+            return Environment.OSVersion.Platform == PlatformID.MacOSX;
 #else
       return RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 #endif
-    }
+        }
 
+        public static bool IsMono ()
+        {
+            if (!_inited)
+                Init ();
 
-    public static bool IsMono()
-    {
-      if (!_inited)
-        Init();
-      return _isMono;
-    }
+            return _isMono;
+        }
 
-    private static void Init()
-    {
-      _inited = true;
-      Type t = Type.GetType("Mono.Runtime");
-      _isMono = t != null;
+        private static void Init ()
+        {
+            _inited = true;
+            Type t = Type.GetType ("Mono.Runtime");
+            _isMono = t != null;
+        }
     }
-  }
 }

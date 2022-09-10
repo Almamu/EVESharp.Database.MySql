@@ -33,32 +33,30 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Helper class that makes it easier to work with the provider.
+/// </summary>
+public sealed partial class MySqlHelper
 {
-  /// <summary>
-  /// Helper class that makes it easier to work with the provider.
-  /// </summary>
-  public sealed partial class MySqlHelper
-  {
-    enum CharClass : byte
+    private enum CharClass : byte
     {
-      None,
-      Quote,
-      Backslash
+        None,
+        Quote,
+        Backslash
     }
 
     private static string stringOfBackslashChars = "\u005c\u00a5\u0160\u20a9\u2216\ufe68\uff3c";
     private static string stringOfQuoteChars =
         "\u0022\u0027\u0060\u00b4\u02b9\u02ba\u02bb\u02bc\u02c8\u02ca\u02cb\u02d9\u0300\u0301\u2018\u2019\u201a\u2032\u2035\u275b\u275c\uff07";
 
-    private static CharClass[] charClassArray = MakeCharClassArray();
+    private static CharClass [] charClassArray = MakeCharClassArray ();
 
     // this class provides only static methods
-    private MySqlHelper()
-    {
-    }
+    private MySqlHelper () { }
 
-    #region ExecuteNonQuery
+#region ExecuteNonQuery
 
     /// <summary>
     /// Executes a single command against a MySQL database.  The <see cref="MySqlConnection"/> is assumed to be
@@ -68,22 +66,22 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">The SQL command to be executed.</param>
     /// <param name="commandParameters">An array of <see cref="MySqlParameter"/> objects to use with the command.</param>
     /// <returns>The number of affected records.</returns>
-    public static int ExecuteNonQuery(MySqlConnection connection, string commandText, params MySqlParameter[] commandParameters)
+    public static int ExecuteNonQuery (MySqlConnection connection, string commandText, params MySqlParameter [] commandParameters)
     {
-      //create a command and prepare it for execution
-      MySqlCommand cmd = new MySqlCommand();
-      cmd.Connection = connection;
-      cmd.CommandText = commandText;
-      cmd.CommandType = CommandType.Text;
+        //create a command and prepare it for execution
+        MySqlCommand cmd = new MySqlCommand ();
+        cmd.Connection  = connection;
+        cmd.CommandText = commandText;
+        cmd.CommandType = CommandType.Text;
 
-      if (commandParameters != null)
-        foreach (MySqlParameter p in commandParameters)
-          cmd.Parameters.Add(p);
+        if (commandParameters != null)
+            foreach (MySqlParameter p in commandParameters)
+                cmd.Parameters.Add (p);
 
-      int result = cmd.ExecuteNonQuery();
-      cmd.Parameters.Clear();
+        int result = cmd.ExecuteNonQuery ();
+        cmd.Parameters.Clear ();
 
-      return result;
+        return result;
     }
 
     /// <summary>
@@ -94,20 +92,21 @@ namespace EVESharp.Database.MySql
     /// <param name="parms">An rray of <see cref="MySqlParameter"/> objects to use with the command.</param>
     /// <returns>The number of affected records.</returns>
     /// <remarks>A new <see cref="MySqlConnection"/> is created using the <see cref="MySqlConnection.ConnectionString"/> given.</remarks>
-    public static int ExecuteNonQuery(string connectionString, string commandText, params MySqlParameter[] parms)
+    public static int ExecuteNonQuery (string connectionString, string commandText, params MySqlParameter [] parms)
     {
-      //create & open a SqlConnection, and dispose of it after we are done.
-      using (MySqlConnection cn = new MySqlConnection(connectionString))
-      {
-        cn.Open();
+        //create & open a SqlConnection, and dispose of it after we are done.
+        using (MySqlConnection cn = new MySqlConnection (connectionString))
+        {
+            cn.Open ();
 
-        //call the overload that takes a connection in place of the connection string
-        return ExecuteNonQuery(cn, commandText, parms);
-      }
+            //call the overload that takes a connection in place of the connection string
+            return ExecuteNonQuery (cn, commandText, parms);
+        }
     }
-    #endregion
 
-    #region ExecuteDataReader
+#endregion
+
+#region ExecuteDataReader
 
     /// <summary>
     /// Executes a single command against a MySQL database, possibly inside an existing transaction.
@@ -118,36 +117,33 @@ namespace EVESharp.Database.MySql
     /// <param name="commandParameters">Array of <see cref="MySqlParameter"/> objects to use with the command</param>
     /// <param name="externalConn">True if the connection should be preserved, false if not</param>
     /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-    private static MySqlDataReader ExecuteReader(MySqlConnection connection, MySqlTransaction transaction, string commandText, MySqlParameter[] commandParameters, bool externalConn)
+    private static MySqlDataReader ExecuteReader
+        (MySqlConnection connection, MySqlTransaction transaction, string commandText, MySqlParameter [] commandParameters, bool externalConn)
     {
-      //create a command and prepare it for execution
-      MySqlCommand cmd = new MySqlCommand();
-      cmd.Connection = connection;
-      cmd.Transaction = transaction;
-      cmd.CommandText = commandText;
-      cmd.CommandType = CommandType.Text;
+        //create a command and prepare it for execution
+        MySqlCommand cmd = new MySqlCommand ();
+        cmd.Connection  = connection;
+        cmd.Transaction = transaction;
+        cmd.CommandText = commandText;
+        cmd.CommandType = CommandType.Text;
 
-      if (commandParameters != null)
-        foreach (MySqlParameter p in commandParameters)
-          cmd.Parameters.Add(p);
+        if (commandParameters != null)
+            foreach (MySqlParameter p in commandParameters)
+                cmd.Parameters.Add (p);
 
-      //create a reader
-      MySqlDataReader dr;
+        //create a reader
+        MySqlDataReader dr;
 
-      // call ExecuteReader with the appropriate CommandBehavior
-      if (externalConn)
-      {
-        dr = cmd.ExecuteReader();
-      }
-      else
-      {
-        dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);
-      }
+        // call ExecuteReader with the appropriate CommandBehavior
+        if (externalConn)
+            dr = cmd.ExecuteReader ();
+        else
+            dr = cmd.ExecuteReader (CommandBehavior.CloseConnection);
 
-      // detach the SqlParameters from the command object, so they can be used again.
-      cmd.Parameters.Clear();
+        // detach the SqlParameters from the command object, so they can be used again.
+        cmd.Parameters.Clear ();
 
-      return dr;
+        return dr;
     }
 
     /// <summary>
@@ -156,10 +152,10 @@ namespace EVESharp.Database.MySql
     /// <param name="connectionString">Settings to use for this command</param>
     /// <param name="commandText">Command text to use</param>
     /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-    public static MySqlDataReader ExecuteReader(string connectionString, string commandText)
+    public static MySqlDataReader ExecuteReader (string connectionString, string commandText)
     {
-      //pass through the call providing null for the set of SqlParameters
-      return ExecuteReader(connectionString, commandText, null);
+        //pass through the call providing null for the set of SqlParameters
+        return ExecuteReader (connectionString, commandText, null);
     }
 
     /// <summary>
@@ -168,10 +164,10 @@ namespace EVESharp.Database.MySql
     /// <param name="connection"><see cref="MySqlConnection"/> object to use for the command</param>
     /// <param name="commandText">Command text to use</param>
     /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-    public static MySqlDataReader ExecuteReader(MySqlConnection connection, string commandText)
+    public static MySqlDataReader ExecuteReader (MySqlConnection connection, string commandText)
     {
-      //pass through the call providing null for the set of SqlParameters
-      return ExecuteReader(connection, null, commandText, null, true);
+        //pass through the call providing null for the set of SqlParameters
+        return ExecuteReader (connection, null, commandText, null, true);
     }
 
     /// <summary>
@@ -181,14 +177,14 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">Command text to use</param>
     /// <param name="commandParameters">Array of <see cref="MySqlParameter"/> objects to use with the command</param>
     /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-    public static MySqlDataReader ExecuteReader(string connectionString, string commandText, params MySqlParameter[] commandParameters)
+    public static MySqlDataReader ExecuteReader (string connectionString, string commandText, params MySqlParameter [] commandParameters)
     {
-      //create & open a SqlConnection
-      MySqlConnection cn = new MySqlConnection(connectionString);
-      cn.Open();
+        //create & open a SqlConnection
+        MySqlConnection cn = new MySqlConnection (connectionString);
+        cn.Open ();
 
-      //call the private overload that takes an internally owned connection in place of the connection string
-      return ExecuteReader(cn, null, commandText, commandParameters, false);
+        //call the private overload that takes an internally owned connection in place of the connection string
+        return ExecuteReader (cn, null, commandText, commandParameters, false);
     }
 
     /// <summary>
@@ -198,16 +194,15 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">Command text to use</param>
     /// <param name="commandParameters">Array of <see cref="MySqlParameter"/> objects to use with the command</param>
     /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-    public static MySqlDataReader ExecuteReader(MySqlConnection connection, string commandText, params MySqlParameter[] commandParameters)
+    public static MySqlDataReader ExecuteReader (MySqlConnection connection, string commandText, params MySqlParameter [] commandParameters)
     {
-      //call the private overload that takes an internally owned connection in place of the connection string
-      return ExecuteReader(connection, null, commandText, commandParameters, true);
+        //call the private overload that takes an internally owned connection in place of the connection string
+        return ExecuteReader (connection, null, commandText, commandParameters, true);
     }
 
+#endregion
 
-    #endregion
-
-    #region ExecuteScalar
+#region ExecuteScalar
 
     /// <summary>
     /// Execute a single command against a MySQL database.
@@ -215,10 +210,10 @@ namespace EVESharp.Database.MySql
     /// <param name="connectionString">Settings to use for the update</param>
     /// <param name="commandText">Command text to use for the update</param>
     /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
-    public static object ExecuteScalar(string connectionString, string commandText)
+    public static object ExecuteScalar (string connectionString, string commandText)
     {
-      //pass through the call providing null for the set of MySqlParameters
-      return ExecuteScalar(connectionString, commandText, null);
+        //pass through the call providing null for the set of MySqlParameters
+        return ExecuteScalar (connectionString, commandText, null);
     }
 
     /// <summary>
@@ -228,16 +223,16 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">Command text to use for the command</param>
     /// <param name="commandParameters">Parameters to use for the command</param>
     /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
-    public static object ExecuteScalar(string connectionString, string commandText, params MySqlParameter[] commandParameters)
+    public static object ExecuteScalar (string connectionString, string commandText, params MySqlParameter [] commandParameters)
     {
-      //create & open a SqlConnection, and dispose of it after we are done.
-      using (MySqlConnection cn = new MySqlConnection(connectionString))
-      {
-        cn.Open();
+        //create & open a SqlConnection, and dispose of it after we are done.
+        using (MySqlConnection cn = new MySqlConnection (connectionString))
+        {
+            cn.Open ();
 
-        //call the overload that takes a connection in place of the connection string
-        return ExecuteScalar(cn, commandText, commandParameters);
-      }
+            //call the overload that takes a connection in place of the connection string
+            return ExecuteScalar (cn, commandText, commandParameters);
+        }
     }
 
     /// <summary>
@@ -246,10 +241,10 @@ namespace EVESharp.Database.MySql
     /// <param name="connection"><see cref="MySqlConnection"/> object to use</param>
     /// <param name="commandText">Command text to use for the command</param>
     /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
-    public static object ExecuteScalar(MySqlConnection connection, string commandText)
+    public static object ExecuteScalar (MySqlConnection connection, string commandText)
     {
-      //pass through the call providing null for the set of MySqlParameters
-      return ExecuteScalar(connection, commandText, null);
+        //pass through the call providing null for the set of MySqlParameters
+        return ExecuteScalar (connection, commandText, null);
     }
 
     /// <summary>
@@ -259,48 +254,46 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">Command text to use for the command</param>
     /// <param name="commandParameters">Parameters to use for the command</param>
     /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
-    public static object ExecuteScalar(MySqlConnection connection, string commandText, params MySqlParameter[] commandParameters)
+    public static object ExecuteScalar (MySqlConnection connection, string commandText, params MySqlParameter [] commandParameters)
     {
-      //create a command and prepare it for execution
-      MySqlCommand cmd = new MySqlCommand();
-      cmd.Connection = connection;
-      cmd.CommandText = commandText;
-      cmd.CommandType = CommandType.Text;
+        //create a command and prepare it for execution
+        MySqlCommand cmd = new MySqlCommand ();
+        cmd.Connection  = connection;
+        cmd.CommandText = commandText;
+        cmd.CommandType = CommandType.Text;
 
-      if (commandParameters != null)
-        foreach (MySqlParameter p in commandParameters)
-          cmd.Parameters.Add(p);
+        if (commandParameters != null)
+            foreach (MySqlParameter p in commandParameters)
+                cmd.Parameters.Add (p);
 
-      //execute the command & return the results
-      object retval = cmd.ExecuteScalar();
+        //execute the command & return the results
+        object retval = cmd.ExecuteScalar ();
 
-      // detach the SqlParameters from the command object, so they can be used again.
-      cmd.Parameters.Clear();
-      return retval;
-
+        // detach the SqlParameters from the command object, so they can be used again.
+        cmd.Parameters.Clear ();
+        return retval;
     }
 
-    #endregion
+#endregion
 
-    #region Utility methods
-    private static CharClass[] MakeCharClassArray()
+#region Utility methods
+
+    private static CharClass [] MakeCharClassArray ()
     {
+        CharClass [] a = new CharClass[65536];
 
-      CharClass[] a = new CharClass[65536];
-      foreach (char c in stringOfBackslashChars)
-      {
-        a[c] = CharClass.Backslash;
-      }
-      foreach (char c in stringOfQuoteChars)
-      {
-        a[c] = CharClass.Quote;
-      }
-      return a;
+        foreach (char c in stringOfBackslashChars)
+            a [c] = CharClass.Backslash;
+
+        foreach (char c in stringOfQuoteChars)
+            a [c] = CharClass.Quote;
+
+        return a;
     }
 
-    private static bool NeedsQuoting(string s)
+    private static bool NeedsQuoting (string s)
     {
-      return s.Any(c => charClassArray[c] != CharClass.None);
+        return s.Any (c => charClassArray [c] != CharClass.None);
     }
 
     /// <summary>
@@ -308,23 +301,24 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="value">The string to escape.</param>
     /// <returns>The string with all quotes escaped.</returns>
-    public static string EscapeString(string value)
+    public static string EscapeString (string value)
     {
-      if (!NeedsQuoting(value))
-        return value;
+        if (!NeedsQuoting (value))
+            return value;
 
-      StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder ();
 
-      foreach (char c in value)
-      {
-        CharClass charClass = charClassArray[c];
-        if (charClass != CharClass.None)
+        foreach (char c in value)
         {
-          sb.Append("\\");
+            CharClass charClass = charClassArray [c];
+
+            if (charClass != CharClass.None)
+                sb.Append ("\\");
+
+            sb.Append (c);
         }
-        sb.Append(c);
-      }
-      return sb.ToString();
+
+        return sb.ToString ();
     }
 
     /// <summary>
@@ -332,29 +326,34 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="value">The string to modidify.</param>
     /// <returns>A string containing double quotes instead of single quotes.</returns>
-    public static string DoubleQuoteString(string value)
+    public static string DoubleQuoteString (string value)
     {
-      if (!NeedsQuoting(value))
-        return value;
+        if (!NeedsQuoting (value))
+            return value;
 
-      StringBuilder sb = new StringBuilder();
-      foreach (char c in value)
-      {
-        CharClass charClass = charClassArray[c];
-        if (charClass == CharClass.Quote)
-          sb.Append(c);
-        else if (charClass == CharClass.Backslash)
-          sb.Append("\\");
-        sb.Append(c);
-      }
-      return sb.ToString();
+        StringBuilder sb = new StringBuilder ();
+
+        foreach (char c in value)
+        {
+            CharClass charClass = charClassArray [c];
+
+            if (charClass == CharClass.Quote)
+                sb.Append (c);
+            else if (charClass == CharClass.Backslash)
+                sb.Append ("\\");
+
+            sb.Append (c);
+        }
+
+        return sb.ToString ();
     }
 
-    #endregion
+#endregion
 
-    #region Async
+#region Async
 
-    #region NonQuery
+#region NonQuery
+
     /// <summary>
     /// Async version of ExecuteNonQuery
     /// </summary>
@@ -362,31 +361,30 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">SQL command to be executed</param>
     /// <param name="commandParameters">Array of <see cref="MySqlParameter"/> objects to use with the command.</param>
     /// <returns>Rows affected</returns>
-    public static Task<int> ExecuteNonQueryAsync(MySqlConnection connection, string commandText, params MySqlParameter[] commandParameters)
+    public static Task <int> ExecuteNonQueryAsync (MySqlConnection connection, string commandText, params MySqlParameter [] commandParameters)
     {
-      return ExecuteNonQueryAsync(connection, commandText, CancellationToken.None, commandParameters);
+        return ExecuteNonQueryAsync (connection, commandText, CancellationToken.None, commandParameters);
     }
 
-    public static Task<int> ExecuteNonQueryAsync(MySqlConnection connection, string commandText, CancellationToken cancellationToken, params MySqlParameter[] commandParameters)
+    public static Task <int> ExecuteNonQueryAsync
+        (MySqlConnection connection, string commandText, CancellationToken cancellationToken, params MySqlParameter [] commandParameters)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var queryResult = ExecuteNonQuery(connection, commandText, commandParameters);
-          result.SetResult(queryResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int queryResult = ExecuteNonQuery (connection, commandText, commandParameters);
+                result.SetResult (queryResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -396,9 +394,9 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">The SQL command to be executed.</param>
     /// <param name="commandParameters">An array of <see cref="MySqlParameter"/> objects to use with the command.</param>
     /// <returns>The number of rows affected.</returns>
-    public static Task<int> ExecuteNonQueryAsync(string connectionString, string commandText, params MySqlParameter[] commandParameters)
+    public static Task <int> ExecuteNonQueryAsync (string connectionString, string commandText, params MySqlParameter [] commandParameters)
     {
-      return ExecuteNonQueryAsync(connectionString, commandText, CancellationToken.None, commandParameters);
+        return ExecuteNonQueryAsync (connectionString, commandText, CancellationToken.None, commandParameters);
     }
 
     /// <summary>
@@ -409,32 +407,31 @@ namespace EVESharp.Database.MySql
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <param name="commandParameters">An array of <see cref="MySqlParameter"/> objects to use with the command.</param>
     /// <returns>The number of rows affected.</returns>
-    public static Task<int> ExecuteNonQueryAsync(string connectionString, string commandText, CancellationToken cancellationToken, params MySqlParameter[] commandParameters)
+    public static Task <int> ExecuteNonQueryAsync
+        (string connectionString, string commandText, CancellationToken cancellationToken, params MySqlParameter [] commandParameters)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var queryResult = ExecuteNonQuery(connectionString, commandText, commandParameters);
-          result.SetResult(queryResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int queryResult = ExecuteNonQuery (connectionString, commandText, commandParameters);
+                result.SetResult (queryResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
-    #endregion
+#endregion
 
+#region DataReader
 
-    #region DataReader
     /// <summary>
     /// Async version of ExecuteReader
     /// </summary>
@@ -444,31 +441,34 @@ namespace EVESharp.Database.MySql
     /// <param name="commandParameters">Array of <see cref="MySqlParameter"/> objects to use with the command</param>
     /// <param name="ExternalConn">True if the connection should be preserved, false if not</param>
     /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-    private static Task<MySqlDataReader> ExecuteReaderAsync(MySqlConnection connection, MySqlTransaction transaction, string commandText, MySqlParameter[] commandParameters, bool ExternalConn)
+    private static Task <MySqlDataReader> ExecuteReaderAsync
+        (MySqlConnection connection, MySqlTransaction transaction, string commandText, MySqlParameter [] commandParameters, bool ExternalConn)
     {
-      return ExecuteReaderAsync(connection, transaction, commandText, commandParameters, ExternalConn, CancellationToken.None);
+        return ExecuteReaderAsync (connection, transaction, commandText, commandParameters, ExternalConn, CancellationToken.None);
     }
 
-    private static Task<MySqlDataReader> ExecuteReaderAsync(MySqlConnection connection, MySqlTransaction transaction, string commandText, MySqlParameter[] commandParameters, bool ExternalConn, CancellationToken cancellationToken)
+    private static Task <MySqlDataReader> ExecuteReaderAsync
+    (
+        MySqlConnection   connection, MySqlTransaction transaction, string commandText, MySqlParameter [] commandParameters, bool ExternalConn,
+        CancellationToken cancellationToken
+    )
     {
-      var result = new TaskCompletionSource<MySqlDataReader>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var reader = ExecuteReader(connection, transaction, commandText, commandParameters, ExternalConn);
-          result.SetResult(reader);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <MySqlDataReader> result = new TaskCompletionSource <MySqlDataReader> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                MySqlDataReader reader = ExecuteReader (connection, transaction, commandText, commandParameters, ExternalConn);
+                result.SetResult (reader);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -477,14 +477,14 @@ namespace EVESharp.Database.MySql
     /// <param name="connectionString">Settings to use for this command</param>
     /// <param name="commandText">Command text to use</param>
     /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-    public static Task<MySqlDataReader> ExecuteReaderAsync(string connectionString, string commandText)
+    public static Task <MySqlDataReader> ExecuteReaderAsync (string connectionString, string commandText)
     {
-      return ExecuteReaderAsync(connectionString, commandText, CancellationToken.None, (MySqlParameter[])null);
+        return ExecuteReaderAsync (connectionString, commandText, CancellationToken.None, (MySqlParameter []) null);
     }
 
-    public static Task<MySqlDataReader> ExecuteReaderAsync(string connectionString, string commandText, CancellationToken cancellationToken)
+    public static Task <MySqlDataReader> ExecuteReaderAsync (string connectionString, string commandText, CancellationToken cancellationToken)
     {
-      return ExecuteReaderAsync(connectionString, commandText, cancellationToken, (MySqlParameter[])null);
+        return ExecuteReaderAsync (connectionString, commandText, cancellationToken, (MySqlParameter []) null);
     }
 
     /// <summary>
@@ -493,14 +493,14 @@ namespace EVESharp.Database.MySql
     /// <param name="connection"><see cref="MySqlConnection"/> object to use for the command</param>
     /// <param name="commandText">Command text to use</param>
     /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-    public static Task<MySqlDataReader> ExecuteReaderAsync(MySqlConnection connection, string commandText)
+    public static Task <MySqlDataReader> ExecuteReaderAsync (MySqlConnection connection, string commandText)
     {
-      return ExecuteReaderAsync(connection, null, commandText, (MySqlParameter[])null, true, CancellationToken.None);
+        return ExecuteReaderAsync (connection, null, commandText, (MySqlParameter []) null, true, CancellationToken.None);
     }
 
-    public static Task<MySqlDataReader> ExecuteReaderAsync(MySqlConnection connection, string commandText, CancellationToken cancellationToken)
+    public static Task <MySqlDataReader> ExecuteReaderAsync (MySqlConnection connection, string commandText, CancellationToken cancellationToken)
     {
-      return ExecuteReaderAsync(connection, null, commandText, (MySqlParameter[])null, true, cancellationToken);
+        return ExecuteReaderAsync (connection, null, commandText, (MySqlParameter []) null, true, cancellationToken);
     }
 
     /// <summary>
@@ -510,31 +510,30 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">Command text to use</param>
     /// <param name="commandParameters">Array of <see cref="MySqlParameter"/> objects to use with the command</param>
     /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-    public static Task<MySqlDataReader> ExecuteReaderAsync(string connectionString, string commandText, params MySqlParameter[] commandParameters)
+    public static Task <MySqlDataReader> ExecuteReaderAsync (string connectionString, string commandText, params MySqlParameter [] commandParameters)
     {
-      return ExecuteReaderAsync(connectionString, commandText, CancellationToken.None, commandParameters);
+        return ExecuteReaderAsync (connectionString, commandText, CancellationToken.None, commandParameters);
     }
 
-    public static Task<MySqlDataReader> ExecuteReaderAsync(string connectionString, string commandText, CancellationToken cancellationToken, params MySqlParameter[] commandParameters)
+    public static Task <MySqlDataReader> ExecuteReaderAsync
+        (string connectionString, string commandText, CancellationToken cancellationToken, params MySqlParameter [] commandParameters)
     {
-      var result = new TaskCompletionSource<MySqlDataReader>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var reader = ExecuteReader(connectionString, commandText, commandParameters);
-          result.SetResult(reader);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <MySqlDataReader> result = new TaskCompletionSource <MySqlDataReader> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                MySqlDataReader reader = ExecuteReader (connectionString, commandText, commandParameters);
+                result.SetResult (reader);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -544,33 +543,35 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">Command text to use</param>
     /// <param name="commandParameters">Array of <see cref="MySqlParameter"/> objects to use with the command</param>
     /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-    public static Task<MySqlDataReader> ExecuteReaderAsync(MySqlConnection connection, string commandText, params MySqlParameter[] commandParameters)
+    public static Task <MySqlDataReader> ExecuteReaderAsync (MySqlConnection connection, string commandText, params MySqlParameter [] commandParameters)
     {
-      return ExecuteReaderAsync(connection, null, commandText, commandParameters, true, CancellationToken.None);
+        return ExecuteReaderAsync (connection, null, commandText, commandParameters, true, CancellationToken.None);
     }
 
-    public static Task<MySqlDataReader> ExecuteReaderAsync(MySqlConnection connection, string commandText, CancellationToken cancellationToken, params MySqlParameter[] commandParameters)
+    public static Task <MySqlDataReader> ExecuteReaderAsync
+        (MySqlConnection connection, string commandText, CancellationToken cancellationToken, params MySqlParameter [] commandParameters)
     {
-      return ExecuteReaderAsync(connection, null, commandText, commandParameters, true, cancellationToken);
+        return ExecuteReaderAsync (connection, null, commandText, commandParameters, true, cancellationToken);
     }
 
-    #endregion
+#endregion
 
-    #region Scalar
+#region Scalar
+
     /// <summary>
     /// Async version of ExecuteScalar
     /// </summary>
     /// <param name="connectionString">Settings to use for the update</param>
     /// <param name="commandText">Command text to use for the update</param>
     /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
-    public static Task<object> ExecuteScalarAsync(string connectionString, string commandText)
+    public static Task <object> ExecuteScalarAsync (string connectionString, string commandText)
     {
-      return ExecuteScalarAsync(connectionString, commandText, CancellationToken.None, (MySqlParameter[])null);
+        return ExecuteScalarAsync (connectionString, commandText, CancellationToken.None, (MySqlParameter []) null);
     }
 
-    public static Task<object> ExecuteScalarAsync(string connectionString, string commandText, CancellationToken cancellationToken)
+    public static Task <object> ExecuteScalarAsync (string connectionString, string commandText, CancellationToken cancellationToken)
     {
-      return ExecuteScalarAsync(connectionString, commandText, cancellationToken, (MySqlParameter[])null);
+        return ExecuteScalarAsync (connectionString, commandText, cancellationToken, (MySqlParameter []) null);
     }
 
     /// <summary>
@@ -580,31 +581,30 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">Command text to use for the command</param>
     /// <param name="commandParameters">Parameters to use for the command</param>
     /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
-    public static Task<object> ExecuteScalarAsync(string connectionString, string commandText, params MySqlParameter[] commandParameters)
+    public static Task <object> ExecuteScalarAsync (string connectionString, string commandText, params MySqlParameter [] commandParameters)
     {
-      return ExecuteScalarAsync(connectionString, commandText, CancellationToken.None, commandParameters);
+        return ExecuteScalarAsync (connectionString, commandText, CancellationToken.None, commandParameters);
     }
 
-    public static Task<object> ExecuteScalarAsync(string connectionString, string commandText, CancellationToken cancellationToken, params MySqlParameter[] commandParameters)
+    public static Task <object> ExecuteScalarAsync
+        (string connectionString, string commandText, CancellationToken cancellationToken, params MySqlParameter [] commandParameters)
     {
-      var result = new TaskCompletionSource<object>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var scalarResult = ExecuteScalar(connectionString, commandText, commandParameters);
-          result.SetResult(scalarResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <object> result = new TaskCompletionSource <object> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                object scalarResult = ExecuteScalar (connectionString, commandText, commandParameters);
+                result.SetResult (scalarResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -613,14 +613,14 @@ namespace EVESharp.Database.MySql
     /// <param name="connection"><see cref="MySqlConnection"/> object to use</param>
     /// <param name="commandText">Command text to use for the command</param>
     /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
-    public static Task<object> ExecuteScalarAsync(MySqlConnection connection, string commandText)
+    public static Task <object> ExecuteScalarAsync (MySqlConnection connection, string commandText)
     {
-      return ExecuteScalarAsync(connection, commandText, CancellationToken.None, (MySqlParameter[])null);
+        return ExecuteScalarAsync (connection, commandText, CancellationToken.None, (MySqlParameter []) null);
     }
 
-    public static Task<object> ExecuteScalarAsync(MySqlConnection connection, string commandText, CancellationToken cancellationToken)
+    public static Task <object> ExecuteScalarAsync (MySqlConnection connection, string commandText, CancellationToken cancellationToken)
     {
-      return ExecuteScalarAsync(connection, commandText, cancellationToken, (MySqlParameter[])null);
+        return ExecuteScalarAsync (connection, commandText, cancellationToken, (MySqlParameter []) null);
     }
 
     /// <summary>
@@ -630,33 +630,33 @@ namespace EVESharp.Database.MySql
     /// <param name="commandText">Command text to use for the command</param>
     /// <param name="commandParameters">Parameters to use for the command</param>
     /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
-    public static Task<object> ExecuteScalarAsync(MySqlConnection connection, string commandText, params MySqlParameter[] commandParameters)
+    public static Task <object> ExecuteScalarAsync (MySqlConnection connection, string commandText, params MySqlParameter [] commandParameters)
     {
-      return ExecuteScalarAsync(connection, commandText, CancellationToken.None, commandParameters);
+        return ExecuteScalarAsync (connection, commandText, CancellationToken.None, commandParameters);
     }
 
-    public static Task<object> ExecuteScalarAsync(MySqlConnection connection, string commandText, CancellationToken cancellationToken, params MySqlParameter[] commandParameters)
+    public static Task <object> ExecuteScalarAsync
+        (MySqlConnection connection, string commandText, CancellationToken cancellationToken, params MySqlParameter [] commandParameters)
     {
-      var result = new TaskCompletionSource<object>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var scalarResult = ExecuteScalar(connection, commandText, commandParameters);
-          result.SetResult(scalarResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <object> result = new TaskCompletionSource <object> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                object scalarResult = ExecuteScalar (connection, commandText, commandParameters);
+                result.SetResult (scalarResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
-    #endregion
-    #endregion
-  }
+
+#endregion
+
+#endregion
 }

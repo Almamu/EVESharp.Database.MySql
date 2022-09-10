@@ -33,23 +33,23 @@ using EVESharp.Database.MySql.Authentication.GSSAPI.Native;
 using EVESharp.Database.MySql.Authentication.GSSAPI.Utility;
 using static EVESharp.Database.MySql.Authentication.GSSAPI.Native.NativeMethods;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI
-{
-  internal enum CredentialUsage
-  {
-    Both = 0,
-    Initiate = 1,
-    Accept = 2
-  }
+namespace EVESharp.Database.MySql.Authentication.GSSAPI;
 
-  /// <summary>
-  /// Credentials to use to establish the context
-  /// </summary>
-  internal class GssCredentials : IDisposable
-  {
+internal enum CredentialUsage
+{
+    Both     = 0,
+    Initiate = 1,
+    Accept   = 2
+}
+
+/// <summary>
+/// Credentials to use to establish the context
+/// </summary>
+internal class GssCredentials : IDisposable
+{
     internal IntPtr _credentials;
-    private IntPtr _gssUsername;
-    
+    private  IntPtr _gssUsername;
+
     internal string UserName { get; set; }
 
     /// <summary>
@@ -61,43 +61,52 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI
     /// GSS_C_INITIATE - Credentials will only be used to initiate security contexts. 
     /// GSS_C_ACCEPT - Credentials will only be used to accept security contexts.</param>
     /// <returns>An object containing the credentials</returns>
-    internal GssCredentials(string username, string password, CredentialUsage usage = CredentialUsage.Initiate)
+    internal GssCredentials (string username, string password, CredentialUsage usage = CredentialUsage.Initiate)
     {
-      UserName = username;
+        this.UserName = username;
 
-      uint minorStatus = 0;
-      uint majorStatus = 0;
+        uint minorStatus = 0;
+        uint majorStatus = 0;
 
-      // copy the principal name to a gss_buffer
-      using (var gssUsernameBuffer = GssType.GetBufferFromString(username))
-      using (var gssPasswordBuffer = GssType.GetBufferFromString(password))
-      {
-        // use the buffer to import the name into a gss_name
-        majorStatus = NativeMethods.gss_import_name(
-            out minorStatus,
-            ref gssUsernameBuffer.Value,
-            ref Const.GssNtUserName,
-            out _gssUsername
-        );
-        if (majorStatus != Const.GSS_S_COMPLETE)
-          throw new MySqlException(ExceptionMessages.FormatGssMessage("GSSAPI: Unable to import the supplied user name.",
-              majorStatus, minorStatus, Const.GssNtHostBasedService));
+        // copy the principal name to a gss_buffer
+        using (Disposable <GssBufferDescStruct> gssUsernameBuffer = GssType.GetBufferFromString (username))
+        using (Disposable <GssBufferDescStruct> gssPasswordBuffer = GssType.GetBufferFromString (password))
+        {
+            // use the buffer to import the name into a gss_name
+            majorStatus = gss_import_name (
+                out minorStatus,
+                ref gssUsernameBuffer.Value,
+                ref Const.GssNtUserName,
+                out this._gssUsername
+            );
 
-        majorStatus = NativeMethods.gss_acquire_cred_with_password(
-          out minorStatus,
-          _gssUsername,
-          ref gssPasswordBuffer.Value,
-          0,
-          ref Const.GssKrb5MechOidSet,
-          (int)usage,
-          ref _credentials,
-          IntPtr.Zero,
-          out var actualExpiry);
+            if (majorStatus != Const.GSS_S_COMPLETE)
+                throw new MySqlException (
+                    ExceptionMessages.FormatGssMessage (
+                        "GSSAPI: Unable to import the supplied user name.",
+                        majorStatus, minorStatus, Const.GssNtHostBasedService
+                    )
+                );
 
-        if (majorStatus != Const.GSS_S_COMPLETE)
-          throw new MySqlException(ExceptionMessages.FormatGssMessage("GSSAPI: Unable to acquire credentials for authentication.",
-              majorStatus, minorStatus, Const.GssKrb5MechOidDesc));
-      }
+            majorStatus = gss_acquire_cred_with_password (
+                out minorStatus, this._gssUsername,
+                ref gssPasswordBuffer.Value,
+                0,
+                ref Const.GssKrb5MechOidSet,
+                (int) usage,
+                ref this._credentials,
+                IntPtr.Zero,
+                out uint actualExpiry
+            );
+
+            if (majorStatus != Const.GSS_S_COMPLETE)
+                throw new MySqlException (
+                    ExceptionMessages.FormatGssMessage (
+                        "GSSAPI: Unable to acquire credentials for authentication.",
+                        majorStatus, minorStatus, Const.GssKrb5MechOidDesc
+                    )
+                );
+        }
     }
 
     /// <summary>
@@ -108,41 +117,51 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI
     /// GSS_C_INITIATE - Credentials will only be used to initiate security contexts. 
     /// GSS_C_ACCEPT - Credentials will only be used to accept security contexts.</param>
     /// <returns>An object containing the credentials</returns>
-    internal GssCredentials(string username, CredentialUsage usage = CredentialUsage.Initiate)
+    internal GssCredentials (string username, CredentialUsage usage = CredentialUsage.Initiate)
     {
-      UserName = username;
+        this.UserName = username;
 
-      // allocate a gss buffer and copy the principal name to it
-      using (var gssNameBuffer = GssType.GetBufferFromString(username))
-      {
-        uint minorStatus = 0;
-        uint majorStatus = 0;
+        // allocate a gss buffer and copy the principal name to it
+        using (Disposable <GssBufferDescStruct> gssNameBuffer = GssType.GetBufferFromString (username))
+        {
+            uint minorStatus = 0;
+            uint majorStatus = 0;
 
-        // use the buffer to import the name into a gss_name
-        majorStatus = NativeMethods.gss_import_name(
-            out minorStatus,
-            ref gssNameBuffer.Value,
-            ref Const.GssNtUserName,
-            out var _gssUsername
-        );
-        if (majorStatus != Const.GSS_S_COMPLETE)
-          throw new MySqlException(ExceptionMessages.FormatGssMessage("GSSAPI: Unable to import the supplied user name.",
-              majorStatus, minorStatus, Const.GssNtHostBasedService));
+            // use the buffer to import the name into a gss_name
+            majorStatus = gss_import_name (
+                out minorStatus,
+                ref gssNameBuffer.Value,
+                ref Const.GssNtUserName,
+                out IntPtr _gssUsername
+            );
 
-        majorStatus = NativeMethods.gss_acquire_cred(
-            out minorStatus,
-            _gssUsername,
-            Const.GSS_C_INDEFINITE,
-            ref Const.GssKrb5MechOidSet,
-            (int)usage,
-            ref _credentials,
-            IntPtr.Zero,
-            out var actualExpiry);
+            if (majorStatus != Const.GSS_S_COMPLETE)
+                throw new MySqlException (
+                    ExceptionMessages.FormatGssMessage (
+                        "GSSAPI: Unable to import the supplied user name.",
+                        majorStatus, minorStatus, Const.GssNtHostBasedService
+                    )
+                );
 
-        if (majorStatus != Const.GSS_S_COMPLETE)
-          throw new MySqlException(ExceptionMessages.FormatGssMessage("GSSAPI: Unable acquire credentials for authentication.",
-              majorStatus, minorStatus, Const.GssKrb5MechOidDesc));
-      }
+            majorStatus = gss_acquire_cred (
+                out minorStatus,
+                _gssUsername,
+                Const.GSS_C_INDEFINITE,
+                ref Const.GssKrb5MechOidSet,
+                (int) usage,
+                ref this._credentials,
+                IntPtr.Zero,
+                out uint actualExpiry
+            );
+
+            if (majorStatus != Const.GSS_S_COMPLETE)
+                throw new MySqlException (
+                    ExceptionMessages.FormatGssMessage (
+                        "GSSAPI: Unable acquire credentials for authentication.",
+                        majorStatus, minorStatus, Const.GssKrb5MechOidDesc
+                    )
+                );
+        }
     }
 
     /// <summary>
@@ -152,39 +171,48 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI
     /// GSS_C_INITIATE - Credentials will only be used to initiate security contexts. 
     /// GSS_C_ACCEPT - Credentials will only be used to accept security contexts.</param>
     /// <returns>An object containing the credentials</returns>
-    internal GssCredentials(CredentialUsage usage = CredentialUsage.Initiate)
+    internal GssCredentials (CredentialUsage usage = CredentialUsage.Initiate)
     {
-      uint minorStatus, lifetime = 0;
-      int credentialUsage;
-      IntPtr name, mechs;
+        uint   minorStatus, lifetime = 0;
+        int    credentialUsage;
+        IntPtr name, mechs;
 
-      var majorStatus = gss_acquire_cred(
-          out minorStatus,
-          Const.GSS_C_NO_NAME,
-          Const.GSS_C_INDEFINITE,
-          ref Const.GssKrb5MechOidSet,
-          (int)usage,
-          ref _credentials,
-          IntPtr.Zero,
-          out var actualExpiry);
+        uint majorStatus = gss_acquire_cred (
+            out minorStatus,
+            Const.GSS_C_NO_NAME,
+            Const.GSS_C_INDEFINITE,
+            ref Const.GssKrb5MechOidSet,
+            (int) usage,
+            ref this._credentials,
+            IntPtr.Zero,
+            out uint actualExpiry
+        );
 
-      if (majorStatus != Const.GSS_S_COMPLETE)
-        throw new MySqlException(ExceptionMessages.FormatGssMessage("GSSAPI: Unable acquire credentials for authentication.",
-            majorStatus, minorStatus, Const.GssKrb5MechOidDesc));
+        if (majorStatus != Const.GSS_S_COMPLETE)
+            throw new MySqlException (
+                ExceptionMessages.FormatGssMessage (
+                    "GSSAPI: Unable acquire credentials for authentication.",
+                    majorStatus, minorStatus, Const.GssKrb5MechOidDesc
+                )
+            );
 
-      majorStatus = gss_inquire_cred(
-        out minorStatus,
-        _credentials,
-        out name,
-        out lifetime,
-        out credentialUsage,
-        out mechs);
+        majorStatus = gss_inquire_cred (
+            out minorStatus, this._credentials,
+            out name,
+            out lifetime,
+            out credentialUsage,
+            out mechs
+        );
 
-      if (majorStatus != Const.GSS_S_COMPLETE)
-        throw new MySqlException(ExceptionMessages.FormatGssMessage("GSSAPI: Unable to obtain information about the credentials provided.",
-            majorStatus, minorStatus, Const.GssKrb5MechOidDesc));
+        if (majorStatus != Const.GSS_S_COMPLETE)
+            throw new MySqlException (
+                ExceptionMessages.FormatGssMessage (
+                    "GSSAPI: Unable to obtain information about the credentials provided.",
+                    majorStatus, minorStatus, Const.GssKrb5MechOidDesc
+                )
+            );
 
-      UserName = TranslateDisplayName(name);
+        this.UserName = TranslateDisplayName (name);
     }
 
     /// <summary>
@@ -192,37 +220,51 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI
     /// </summary>
     /// <param name="name">Name in internal form (GSSAPI).</param>
     /// <returns></returns>
-    private static string TranslateDisplayName(IntPtr name)
+    private static string TranslateDisplayName (IntPtr name)
     {
-      string userName;
+        string userName;
 
-      GssBufferDescStruct buffer;
-      gss_display_name(out _, name, out buffer, out _);
+        GssBufferDescStruct buffer;
+        gss_display_name (out _, name, out buffer, out _);
 
-      userName = buffer.value == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAnsi(buffer.value);
+        userName = buffer.value == IntPtr.Zero ? string.Empty : Marshal.PtrToStringAnsi (buffer.value);
 
-      var majorStatus = gss_release_buffer(out var minorStatus, ref buffer);
-      if (majorStatus != Const.GSS_S_COMPLETE)
-        throw new MySqlException(ExceptionMessages.FormatGssMessage("GSSAPI: An error occurred releasing a buffer.",
-                majorStatus, minorStatus, Const.GSS_C_NO_OID));
+        uint majorStatus = gss_release_buffer (out uint minorStatus, ref buffer);
 
-      return userName;
+        if (majorStatus != Const.GSS_S_COMPLETE)
+            throw new MySqlException (
+                ExceptionMessages.FormatGssMessage (
+                    "GSSAPI: An error occurred releasing a buffer.",
+                    majorStatus, minorStatus, Const.GSS_C_NO_OID
+                )
+            );
+
+        return userName;
     }
 
-    public void Dispose()
+    public void Dispose ()
     {
-      uint minorStatus = 0;
-      uint majorStatus = 0;
+        uint minorStatus = 0;
+        uint majorStatus = 0;
 
-      majorStatus = gss_release_name(out minorStatus, ref _gssUsername);
-      if (majorStatus != Const.GSS_S_COMPLETE)
-        throw new MySqlException(ExceptionMessages.FormatGssMessage("GSSAPI: Unable to release the user name handle.",
-          majorStatus, minorStatus, Const.GssNtHostBasedService));
+        majorStatus = gss_release_name (out minorStatus, ref this._gssUsername);
 
-      majorStatus = gss_release_cred(out minorStatus, ref _credentials);
-      if (majorStatus != Const.GSS_S_COMPLETE)
-        throw new MySqlException(ExceptionMessages.FormatGssMessage("GSSAPI: Unable to release the credential handle.",
-          majorStatus, minorStatus, Const.GssNtHostBasedService));
+        if (majorStatus != Const.GSS_S_COMPLETE)
+            throw new MySqlException (
+                ExceptionMessages.FormatGssMessage (
+                    "GSSAPI: Unable to release the user name handle.",
+                    majorStatus, minorStatus, Const.GssNtHostBasedService
+                )
+            );
+
+        majorStatus = gss_release_cred (out minorStatus, ref this._credentials);
+
+        if (majorStatus != Const.GSS_S_COMPLETE)
+            throw new MySqlException (
+                ExceptionMessages.FormatGssMessage (
+                    "GSSAPI: Unable to release the credential handle.",
+                    majorStatus, minorStatus, Const.GssNtHostBasedService
+                )
+            );
     }
-  }
 }

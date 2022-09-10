@@ -30,14 +30,14 @@ using EVESharp.Database.MySql;
 using System;
 using System.Collections.Generic;
 
-namespace EVESharp.Database.MySql.Failover
+namespace EVESharp.Database.MySql.Failover;
+
+/// <summary>
+/// Manages the hosts available for client side failover using the Random Failover method.
+/// The Random Failover method attempts to connect to the hosts specified in the list randomly until all the hosts have been attempted.
+/// </summary>
+internal class RandomFailoverGroup : FailoverGroup
 {
-  /// <summary>
-  /// Manages the hosts available for client side failover using the Random Failover method.
-  /// The Random Failover method attempts to connect to the hosts specified in the list randomly until all the hosts have been attempted.
-  /// </summary>
-  internal class RandomFailoverGroup : FailoverGroup
-  {
     /// <summary>
     /// The initial host taken from the list.
     /// </summary>
@@ -49,51 +49,51 @@ namespace EVESharp.Database.MySql.Failover
     /// <summary>
     /// Random object to get the next host.
     /// </summary>
-    private readonly Random rnd = new Random();
+    private readonly Random rnd = new Random ();
 
-
-    public RandomFailoverGroup(List<FailoverServer> hosts) : base(hosts) { }
+    public RandomFailoverGroup (List <FailoverServer> hosts) : base (hosts) { }
 
     /// <summary>
     /// Sets the initial active host.
     /// </summary>
-    protected internal override void SetInitialActiveServer()
+    protected internal override void SetInitialActiveServer ()
     {
-      if (Hosts == null || Hosts.Count == 0)
-        throw new MySqlException(Resources.Replication_NoAvailableServer);
+        if (this.Hosts == null || this.Hosts.Count == 0)
+            throw new MySqlException (Resources.Replication_NoAvailableServer);
 
-      var initialIndex = rnd.Next(Hosts.Count);
-      _initialHost = Hosts[initialIndex];
+        int initialIndex = this.rnd.Next (this.Hosts.Count);
+        this._initialHost = this.Hosts [initialIndex];
 
-      _initialHost.IsActive = true;
-      _initialHost.Attempted = true;
-      _activeHost = _initialHost;
-      _currentHost = _activeHost;
+        this._initialHost.IsActive  = true;
+        this._initialHost.Attempted = true;
+        this._activeHost            = this._initialHost;
+        this._currentHost           = this._activeHost;
     }
 
     /// <summary>
     /// Determines the next host.
     /// </summary>
     /// <returns>A <see cref="FailoverServer"/> object that represents the next available host.</returns>
-    protected internal override FailoverServer GetNextHost()
+    protected internal override FailoverServer GetNextHost ()
     {
-      if (Hosts == null || Hosts?.Count == 0)
-        throw new MySqlException(Resources.Replication_NoAvailableServer);
+        if (this.Hosts == null || this.Hosts?.Count == 0)
+            throw new MySqlException (Resources.Replication_NoAvailableServer);
 
-      Hosts.Find(h => h.Host == _currentHost.Host && h.Port == _currentHost.Port).IsActive = false;
-      var notAttemptedHosts = Hosts.FindAll(h => h.Attempted == false);
+        this.Hosts.Find (h => h.Host == this._currentHost.Host && h.Port == this._currentHost.Port).IsActive = false;
+        List <FailoverServer> notAttemptedHosts = this.Hosts.FindAll (h => h.Attempted == false);
 
-      if (notAttemptedHosts.Count > 0)
-      {
-        _activeHost = notAttemptedHosts[rnd.Next(notAttemptedHosts.Count)];
-        _activeHost.IsActive = true;
-        _activeHost.Attempted = true;
-        _currentHost = _activeHost;
-      }
-      else
-        _activeHost = _initialHost;
+        if (notAttemptedHosts.Count > 0)
+        {
+            this._activeHost           = notAttemptedHosts [this.rnd.Next (notAttemptedHosts.Count)];
+            this._activeHost.IsActive  = true;
+            this._activeHost.Attempted = true;
+            this._currentHost          = this._activeHost;
+        }
+        else
+        {
+            this._activeHost = this._initialHost;
+        }
 
-      return _activeHost;
+        return this._activeHost;
     }
-  }
 }

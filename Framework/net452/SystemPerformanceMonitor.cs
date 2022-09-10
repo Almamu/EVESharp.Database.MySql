@@ -30,61 +30,68 @@ using System;
 using System.Diagnostics;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+internal class SystemPerformanceMonitor : PerformanceMonitor
 {
-    internal class SystemPerformanceMonitor : PerformanceMonitor
+    private static PerformanceCounter procedureHardQueries;
+    private static PerformanceCounter procedureSoftQueries;
+
+    public SystemPerformanceMonitor (MySqlConnection connection) : base (connection)
     {
-        private static PerformanceCounter procedureHardQueries;
-        private static PerformanceCounter procedureSoftQueries;
+        string categoryName = Resources.PerfMonCategoryName;
 
-        public SystemPerformanceMonitor(MySqlConnection connection) : base(connection)
-        {
-            string categoryName = Resources.PerfMonCategoryName;
-
-            if (connection.Settings.UsePerformanceMonitor && procedureHardQueries == null)
+        if (connection.Settings.UsePerformanceMonitor && procedureHardQueries == null)
+            try
             {
-                try
-                {
-                    procedureHardQueries = new PerformanceCounter(categoryName,
-                                                                  "HardProcedureQueries", false);
-                    procedureSoftQueries = new PerformanceCounter(categoryName,
-                                                                  "SoftProcedureQueries", false);
-                }
-                catch (Exception ex)
-                {
-                    MySqlTrace.LogError(connection.ServerThread, ex.Message);
-                }
+                procedureHardQueries = new PerformanceCounter (
+                    categoryName,
+                    "HardProcedureQueries", false
+                );
+
+                procedureSoftQueries = new PerformanceCounter (
+                    categoryName,
+                    "SoftProcedureQueries", false
+                );
             }
-        }
+            catch (Exception ex)
+            {
+                MySqlTrace.LogError (connection.ServerThread, ex.Message);
+            }
+    }
 
-        private void EnsurePerfCategoryExist()
-        {
-            CounterCreationDataCollection ccdc = new CounterCreationDataCollection();
-            CounterCreationData ccd = new CounterCreationData();
-            ccd.CounterType = PerformanceCounterType.NumberOfItems32;
-            ccd.CounterName = "HardProcedureQueries";
-            ccdc.Add(ccd);
+    private void EnsurePerfCategoryExist ()
+    {
+        CounterCreationDataCollection ccdc = new CounterCreationDataCollection ();
+        CounterCreationData           ccd  = new CounterCreationData ();
+        ccd.CounterType = PerformanceCounterType.NumberOfItems32;
+        ccd.CounterName = "HardProcedureQueries";
+        ccdc.Add (ccd);
 
-            ccd = new CounterCreationData();
-            ccd.CounterType = PerformanceCounterType.NumberOfItems32;
-            ccd.CounterName = "SoftProcedureQueries";
-            ccdc.Add(ccd);
-            if (!PerformanceCounterCategory.Exists(Resources.PerfMonCategoryName))
-                PerformanceCounterCategory.Create(Resources.PerfMonCategoryName,"", new PerformanceCounterCategoryType(), ccdc);
-        }
+        ccd             = new CounterCreationData ();
+        ccd.CounterType = PerformanceCounterType.NumberOfItems32;
+        ccd.CounterName = "SoftProcedureQueries";
+        ccdc.Add (ccd);
 
-        public override void AddHardProcedureQuery()
-        {
-            if (!Connection.Settings.UsePerformanceMonitor ||
-                procedureHardQueries == null) return;
-            procedureHardQueries.Increment();
-        }
+        if (!PerformanceCounterCategory.Exists (Resources.PerfMonCategoryName))
+            PerformanceCounterCategory.Create (Resources.PerfMonCategoryName, "", new PerformanceCounterCategoryType (), ccdc);
+    }
 
-        public override void AddSoftProcedureQuery()
-        {
-            if (!Connection.Settings.UsePerformanceMonitor ||
-                procedureSoftQueries == null) return;
-            procedureSoftQueries.Increment();
-        }
+    public override void AddHardProcedureQuery ()
+    {
+        if (!this.Connection.Settings.UsePerformanceMonitor ||
+            procedureHardQueries == null)
+            return;
+
+        procedureHardQueries.Increment ();
+    }
+
+    public override void AddSoftProcedureQuery ()
+    {
+        if (!this.Connection.Settings.UsePerformanceMonitor ||
+            procedureSoftQueries == null)
+            return;
+
+        procedureSoftQueries.Increment ();
     }
 }

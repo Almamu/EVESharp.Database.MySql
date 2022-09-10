@@ -28,28 +28,27 @@
 
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Authentication
+namespace EVESharp.Database.MySql.Authentication;
+
+/// <summary>
+/// Allows connections to a user account set with the mysql_clear_password authentication plugin.
+/// </summary>
+public class MySqlClearPasswordPlugin : MySqlAuthenticationPlugin
 {
-  /// <summary>
-  /// Allows connections to a user account set with the mysql_clear_password authentication plugin.
-  /// </summary>
-  public class MySqlClearPasswordPlugin : MySqlAuthenticationPlugin
-  {
-    private byte[] passBytes;
-    public override string PluginName => "mysql_clear_password";
-    protected override byte[] MoreData(byte[] data)
+    private         byte [] passBytes;
+    public override string  PluginName => "mysql_clear_password";
+
+    protected override byte [] MoreData (byte [] data)
     {
-      if ((Settings.SslMode != MySqlSslMode.Disabled &&
-      Settings.ConnectionProtocol != MySqlConnectionProtocol.UnixSocket) ||
-      (Settings.ConnectionProtocol == MySqlConnectionProtocol.UnixSocket))
-      {
-        passBytes = System.Text.Encoding.UTF8.GetBytes(GetMFAPassword());
-        return passBytes;
-      }
-      else
-      {
-        throw new MySqlException(Resources.ClearPasswordNotSupported);
-      }
+        if ((this.Settings.SslMode != MySqlSslMode.Disabled && this.Settings.ConnectionProtocol != MySqlConnectionProtocol.UnixSocket) ||
+            this.Settings.ConnectionProtocol == MySqlConnectionProtocol.UnixSocket)
+        {
+            this.passBytes = System.Text.Encoding.UTF8.GetBytes (this.GetMFAPassword ());
+            return this.passBytes;
+        }
+        else
+        {
+            throw new MySqlException (Resources.ClearPasswordNotSupported);
+        }
     }
-  }
 }

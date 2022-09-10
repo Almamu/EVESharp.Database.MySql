@@ -33,101 +33,106 @@ using System;
 using System.Text;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Authentication
+namespace EVESharp.Database.MySql.Authentication;
+
+/// <summary>
+/// Enables connections to a user account set with the authentication_kerberos authentication plugin.
+/// </summary>
+internal class KerberosAuthenticationPlugin : MySqlAuthenticationPlugin
 {
-  /// <summary>
-  /// Enables connections to a user account set with the authentication_kerberos authentication plugin.
-  /// </summary>
-  internal class KerberosAuthenticationPlugin : MySqlAuthenticationPlugin
-  {
     public override string PluginName => "authentication_kerberos_client";
-    protected string Username { get; private set; }
-    protected string Password { get; private set; }
-    private string _servicePrincipal;
-    private string _realm;
+    protected       string Username   { get; private set; }
+    protected       string Password   { get; private set; }
+    private         string _servicePrincipal;
+    private         string _realm;
 
     private const string PACKAGE = "Kerberos";
 
-    private GssapiMechanism _gssapiMechanism;
+    private GssapiMechanism     _gssapiMechanism;
     private SspiSecurityContext _sspiSecurityContext;
 
-    protected override void SetAuthData(byte[] data)
+    protected override void SetAuthData (byte [] data)
     {
-      Username = GetUsername();
-      Password = GetMFAPassword();
+        this.Username = this.GetUsername ();
+        this.Password = this.GetMFAPassword ();
 
-      //Protocol::AuthSwitchRequest plugin data contains:
-      // int<2> SPN string length
-      // string<VAR> SPN string
-      // int<2> User Principal Name realm string length
-      // string<VAR> User Principal Name realm string
-      Int16 servicePrincipalNameLength = BitConverter.ToInt16(data, 0);
-      if (servicePrincipalNameLength > data.Length) return; // not an AuthSwitchRequest
-      _servicePrincipal = Encoding.GetString(data, 2, servicePrincipalNameLength);
-      Int16 userPrincipalRealmLength = BitConverter.ToInt16(data, servicePrincipalNameLength + 2);
-      _realm = Encoding.GetString(data, servicePrincipalNameLength + 4, userPrincipalRealmLength);
+        //Protocol::AuthSwitchRequest plugin data contains:
+        // int<2> SPN string length
+        // string<VAR> SPN string
+        // int<2> User Principal Name realm string length
+        // string<VAR> User Principal Name realm string
+        short servicePrincipalNameLength = BitConverter.ToInt16 (data, 0);
+
+        if (servicePrincipalNameLength > data.Length)
+            return; // not an AuthSwitchRequest
+
+        this._servicePrincipal = this.Encoding.GetString (data, 2, servicePrincipalNameLength);
+        short userPrincipalRealmLength = BitConverter.ToInt16 (data, servicePrincipalNameLength + 2);
+        this._realm = this.Encoding.GetString (data, servicePrincipalNameLength + 4, userPrincipalRealmLength);
     }
 
-    public override string GetUsername()
+    public override string GetUsername ()
     {
-      Username = string.IsNullOrWhiteSpace(Username) ? Settings.UserID : Username;
+        this.Username = string.IsNullOrWhiteSpace (this.Username) ? this.Settings.UserID : this.Username;
 
-      // If no password is provided, MySQL user and Windows logged-in user should match
-      if (Platform.IsWindows() && !string.IsNullOrWhiteSpace(Username) && string.IsNullOrWhiteSpace(Password) && Username != Environment.UserName)
-        throw new MySqlException(string.Format(Resources.UnmatchedWinUserAndMySqlUser, Username, Environment.UserName));
+        // If no password is provided, MySQL user and Windows logged-in user should match
+        if (Platform.IsWindows () && !string.IsNullOrWhiteSpace (this.Username) && string.IsNullOrWhiteSpace (this.Password) &&
+            this.Username != Environment.UserName)
+            throw new MySqlException (string.Format (Resources.UnmatchedWinUserAndMySqlUser, this.Username, Environment.UserName));
 
-      if (string.IsNullOrWhiteSpace(Username))
-      {
-        try
-        {
-          // Try to obtain the user name from a cached TGT
-          Username = new GssCredentials().UserName.Trim();
-        }
-        catch (Exception)
-        {
-          // Fall-back to system login user
-          Username = base.GetUsername();
-        }
-      }
+        if (string.IsNullOrWhiteSpace (this.Username))
+            try
+            {
+                // Try to obtain the user name from a cached TGT
+                this.Username = new GssCredentials ().UserName.Trim ();
+            }
+            catch (Exception)
+            {
+                // Fall-back to system login user
+                this.Username = base.GetUsername ();
+            }
 
-      int posAt = Username.IndexOf('@');
-      Settings.UserID = posAt < 0 ? Username : Username.Substring(0, posAt);
-      return Settings.UserID;
+        int posAt = this.Username.IndexOf ('@');
+        this.Settings.UserID = posAt < 0 ? this.Username : this.Username.Substring (0, posAt);
+        return this.Settings.UserID;
     }
 
-    protected override byte[] MoreData(byte[] data)
+    protected override byte [] MoreData (byte [] data)
     {
-      if (Platform.IsWindows())
-      {
-        if (_sspiSecurityContext == null)
+        if (Platform.IsWindows ())
         {
-          Username = $"{Username}@{_realm}";
-          var sspiCreds = string.IsNullOrWhiteSpace(Password) ? new SspiCredentials(PACKAGE) : new SspiCredentials(_servicePrincipal, Username, Password, _realm, PACKAGE);
-          _sspiSecurityContext = new SspiSecurityContext(sspiCreds);
+            if (this._sspiSecurityContext == null)
+            {
+                this.Username = $"{this.Username}@{this._realm}";
+
+                SspiCredentials sspiCreds = string.IsNullOrWhiteSpace (this.Password)
+                    ? new SspiCredentials (PACKAGE)
+                    : new SspiCredentials (this._servicePrincipal, this.Username, this.Password, this._realm, PACKAGE);
+
+                this._sspiSecurityContext = new SspiSecurityContext (sspiCreds);
+            }
+
+            ContextStatus status = this._sspiSecurityContext.InitializeSecurityContext (out byte [] clientBlob, data, this._servicePrincipal);
+
+            if (clientBlob.Length == 0 && status == ContextStatus.Accepted)
+                return null;
+            else
+                return clientBlob;
         }
-
-        var status = _sspiSecurityContext.InitializeSecurityContext(out byte[] clientBlob, data, _servicePrincipal);
-
-        if (clientBlob.Length == 0 && status == ContextStatus.Accepted)
-          return null;
         else
-          return clientBlob;
-      }
-      else
-      {
-        if (_gssapiMechanism == null)
         {
-          Username = $"{Username}@{_realm}";
-          _gssapiMechanism = new GssapiMechanism(Username, Password, _servicePrincipal);
+            if (this._gssapiMechanism == null)
+            {
+                this.Username         = $"{this.Username}@{this._realm}";
+                this._gssapiMechanism = new GssapiMechanism (this.Username, this.Password, this._servicePrincipal);
+            }
+
+            byte [] response = this._gssapiMechanism.Challenge (data);
+
+            if (response.Length == 0 && this._gssapiMechanism.gssContext.IsEstablished)
+                return null;
+            else
+                return response;
         }
-
-        var response = _gssapiMechanism.Challenge(data);
-
-        if (response.Length == 0 && _gssapiMechanism.gssContext.IsEstablished)
-          return null;
-        else
-          return response;
-      }
     }
-  }
 }

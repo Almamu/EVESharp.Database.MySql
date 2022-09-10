@@ -30,27 +30,36 @@ using EVESharp.Database.MySql;
 using System.Text;
 using EVESharp.Database.MySql.Authentication.GSSAPI.Native;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Utility;
+
+internal static class GssType
 {
-  internal static class GssType
-  {
-    private static readonly Encoding Iso = Encoding.GetEncoding("iso-8859-1");
+    private static readonly Encoding Iso = Encoding.GetEncoding ("iso-8859-1");
 
-    internal static Disposable<GssBufferDescStruct> GetBufferFromString(string buffer) =>
-        GetBufferFromBytes(Iso.GetBytes(buffer));
+    internal static Disposable <GssBufferDescStruct> GetBufferFromString (string buffer)
+    {
+        return GetBufferFromBytes (Iso.GetBytes (buffer));
+    }
 
-    public static Disposable<GssBufferDescStruct> GetBufferFromBytes(byte[] buffer) =>
-        Disposable.From(
-            Pinned.From(buffer), p => new GssBufferDescStruct
+    public static Disposable <GssBufferDescStruct> GetBufferFromBytes (byte [] buffer)
+    {
+        return Disposable.From (
+            Pinned.From (buffer), p => new GssBufferDescStruct
             {
-              length = (uint)p.Value.Length,
-              value = p.Address
+                length = (uint) p.Value.Length,
+                value  = p.Address
             }, p =>
             {
-              var majorStatus = NativeMethods.gss_release_buffer(out var minorStatus, ref p);
-              if (majorStatus != Const.GSS_S_COMPLETE)
-                throw new MySqlException(ExceptionMessages.FormatGssMessage("GSSAPI: An error occurred releasing a buffer.",
-                        majorStatus, minorStatus, Const.GSS_C_NO_OID));
-            });
-  }
+                uint majorStatus = NativeMethods.gss_release_buffer (out uint minorStatus, ref p);
+
+                if (majorStatus != Const.GSS_S_COMPLETE)
+                    throw new MySqlException (
+                        ExceptionMessages.FormatGssMessage (
+                            "GSSAPI: An error occurred releasing a buffer.",
+                            majorStatus, minorStatus, Const.GSS_C_NO_OID
+                        )
+                    );
+            }
+        );
+    }
 }

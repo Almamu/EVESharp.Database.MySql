@@ -32,22 +32,23 @@ using System.Data.Common;
 using System.Security;
 using System.Security.Permissions;
 
-namespace EVESharp.Database.MySql
-{
-  /// <summary>
-  /// Associates a security action with a custom security attribute.
-  /// </summary>
-  [Serializable, AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Struct | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
-  public sealed class MySqlClientPermissionAttribute : DBDataPermissionAttribute
-  {
-      // Methods
-      public MySqlClientPermissionAttribute(SecurityAction action) : base(action)
-      {
-      }
+namespace EVESharp.Database.MySql;
 
-      public override IPermission CreatePermission()
-      {
-        return new MySqlClientPermission(this);
-      }
+/// <summary>
+/// Associates a security action with a custom security attribute.
+/// </summary>
+[Serializable]
+[AttributeUsage (
+    AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Struct | AttributeTargets.Class | AttributeTargets.Assembly,
+    AllowMultiple = true, Inherited = false
+)]
+public sealed class MySqlClientPermissionAttribute : DBDataPermissionAttribute
+{
+    // Methods
+    public MySqlClientPermissionAttribute (SecurityAction action) : base (action) { }
+
+    public override IPermission CreatePermission ()
+    {
+        return new MySqlClientPermission (this);
     }
 }

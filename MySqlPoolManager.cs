@@ -35,226 +35,234 @@ using System.Linq;
 using System.Threading;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
-{
-  /// <summary>
-  /// Summary description for MySqlPoolManager.
-  /// </summary>
-  internal class MySqlPoolManager
-  {
-    private static readonly Dictionary<string, MySqlPool> Pools = new Dictionary<string, MySqlPool>();
-    private static readonly List<MySqlPool> ClearingPools = new List<MySqlPool>();
-    internal const int DEMOTED_TIMEOUT = 120000;
+namespace EVESharp.Database.MySql;
 
-    #region Properties
+/// <summary>
+/// Summary description for MySqlPoolManager.
+/// </summary>
+internal class MySqlPoolManager
+{
+    private static readonly Dictionary <string, MySqlPool> Pools           = new Dictionary <string, MySqlPool> ();
+    private static readonly List <MySqlPool>               ClearingPools   = new List <MySqlPool> ();
+    internal const          int                            DEMOTED_TIMEOUT = 120000;
+
+#region Properties
+
     /// <summary>
     /// Queue of demoted hosts.
     /// </summary>
-    internal static ConcurrentQueue<FailoverServer> DemotedHosts { get; set; }
+    internal static ConcurrentQueue <FailoverServer> DemotedHosts { get; set; }
     /// <summary>
     /// List of hosts that will be attempted to connect to.
     /// </summary>
-    internal static List<FailoverServer> Hosts { get; set; }
+    internal static List <FailoverServer> Hosts { get; set; }
     /// <summary>
     /// Timer to be used when a host have been demoted.
     /// </summary>
     internal static Timer DemotedServersTimer { get; set; }
-    #endregion
+
+#endregion
 
     // Timeout in seconds, after which an unused (idle) connection 
     // should be closed.
     internal static int maxConnectionIdleTime = 180;
 
-    static MySqlPoolManager()
+    static MySqlPoolManager ()
     {
-      AppDomain.CurrentDomain.ProcessExit += EnsureClearingPools;
-      AppDomain.CurrentDomain.DomainUnload += EnsureClearingPools;
+        AppDomain.CurrentDomain.ProcessExit  += EnsureClearingPools;
+        AppDomain.CurrentDomain.DomainUnload += EnsureClearingPools;
     }
 
-    private static void EnsureClearingPools(object sender, EventArgs e)
+    private static void EnsureClearingPools (object sender, EventArgs e)
     {
-      ClearAllPools();
+        ClearAllPools ();
     }
 
     // we add a small amount to the due time to let the cleanup detect
     //expired connections in the first cleanup.
-    private static Timer timer = new Timer(CleanIdleConnections,
-      null, (maxConnectionIdleTime * 1000) + 8000, maxConnectionIdleTime * 1000);
+    private static Timer timer = new Timer (
+        CleanIdleConnections,
+        null, maxConnectionIdleTime * 1000 + 8000, maxConnectionIdleTime * 1000
+    );
 
-    private static string GetKey(MySqlConnectionStringBuilder settings)
+    private static string GetKey (MySqlConnectionStringBuilder settings)
     {
-      string key = "";
-      lock (settings)
-      {
-        key = settings.ConnectionString;
-      }
+        string key = "";
 
-      if (!settings.IntegratedSecurity || settings.ConnectionReset) return key;
-
-      try
-      {
-        // Append SID to the connection string to generate a key
-        // With Integrated security different Windows users with the same
-        // connection string may be mapped to different MySQL accounts.
-        System.Security.Principal.WindowsIdentity id =
-          System.Security.Principal.WindowsIdentity.GetCurrent();
-
-        key += ";" + id.User;
-      }
-      catch (System.Security.SecurityException ex)
-      {
-        // Documentation for WindowsIdentity.GetCurrent() states 
-        // SecurityException can be thrown. In this case the 
-        // connection can only be pooled if reset is done.
-        throw new MySqlException(Resources.NoWindowsIdentity, ex);
-      }
-
-      return key;
-    }
-    public static MySqlPool GetPool(MySqlConnectionStringBuilder settings)
-    {
-      string text = GetKey(settings);
-
-      lock (Pools)
-      {
-        MySqlPool pool;
-        Pools.TryGetValue(text, out pool);
-
-        if (pool == null)
+        lock (settings)
         {
-          pool = new MySqlPool(settings);
-          Pools.Add(text, pool);
+            key = settings.ConnectionString;
         }
-        else
-          pool.Settings = settings;
 
-        return pool;
-      }
+        if (!settings.IntegratedSecurity || settings.ConnectionReset)
+            return key;
+
+        try
+        {
+            // Append SID to the connection string to generate a key
+            // With Integrated security different Windows users with the same
+            // connection string may be mapped to different MySQL accounts.
+            System.Security.Principal.WindowsIdentity id =
+                System.Security.Principal.WindowsIdentity.GetCurrent ();
+
+            key += ";" + id.User;
+        }
+        catch (System.Security.SecurityException ex)
+        {
+            // Documentation for WindowsIdentity.GetCurrent() states 
+            // SecurityException can be thrown. In this case the 
+            // connection can only be pooled if reset is done.
+            throw new MySqlException (Resources.NoWindowsIdentity, ex);
+        }
+
+        return key;
     }
 
-    public static void RemoveConnection(Driver driver)
+    public static MySqlPool GetPool (MySqlConnectionStringBuilder settings)
     {
-      Debug.Assert(driver != null);
+        string text = GetKey (settings);
 
-      MySqlPool pool = driver.Pool;
+        lock (Pools)
+        {
+            MySqlPool pool;
+            Pools.TryGetValue (text, out pool);
 
-      pool?.RemoveConnection(driver);
+            if (pool == null)
+            {
+                pool = new MySqlPool (settings);
+                Pools.Add (text, pool);
+            }
+            else
+            {
+                pool.Settings = settings;
+            }
+
+            return pool;
+        }
     }
 
-    public static void ReleaseConnection(Driver driver)
+    public static void RemoveConnection (Driver driver)
     {
-      Debug.Assert(driver != null);
+        Debug.Assert (driver != null);
 
-      MySqlPool pool = driver.Pool;
+        MySqlPool pool = driver.Pool;
 
-      pool?.ReleaseConnection(driver);
+        pool?.RemoveConnection (driver);
     }
 
-    public static void ClearPool(MySqlConnectionStringBuilder settings)
+    public static void ReleaseConnection (Driver driver)
     {
-      Debug.Assert(settings != null);
-      string text;
-      try
-      {
-        text = GetKey(settings);
-      }
-      catch (MySqlException)
-      {
-        // Cannot retrieve windows identity for IntegratedSecurity=true
-        // This can be ignored.
-        return;
-      }
-      ClearPoolByText(text);
+        Debug.Assert (driver != null);
+
+        MySqlPool pool = driver.Pool;
+
+        pool?.ReleaseConnection (driver);
     }
 
-    private static void ClearPoolByText(string key)
+    public static void ClearPool (MySqlConnectionStringBuilder settings)
     {
-      lock (Pools)
-      {
-        // if pools doesn't have it, then this pool must already have been cleared
-        if (!Pools.ContainsKey(key)) return;
+        Debug.Assert (settings != null);
+        string text;
 
-        // add the pool to our list of pools being cleared
-        MySqlPool pool = (Pools[key] as MySqlPool);
-        ClearingPools.Add(pool);
+        try
+        {
+            text = GetKey (settings);
+        }
+        catch (MySqlException)
+        {
+            // Cannot retrieve windows identity for IntegratedSecurity=true
+            // This can be ignored.
+            return;
+        }
 
-        // now tell the pool to clear itself
-        pool.Clear();
-
-        // and then remove the pool from the active pools list
-        Pools.Remove(key);
-      }
+        ClearPoolByText (text);
     }
 
-    public static void ClearAllPools()
+    private static void ClearPoolByText (string key)
     {
-      lock (Pools)
-      {
-        // Create separate keys list.
-        List<string> keys = new List<string>(Pools.Count);
-        keys.AddRange(Pools.Keys);
+        lock (Pools)
+        {
+            // if pools doesn't have it, then this pool must already have been cleared
+            if (!Pools.ContainsKey (key))
+                return;
 
-        // Remove all pools by key.
-        foreach (string key in keys)
-          ClearPoolByText(key);
-      }
+            // add the pool to our list of pools being cleared
+            MySqlPool pool = Pools [key] as MySqlPool;
+            ClearingPools.Add (pool);
 
-      if (DemotedServersTimer != null)
-      {
-        DemotedServersTimer.Dispose();
-        Hosts?.Clear(); 
-        while (!DemotedHosts.IsEmpty)
-          DemotedHosts.TryDequeue(out _);
-      }
+            // now tell the pool to clear itself
+            pool.Clear ();
+
+            // and then remove the pool from the active pools list
+            Pools.Remove (key);
+        }
     }
 
-    public static void RemoveClearedPool(MySqlPool pool)
+    public static void ClearAllPools ()
     {
-      Debug.Assert(ClearingPools.Contains(pool));
-      ClearingPools.Remove(pool);
+        lock (Pools)
+        {
+            // Create separate keys list.
+            List <string> keys = new List <string> (Pools.Count);
+            keys.AddRange (Pools.Keys);
+
+            // Remove all pools by key.
+            foreach (string key in keys)
+                ClearPoolByText (key);
+        }
+
+        if (DemotedServersTimer != null)
+        {
+            DemotedServersTimer.Dispose ();
+            Hosts?.Clear ();
+
+            while (!DemotedHosts.IsEmpty)
+                DemotedHosts.TryDequeue (out _);
+        }
+    }
+
+    public static void RemoveClearedPool (MySqlPool pool)
+    {
+        Debug.Assert (ClearingPools.Contains (pool));
+        ClearingPools.Remove (pool);
     }
 
     /// <summary>
     /// Remove drivers that have been idle for too long.
     /// </summary>
-    public static void CleanIdleConnections(object obj)
+    public static void CleanIdleConnections (object obj)
     {
-      List<Driver> oldDrivers = new List<Driver>();
-      lock (Pools)
-      {
-        foreach (MySqlPool pool in Pools.Keys.Select(key => Pools[key]))
+        List <Driver> oldDrivers = new List <Driver> ();
+
+        lock (Pools)
         {
-          oldDrivers.AddRange(pool.RemoveOldIdleConnections());
+            foreach (MySqlPool pool in Pools.Keys.Select (key => Pools [key]))
+                oldDrivers.AddRange (pool.RemoveOldIdleConnections ());
         }
-      }
-      foreach (Driver driver in oldDrivers)
-      {
-        driver.Close();
-      }
+
+        foreach (Driver driver in oldDrivers)
+            driver.Close ();
     }
 
     /// <summary>
     /// Remove hosts that have been on the demoted list for more
     /// than 120,000 milliseconds and add them to the available hosts list.
     /// </summary>
-    internal static void ReleaseDemotedHosts(object state)
+    internal static void ReleaseDemotedHosts (object state)
     {
-      while (!DemotedHosts.IsEmpty)
-      {
-        if (DemotedHosts.TryPeek(out FailoverServer demotedServer) &&
-        demotedServer.DemotedTime.AddMilliseconds(DEMOTED_TIMEOUT) < DateTime.Now)
-        {
-          demotedServer.Attempted = false;
-          Hosts?.Add(demotedServer);
-          DemotedHosts.TryDequeue(out demotedServer);
-        }
-        else
-        {
-          break;
-        }
-      }
+        while (!DemotedHosts.IsEmpty)
+            if (DemotedHosts.TryPeek (out FailoverServer demotedServer) &&
+                demotedServer.DemotedTime.AddMilliseconds (DEMOTED_TIMEOUT) < DateTime.Now)
+            {
+                demotedServer.Attempted = false;
+                Hosts?.Add (demotedServer);
+                DemotedHosts.TryDequeue (out demotedServer);
+            }
+            else
+            {
+                break;
+            }
 
-      DemotedServersTimer.Change(DEMOTED_TIMEOUT, Timeout.Infinite);
+        DemotedServersTimer.Change (DEMOTED_TIMEOUT, Timeout.Infinite);
     }
-  }
 }

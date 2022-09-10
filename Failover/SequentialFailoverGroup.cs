@@ -29,14 +29,14 @@
 using EVESharp.Database.MySql;
 using System.Collections.Generic;
 
-namespace EVESharp.Database.MySql.Failover
+namespace EVESharp.Database.MySql.Failover;
+
+/// <summary>
+/// Manages the hosts available for client side failover using the Sequential Failover method.
+/// The Sequential Failover method attempts to connect to the hosts specified in the list one after another until the initial host is reached.
+/// </summary>
+internal class SequentialFailoverGroup : FailoverGroup
 {
-  /// <summary>
-  /// Manages the hosts available for client side failover using the Sequential Failover method.
-  /// The Sequential Failover method attempts to connect to the hosts specified in the list one after another until the initial host is reached.
-  /// </summary>
-  internal class SequentialFailoverGroup : FailoverGroup
-  {
     /// <summary>
     /// The initial host taken from the list.
     /// </summary>
@@ -50,48 +50,50 @@ namespace EVESharp.Database.MySql.Failover
     /// </summary>
     private FailoverServer _currentHost;
 
-    public SequentialFailoverGroup(List<FailoverServer> hosts) : base(hosts)
+    public SequentialFailoverGroup (List <FailoverServer> hosts) : base (hosts)
     {
-      _hostIndex = 0;
+        this._hostIndex = 0;
     }
 
     /// <summary>
     /// Sets the initial active host.
     /// </summary>
-    protected internal override void SetInitialActiveServer()
+    protected internal override void SetInitialActiveServer ()
     {
-      if (Hosts == null || Hosts.Count == 0)
-        throw new MySqlException(Resources.Replication_NoAvailableServer);
+        if (this.Hosts == null || this.Hosts.Count == 0)
+            throw new MySqlException (Resources.Replication_NoAvailableServer);
 
-      _initialHost = Hosts[0];
-      Hosts[0].IsActive = true;
-      _activeHost = Hosts[0];
-      _currentHost = _activeHost;
+        this._initialHost       = this.Hosts [0];
+        this.Hosts [0].IsActive = true;
+        this._activeHost        = this.Hosts [0];
+        this._currentHost       = this._activeHost;
     }
 
     /// <summary>
     /// Determines the next host.
     /// </summary>
     /// <returns>A <see cref="FailoverServer"/> object that represents the next available host.</returns>
-    protected internal override FailoverServer GetNextHost()
+    protected internal override FailoverServer GetNextHost ()
     {
-      if (Hosts == null || Hosts?.Count == 0)
-        throw new MySqlException(Resources.Replication_NoAvailableServer);
+        if (this.Hosts == null || this.Hosts?.Count == 0)
+            throw new MySqlException (Resources.Replication_NoAvailableServer);
 
-      var currentServer = Hosts.Find(h => h.Host == _currentHost.Host && h.Port == _currentHost.Port);
-      currentServer.IsActive = false;
-      _hostIndex = Hosts.IndexOf(currentServer);
-      if (Hosts.Count > 1)
-      {
-        _activeHost = _hostIndex == Hosts.Count - 1 ? Hosts[0] : Hosts[_hostIndex + 1];
-        _activeHost.IsActive = true;
-        _currentHost = _activeHost;
-        _hostIndex++;
-      }
-      else
-        _activeHost = _initialHost;
+        FailoverServer currentServer = this.Hosts.Find (h => h.Host == this._currentHost.Host && h.Port == this._currentHost.Port);
+        currentServer.IsActive = false;
+        this._hostIndex        = this.Hosts.IndexOf (currentServer);
 
-      return _activeHost;
+        if (this.Hosts.Count > 1)
+        {
+            this._activeHost          = this._hostIndex == this.Hosts.Count - 1 ? this.Hosts [0] : this.Hosts [this._hostIndex + 1];
+            this._activeHost.IsActive = true;
+            this._currentHost         = this._activeHost;
+            this._hostIndex++;
+        }
+        else
+        {
+            this._activeHost = this._initialHost;
+        }
+
+        return this._activeHost;
     }
-  }
 }

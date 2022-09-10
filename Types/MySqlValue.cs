@@ -29,18 +29,17 @@
 using System;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Types
-{
-  internal interface IMySqlValue
-  {
-    bool IsNull { get; }
-    MySqlDbType MySqlDbType { get; }
-    object Value { get; /*set;*/ }
-    Type SystemType { get; }
-    string MySqlTypeName { get; }
+namespace EVESharp.Database.MySql.Types;
 
-    void WriteValue(MySqlPacket packet, bool binary, object value, int length);
-    IMySqlValue ReadValue(MySqlPacket packet, long length, bool isNull);
-    void SkipValue(MySqlPacket packet);
-  }
+internal interface IMySqlValue
+{
+    bool        IsNull        { get; }
+    MySqlDbType MySqlDbType   { get; }
+    object      Value         { get; /*set;*/ }
+    Type        SystemType    { get; }
+    string      MySqlTypeName { get; }
+
+    void        WriteValue (MySqlPacket packet, bool binary, object value, int length);
+    IMySqlValue ReadValue (MySqlPacket  packet, long length, bool   isNull);
+    void        SkipValue (MySqlPacket  packet);
 }

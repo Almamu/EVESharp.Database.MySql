@@ -31,116 +31,110 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Text;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Defines a replication configurarion element in the configuration file.
+/// </summary>
+public sealed class ReplicationConfigurationElement : ConfigurationElement
 {
-  /// <summary>
-  /// Defines a replication configurarion element in the configuration file.
-  /// </summary>
-  public sealed class ReplicationConfigurationElement : ConfigurationElement
-  {
     /// <summary>
     /// Gets a collection of <see cref="ReplicationServerGroupConfigurationElement"/> objects representing the server groups.
     /// </summary>
-    [ConfigurationProperty("ServerGroups", IsRequired = true)]
-    [ConfigurationCollection(typeof(ReplicationServerGroupConfigurationElement), AddItemName = "Group")]
-    public GenericConfigurationElementCollection<ReplicationServerGroupConfigurationElement> ServerGroups
-    {
-      get { return (GenericConfigurationElementCollection<ReplicationServerGroupConfigurationElement>)this["ServerGroups"]; }
-    }
-  }
+    [ConfigurationProperty ("ServerGroups", IsRequired = true)]
+    [ConfigurationCollection (typeof (ReplicationServerGroupConfigurationElement), AddItemName = "Group")]
+    public GenericConfigurationElementCollection <ReplicationServerGroupConfigurationElement> ServerGroups =>
+        (GenericConfigurationElementCollection <ReplicationServerGroupConfigurationElement>) this ["ServerGroups"];
+}
 
-  /// <summary>
-  /// Defines a replication server group in the configuration file.
-  /// </summary>
-  public sealed class ReplicationServerGroupConfigurationElement : ConfigurationElement
-  {
+/// <summary>
+/// Defines a replication server group in the configuration file.
+/// </summary>
+public sealed class ReplicationServerGroupConfigurationElement : ConfigurationElement
+{
     /// <summary>
     /// Gets or sets the name of the replication server group configuration.
     /// </summary>
-    [ConfigurationProperty("name", IsRequired = true)]
+    [ConfigurationProperty ("name", IsRequired = true)]
     public string Name
     {
-      get { return (string)this["name"]; }
-      set { this["name"] = value; }
+        get => (string) this ["name"];
+        set => this ["name"] = value;
     }
 
     /// <summary>
     /// Gets or sets the group type of the replication server group configuration.
     /// </summary>
-    [ConfigurationProperty("groupType", IsRequired = false)]
+    [ConfigurationProperty ("groupType", IsRequired = false)]
     public string GroupType
     {
-      get { return (string)this["groupType"]; }
-      set { this["groupType"] = value; }
+        get => (string) this ["groupType"];
+        set => this ["groupType"] = value;
     }
 
     /// <summary>
     /// Gets or sets the number of seconds to wait for retry.
     /// </summary>
-    [ConfigurationProperty("retryTime", IsRequired = false, DefaultValue = 60)]
+    [ConfigurationProperty ("retryTime", IsRequired = false, DefaultValue = 60)]
     public int RetryTime
     {
-      get { return (int)this["retryTime"]; }
-      set { this["retryTime"] = value; }
+        get => (int) this ["retryTime"];
+        set => this ["retryTime"] = value;
     }
 
     /// <summary>
     /// Gets a collection of <see cref="ReplicationServerConfigurationElement"/> objects representing the
     /// server configurations associated to this group configuration.
     /// </summary>
-    [ConfigurationProperty("Servers")]
-    [ConfigurationCollection(typeof(ReplicationServerConfigurationElement), AddItemName = "Server")]
-    public GenericConfigurationElementCollection<ReplicationServerConfigurationElement> Servers
-    {
-      get { return (GenericConfigurationElementCollection<ReplicationServerConfigurationElement>)this["Servers"]; }
-    }
-  }
+    [ConfigurationProperty ("Servers")]
+    [ConfigurationCollection (typeof (ReplicationServerConfigurationElement), AddItemName = "Server")]
+    public GenericConfigurationElementCollection <ReplicationServerConfigurationElement> Servers =>
+        (GenericConfigurationElementCollection <ReplicationServerConfigurationElement>) this ["Servers"];
+}
 
-  /// <summary>
-  /// Defines a replication server in configuration file.
-  /// </summary>
-  public sealed class ReplicationServerConfigurationElement : ConfigurationElement
-  {
+/// <summary>
+/// Defines a replication server in configuration file.
+/// </summary>
+public sealed class ReplicationServerConfigurationElement : ConfigurationElement
+{
     /// <summary>
     /// Gets or sets the name of the replication server configuration. 
     /// </summary>
-    [ConfigurationProperty("name", IsRequired = true)]
+    [ConfigurationProperty ("name", IsRequired = true)]
     public string Name
     {
-      get { return (string)this["name"]; }
-      set { this["name"] = value; }
+        get => (string) this ["name"];
+        set => this ["name"] = value;
     }
 
     /// <summary>
     /// Gets or sets whether the replication server is configured as source.
     /// </summary>
-    [ConfigurationProperty("IsMaster", IsRequired = false, DefaultValue = false)]
-    [Obsolete("This property is deprecated, please use IsSource instead.")]
+    [ConfigurationProperty ("IsMaster", IsRequired = false, DefaultValue = false)]
+    [Obsolete ("This property is deprecated, please use IsSource instead.")]
     public bool IsMaster
     {
-      get { return (bool)this["IsMaster"]; }
-      set { this["IsMaster"] = value; }
+        get => (bool) this ["IsMaster"];
+        set => this ["IsMaster"] = value;
     }
 
     /// <summary>
     /// Gets or sets whether the replication server is configured as source.
     /// </summary>
-    [ConfigurationProperty("IsSource", IsRequired = false, DefaultValue = false)]
+    [ConfigurationProperty ("IsSource", IsRequired = false, DefaultValue = false)]
     public bool IsSource
     {
-      get { return (bool)this["IsSource"]; }
-      set { this["IsSource"] = value; }
+        get => (bool) this ["IsSource"];
+        set => this ["IsSource"] = value;
     }
-
 
     /// <summary>
     /// Gets or sets the connection string associated to this replication server.
     /// </summary>
-    [ConfigurationProperty("connectionstring", IsRequired = true)]
+    [ConfigurationProperty ("connectionstring", IsRequired = true)]
     public string ConnectionString
     {
-      get { return (string)this["connectionstring"]; }
-      set { this["connectionstring"] = value; }
+        get => (string) this ["connectionstring"];
+        set => this ["connectionstring"] = value;
     }
-  }
 }

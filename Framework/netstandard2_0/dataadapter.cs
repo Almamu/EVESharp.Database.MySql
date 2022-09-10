@@ -35,79 +35,79 @@ using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EVESharp.Database.MySql
-{
-  /// <summary>
-  ///  Represents a set of data commands and a database connection that are used to fill a dataset and update a MySQL database. 
-  ///  This class cannot be inherited.
-  /// </summary>
-  /// <remarks>
-  ///  <para>
-  ///    The <see cref="MySqlDataAdapter"/>, serves as a bridge between a <see cref="DataSet"/>
-  ///    and MySQL for retrieving and saving data. The <see cref="MySqlDataAdapter"/> provides this
-  ///    bridge by mapping <see cref="DbDataAdapter.Fill(DataSet)"/>, which changes the data in the
-  ///    <see cref="DataSet"/> to match the data in the data source, and <see cref="DbDataAdapter.Update(DataSet)"/>,
-  ///    which changes the data in the data source to match the data in the <see cref="DataSet"/>,
-  ///    using the appropriate SQL statements against the data source.
-  ///  </para>
-  ///  <para>
-  ///    When the <see cref="MySqlDataAdapter"/> fills a <see cref="DataSet"/>, it will create the necessary
-  ///    tables and columns for the returned data if they do not already exist. However, primary
-  ///    key information will not be included in the implicitly created schema unless the
-  ///    <see cref="MissingSchemaAction"/> property is set to <see cref="MissingSchemaAction.AddWithKey"/>.
-  ///    You may also have the <see cref="MySqlDataAdapter"/> create the schema of the <see cref="DataSet"/>,
-  ///    including primary key information, before filling it with data using <see cref="DbDataAdapter.FillSchema(DataTable, SchemaType)"/>.
-  ///  </para>
-  ///  <para>
-  ///    <see cref="MySqlDataAdapter"/> is used in conjunction with <see cref="MySqlConnection"/>
-  ///    and <see cref="MySqlCommand"/> to increase performance when connecting to a MySQL database.
-  ///  </para>
-  ///  <para>
-  ///    The <see cref="MySqlDataAdapter"/> also includes the <see cref="MySqlDataAdapter.SelectCommand"/>,
-  ///    <see cref="MySqlDataAdapter.InsertCommand"/>, <see cref="MySqlDataAdapter.DeleteCommand"/>,
-  ///    <see cref="MySqlDataAdapter.UpdateCommand"/>, and <see cref="DataAdapter.TableMappings"/>
-  ///    properties to facilitate the loading and updating of data.
-  ///  </para>
-  ///  <para>
-  ///    When an instance of <see cref="MySqlDataAdapter"/> is created, the read/write properties
-  ///    are set to initial values. For a list of these values, see the <see cref="MySqlDataAdapter"/>
-  ///    constructor.
-  ///  </para>
-  ///  <note>
-  ///    Please be aware that the <see cref="DataColumn"/> class allows only
-  ///    Int16, Int32, and Int64 to have the AutoIncrement property set.
-  ///    If you plan to use autoincremement columns with MySQL, you should consider
-  ///    using signed integer columns.
-  ///  </note>
-  /// </remarks>
-  /// <example>
-  ///  The following example creates a <see cref="MySqlCommand"/> and a <see cref="MySqlConnection"/>.
-  ///  The <see cref="MySqlConnection"/> is opened and set as the <see cref="MySqlCommand.Connection"/> for the
-  ///  <see cref="MySqlCommand"/>. The example then calls <see cref="MySqlCommand.ExecuteNonQuery"/>, and closes
-  ///  the connection. To accomplish this, the <see cref="MySqlCommand.ExecuteNonQuery"/> is
-  ///  passed a connection string and a query string that is a SQL INSERT
-  ///  statement.
-  ///  <code lang="C#">
-  ///    public DataSet SelectRows(DataSet dataset,string connection,string query)
-  ///    {
-  ///      MySqlConnection conn = new MySqlConnection(connection);
-  ///      MySqlDataAdapter adapter = new MySqlDataAdapter();
-  ///      adapter.SelectCommand = new MySqlCommand(query, conn);
-  ///      adapter.Fill(dataset);
-  ///      return dataset;
-  ///    }
-  ///  </code>
-  /// </example>
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+///  Represents a set of data commands and a database connection that are used to fill a dataset and update a MySQL database. 
+///  This class cannot be inherited.
+/// </summary>
+/// <remarks>
+///  <para>
+///    The <see cref="MySqlDataAdapter"/>, serves as a bridge between a <see cref="DataSet"/>
+///    and MySQL for retrieving and saving data. The <see cref="MySqlDataAdapter"/> provides this
+///    bridge by mapping <see cref="DbDataAdapter.Fill(DataSet)"/>, which changes the data in the
+///    <see cref="DataSet"/> to match the data in the data source, and <see cref="DbDataAdapter.Update(DataSet)"/>,
+///    which changes the data in the data source to match the data in the <see cref="DataSet"/>,
+///    using the appropriate SQL statements against the data source.
+///  </para>
+///  <para>
+///    When the <see cref="MySqlDataAdapter"/> fills a <see cref="DataSet"/>, it will create the necessary
+///    tables and columns for the returned data if they do not already exist. However, primary
+///    key information will not be included in the implicitly created schema unless the
+///    <see cref="MissingSchemaAction"/> property is set to <see cref="MissingSchemaAction.AddWithKey"/>.
+///    You may also have the <see cref="MySqlDataAdapter"/> create the schema of the <see cref="DataSet"/>,
+///    including primary key information, before filling it with data using <see cref="DbDataAdapter.FillSchema(DataTable, SchemaType)"/>.
+///  </para>
+///  <para>
+///    <see cref="MySqlDataAdapter"/> is used in conjunction with <see cref="MySqlConnection"/>
+///    and <see cref="MySqlCommand"/> to increase performance when connecting to a MySQL database.
+///  </para>
+///  <para>
+///    The <see cref="MySqlDataAdapter"/> also includes the <see cref="MySqlDataAdapter.SelectCommand"/>,
+///    <see cref="MySqlDataAdapter.InsertCommand"/>, <see cref="MySqlDataAdapter.DeleteCommand"/>,
+///    <see cref="MySqlDataAdapter.UpdateCommand"/>, and <see cref="DataAdapter.TableMappings"/>
+///    properties to facilitate the loading and updating of data.
+///  </para>
+///  <para>
+///    When an instance of <see cref="MySqlDataAdapter"/> is created, the read/write properties
+///    are set to initial values. For a list of these values, see the <see cref="MySqlDataAdapter"/>
+///    constructor.
+///  </para>
+///  <note>
+///    Please be aware that the <see cref="DataColumn"/> class allows only
+///    Int16, Int32, and Int64 to have the AutoIncrement property set.
+///    If you plan to use autoincremement columns with MySQL, you should consider
+///    using signed integer columns.
+///  </note>
+/// </remarks>
+/// <example>
+///  The following example creates a <see cref="MySqlCommand"/> and a <see cref="MySqlConnection"/>.
+///  The <see cref="MySqlConnection"/> is opened and set as the <see cref="MySqlCommand.Connection"/> for the
+///  <see cref="MySqlCommand"/>. The example then calls <see cref="MySqlCommand.ExecuteNonQuery"/>, and closes
+///  the connection. To accomplish this, the <see cref="MySqlCommand.ExecuteNonQuery"/> is
+///  passed a connection string and a query string that is a SQL INSERT
+///  statement.
+///  <code lang="C#">
+///    public DataSet SelectRows(DataSet dataset,string connection,string query)
+///    {
+///      MySqlConnection conn = new MySqlConnection(connection);
+///      MySqlDataAdapter adapter = new MySqlDataAdapter();
+///      adapter.SelectCommand = new MySqlCommand(query, conn);
+///      adapter.Fill(dataset);
+///      return dataset;
+///    }
+///  </code>
+/// </example>
 #if NET452
-  [ToolboxBitmap(typeof(MySqlDataAdapter), "MySqlClient.resources.dataadapter.bmp")]
+[ToolboxBitmap (typeof (MySqlDataAdapter), "MySqlClient.resources.dataadapter.bmp")]
 #endif
-  [DesignerCategory("Code")]
-  [Designer("MySql.Data.MySqlClient.Design.MySqlDataAdapterDesigner,MySqlClient.Design")]
-  public sealed class MySqlDataAdapter : DbDataAdapter, IDbDataAdapter, IDataAdapter
-  {
-    private bool loadingDefaults;
-    private int updateBatchSize;
-    List<IDbCommand> commandBatch;
+[DesignerCategory ("Code")]
+[Designer ("MySql.Data.MySqlClient.Design.MySqlDataAdapterDesigner,MySqlClient.Design")]
+public sealed class MySqlDataAdapter : DbDataAdapter, IDbDataAdapter, IDataAdapter
+{
+    private bool              loadingDefaults;
+    private int               updateBatchSize;
+    private List <IDbCommand> commandBatch;
 
     /// <summary>
     /// Occurs during Update before a command is executed against the data source. The attempt to update is made, so the event fires.
@@ -154,10 +154,10 @@ namespace EVESharp.Database.MySql
     ///    You can change the value of any of these properties through a separate call to the property.
     ///  </para>
     /// </remarks>
-    public MySqlDataAdapter()
+    public MySqlDataAdapter ()
     {
-      loadingDefaults = true;
-      updateBatchSize = 1;
+        this.loadingDefaults = true;
+        this.updateBatchSize = 1;
     }
 
     /// <summary>
@@ -169,10 +169,10 @@ namespace EVESharp.Database.MySql
     ///  <see cref="MySqlCommand"/> that is a SQL SELECT statement or stored procedure and is set
     ///  as the <see cref="SelectCommand"/> property of the <see cref="MySqlDataAdapter"/>.
     /// </param>
-    public MySqlDataAdapter(MySqlCommand selectCommand)
-      : this()
+    public MySqlDataAdapter (MySqlCommand selectCommand)
+        : this ()
     {
-      SelectCommand = selectCommand;
+        this.SelectCommand = selectCommand;
     }
 
     /// <summary>
@@ -195,10 +195,10 @@ namespace EVESharp.Database.MySql
     ///    <see cref="MySqlConnection.Close"/> or <see cref="MySqlConnection.Dispose()"/> to close it.
     ///  </para>
     /// </remarks>
-    public MySqlDataAdapter(string selectCommandText, MySqlConnection connection)
-      : this()
+    public MySqlDataAdapter (string selectCommandText, MySqlConnection connection)
+        : this ()
     {
-      SelectCommand = new MySqlCommand(selectCommandText, connection);
+        this.SelectCommand = new MySqlCommand (selectCommandText, connection);
     }
 
     /// <summary>
@@ -210,14 +210,16 @@ namespace EVESharp.Database.MySql
     ///  be used by the <see cref="SelectCommand"/> property of the <see cref="MySqlDataAdapter"/>.
     /// </param>
     /// <param name="selectConnString">The connection string</param>
-    public MySqlDataAdapter(string selectCommandText, string selectConnString)
-      : this()
+    public MySqlDataAdapter (string selectCommandText, string selectConnString)
+        : this ()
     {
-      SelectCommand = new MySqlCommand(selectCommandText,
-        new MySqlConnection(selectConnString));
+        this.SelectCommand = new MySqlCommand (
+            selectCommandText,
+            new MySqlConnection (selectConnString)
+        );
     }
 
-    #region Properties
+#region Properties
 
     /// <summary>
     ///  Gets or sets a SQL statement or stored procedure used to delete records from the data set.
@@ -241,11 +243,11 @@ namespace EVESharp.Database.MySql
     ///    to the previously created <see cref="MySqlCommand"/> object.
     ///  </para>
     /// </remarks>
-    [Description("Used during Update for deleted rows in Dataset.")]
+    [Description ("Used during Update for deleted rows in Dataset.")]
     public new MySqlCommand DeleteCommand
     {
-      get { return (MySqlCommand)base.DeleteCommand; }
-      set { base.DeleteCommand = value; }
+        get => (MySqlCommand) base.DeleteCommand;
+        set => base.DeleteCommand = value;
     }
 
     /// <summary>
@@ -274,11 +276,11 @@ namespace EVESharp.Database.MySql
     ///    depending on how you set the <see cref="MySqlCommand.UpdatedRowSource"/> property of the <see cref="MySqlCommand"/> object.
     ///  </note>
     ///</remarks>
-    [Description("Used during Update for new rows in Dataset.")]
+    [Description ("Used during Update for new rows in Dataset.")]
     public new MySqlCommand InsertCommand
     {
-      get { return (MySqlCommand)base.InsertCommand; }
-      set { base.InsertCommand = value; }
+        get => (MySqlCommand) base.InsertCommand;
+        set => base.InsertCommand = value;
     }
 
     /// <summary>
@@ -299,12 +301,12 @@ namespace EVESharp.Database.MySql
     ///    <see cref="DataSet"/>, and no exception is raised.
     ///  </para>
     /// </remarks>
-    [Description("Used during Fill/FillSchema")]
-    [Category("Fill")]
+    [Description ("Used during Fill/FillSchema")]
+    [Category ("Fill")]
     public new MySqlCommand SelectCommand
     {
-      get { return (MySqlCommand)base.SelectCommand; }
-      set { base.SelectCommand = value; }
+        get => (MySqlCommand) base.SelectCommand;
+        set => base.SelectCommand = value;
     }
 
     /// <summary>
@@ -333,20 +335,20 @@ namespace EVESharp.Database.MySql
     ///    depending on how you set the <see cref="MySqlCommand.UpdatedRowSource"/> property of the <see cref="MySqlCommand"/> object.
     ///  </note>
     /// </remarks>
-    [Description("Used during Update for modified rows in Dataset.")]
+    [Description ("Used during Update for modified rows in Dataset.")]
     public new MySqlCommand UpdateCommand
     {
-      get { return (MySqlCommand)base.UpdateCommand; }
-      set { base.UpdateCommand = value; }
+        get => (MySqlCommand) base.UpdateCommand;
+        set => base.UpdateCommand = value;
     }
 
     internal bool LoadDefaults
     {
-      get { return loadingDefaults; }
-      set { loadingDefaults = value; }
+        get => this.loadingDefaults;
+        set => this.loadingDefaults = value;
     }
 
-    #endregion
+#endregion
 
     /// <summary>
     /// Open connection if it was closed.
@@ -358,59 +360,60 @@ namespace EVESharp.Database.MySql
     /// If connection is opened by this function, the list is updated
     /// </param>
     /// <returns>true if connection was opened</returns>
-    private void OpenConnectionIfClosed(DataRowState state,
-      List<MySqlConnection> openedConnections)
+    private void OpenConnectionIfClosed
+    (
+        DataRowState           state,
+        List <MySqlConnection> openedConnections
+    )
     {
-      MySqlCommand cmd = null;
-      switch (state)
-      {
-        case DataRowState.Added:
-          cmd = InsertCommand;
-          break;
-        case DataRowState.Deleted:
-          cmd = DeleteCommand;
-          break;
-        case DataRowState.Modified:
-          cmd = UpdateCommand;
-          break;
-        default:
-          return;
-      }
+        MySqlCommand cmd = null;
 
-      if (cmd != null && cmd.Connection != null &&
-        cmd.Connection.connectionState == ConnectionState.Closed)
-      {
-        cmd.Connection.Open();
-        openedConnections.Add(cmd.Connection);
-      }
-    }
-
-    protected override int Update(DataRow[] dataRows, DataTableMapping tableMapping)
-    {
-
-      List<MySqlConnection> connectionsOpened = new List<MySqlConnection>();
-
-      try
-      {
-        // Open connections for insert/update/update commands, if 
-        // connections are closed.
-        foreach (DataRow row in dataRows)
+        switch (state)
         {
-          OpenConnectionIfClosed(row.RowState, connectionsOpened);
+            case DataRowState.Added:
+                cmd = this.InsertCommand;
+                break;
+            case DataRowState.Deleted:
+                cmd = this.DeleteCommand;
+                break;
+            case DataRowState.Modified:
+                cmd = this.UpdateCommand;
+                break;
+            default: return;
         }
 
-        int ret = base.Update(dataRows, tableMapping);
-
-        return ret;
-      }
-      finally
-      {
-        foreach (MySqlConnection c in connectionsOpened)
-          c.Close();
-      }
+        if (cmd != null && cmd.Connection != null &&
+            cmd.Connection.connectionState == ConnectionState.Closed)
+        {
+            cmd.Connection.Open ();
+            openedConnections.Add (cmd.Connection);
+        }
     }
 
-    #region Batching Support
+    protected override int Update (DataRow [] dataRows, DataTableMapping tableMapping)
+    {
+        List <MySqlConnection> connectionsOpened = new List <MySqlConnection> ();
+
+        try
+        {
+            // Open connections for insert/update/update commands, if 
+            // connections are closed.
+            foreach (DataRow row in dataRows)
+                this.OpenConnectionIfClosed (row.RowState, connectionsOpened);
+
+            int ret = base.Update (dataRows, tableMapping);
+
+            return ret;
+        }
+        finally
+        {
+            foreach (MySqlConnection c in connectionsOpened)
+                c.Close ();
+        }
+    }
+
+#region Batching Support
+
     /// <summary>
     /// Gets or sets a value that enables or disables batch processing support, 
     /// and specifies the number of commands that can be executed in a batch.
@@ -454,16 +457,16 @@ namespace EVESharp.Database.MySql
     /// </remarks>
     public override int UpdateBatchSize
     {
-      get { return updateBatchSize; }
-      set { updateBatchSize = value; }
+        get => this.updateBatchSize;
+        set => this.updateBatchSize = value;
     }
 
     /// <summary>
     /// Initializes batching for the <see cref="MySqlDataAdapter"/>.
     /// </summary>
-    protected override void InitializeBatching()
+    protected override void InitializeBatching ()
     {
-      commandBatch = new List<IDbCommand>();
+        this.commandBatch = new List <IDbCommand> ();
     }
 
     /// <summary>
@@ -471,65 +474,75 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="command">The <see cref="IDbCommand"/> to add to the batch.</param>
     /// <returns>The number of commands in the batch before adding the <see cref="IDbCommand"/>.</returns>
-    protected override int AddToBatch(IDbCommand command)
+    protected override int AddToBatch (IDbCommand command)
     {
-      // the first time each command is asked to be batched, we ask
-      // that command to prepare its batchable command text. We only want
-      // to do this one time for each command
-      MySqlCommand commandToBatch = (MySqlCommand)command;
-      if (commandToBatch.BatchableCommandText == null)
-        commandToBatch.GetCommandTextForBatching();
+        // the first time each command is asked to be batched, we ask
+        // that command to prepare its batchable command text. We only want
+        // to do this one time for each command
+        MySqlCommand commandToBatch = (MySqlCommand) command;
 
-      IDbCommand cloneCommand = (IDbCommand)((ICloneable)command).Clone();
-      commandBatch.Add(cloneCommand);
+        if (commandToBatch.BatchableCommandText == null)
+            commandToBatch.GetCommandTextForBatching ();
 
-      return commandBatch.Count - 1;
+        IDbCommand cloneCommand = (IDbCommand) ((ICloneable) command).Clone ();
+        this.commandBatch.Add (cloneCommand);
+
+        return this.commandBatch.Count - 1;
     }
 
     /// <summary>
     /// Executes the current batch.
     /// </summary>
     /// <returns>The return value from the last command in the batch.</returns>
-    protected override int ExecuteBatch()
+    protected override int ExecuteBatch ()
     {
-      int recordsAffected = 0;
-      int index = 0;
-      while (index < commandBatch.Count)
-      {
-        MySqlCommand cmd = (MySqlCommand)commandBatch[index++];
-        for (int index2 = index; index2 < commandBatch.Count; index2++, index++)
+        int recordsAffected = 0;
+        int index           = 0;
+
+        while (index < this.commandBatch.Count)
         {
-          MySqlCommand cmd2 = (MySqlCommand)commandBatch[index2];
-          if (cmd2.BatchableCommandText == null ||
-            cmd2.CommandText != cmd.CommandText) break;
-          cmd.AddToBatch(cmd2);
+            MySqlCommand cmd = (MySqlCommand) this.commandBatch [index++];
+
+            for (int index2 = index; index2 < this.commandBatch.Count; index2++, index++)
+            {
+                MySqlCommand cmd2 = (MySqlCommand) this.commandBatch [index2];
+
+                if (cmd2.BatchableCommandText == null ||
+                    cmd2.CommandText != cmd.CommandText)
+                    break;
+
+                cmd.AddToBatch (cmd2);
+            }
+
+            recordsAffected += cmd.ExecuteNonQuery ();
         }
-        recordsAffected += cmd.ExecuteNonQuery();
-      }
-      return recordsAffected;
+
+        return recordsAffected;
     }
 
     /// <summary>
     /// Removes all <see cref="IDbCommand"/> objects from the batch.
     /// </summary>
-    protected override void ClearBatch()
+    protected override void ClearBatch ()
     {
-      if (commandBatch.Count > 0)
-      {
-        MySqlCommand cmd = (MySqlCommand)commandBatch[0];
-        if (cmd.Batch != null)
-          cmd.Batch.Clear();
-      }
-      commandBatch.Clear();
+        if (this.commandBatch.Count > 0)
+        {
+            MySqlCommand cmd = (MySqlCommand) this.commandBatch [0];
+
+            if (cmd.Batch != null)
+                cmd.Batch.Clear ();
+        }
+
+        this.commandBatch.Clear ();
     }
 
     /// <summary>
     /// Ends batching for the <see cref="MySqlDataAdapter"/>.
     /// </summary>
-    protected override void TerminateBatching()
+    protected override void TerminateBatching ()
     {
-      ClearBatch();
-      commandBatch = null;
+        this.ClearBatch ();
+        this.commandBatch = null;
     }
 
     /// <summary>
@@ -538,12 +551,12 @@ namespace EVESharp.Database.MySql
     /// <param name="commandIdentifier">The index of the command to retrieve the parameter from.</param>
     /// <param name="parameterIndex">The index of the parameter within the command.</param>
     /// <returns>The <see cref="IDataParameter"/> specified.</returns>
-    protected override IDataParameter GetBatchedParameter(int commandIdentifier, int parameterIndex)
+    protected override IDataParameter GetBatchedParameter (int commandIdentifier, int parameterIndex)
     {
-      return (IDataParameter)commandBatch[commandIdentifier].Parameters[parameterIndex];
+        return (IDataParameter) this.commandBatch [commandIdentifier].Parameters [parameterIndex];
     }
 
-    #endregion
+#endregion
 
     /// <summary>
     /// Overridden. See <see cref="DbDataAdapter.CreateRowUpdatedEvent"/>.
@@ -553,9 +566,10 @@ namespace EVESharp.Database.MySql
     /// <param name="statementType"></param>
     /// <param name="tableMapping"></param>
     /// <returns></returns>
-    override protected RowUpdatedEventArgs CreateRowUpdatedEvent(DataRow dataRow, IDbCommand command, StatementType statementType, DataTableMapping tableMapping)
+    protected override RowUpdatedEventArgs CreateRowUpdatedEvent
+        (DataRow dataRow, IDbCommand command, StatementType statementType, DataTableMapping tableMapping)
     {
-      return new MySqlRowUpdatedEventArgs(dataRow, command, statementType, tableMapping);
+        return new MySqlRowUpdatedEventArgs (dataRow, command, statementType, tableMapping);
     }
 
     /// <summary>
@@ -566,41 +580,44 @@ namespace EVESharp.Database.MySql
     /// <param name="statementType">Whether the command is an UPDATE, INSERT, DELETE, or SELECT statement.</param>
     /// <param name="tableMapping">A <see cref="DataTableMapping"/> object.</param>
     /// <returns></returns>
-    override protected RowUpdatingEventArgs CreateRowUpdatingEvent(DataRow dataRow, IDbCommand command, StatementType statementType, DataTableMapping tableMapping)
+    protected override RowUpdatingEventArgs CreateRowUpdatingEvent
+        (DataRow dataRow, IDbCommand command, StatementType statementType, DataTableMapping tableMapping)
     {
-      return new MySqlRowUpdatingEventArgs(dataRow, command, statementType, tableMapping);
+        return new MySqlRowUpdatingEventArgs (dataRow, command, statementType, tableMapping);
     }
 
     /// <summary>
     /// Overridden. Raises the RowUpdating event.
     /// </summary>
     /// <param name="value">A MySqlRowUpdatingEventArgs that contains the event data.</param>
-    override protected void OnRowUpdating(RowUpdatingEventArgs value)
+    protected override void OnRowUpdating (RowUpdatingEventArgs value)
     {
-      if (RowUpdating != null)
-        RowUpdating(this, (value as MySqlRowUpdatingEventArgs));
+        if (this.RowUpdating != null)
+            this.RowUpdating (this, value as MySqlRowUpdatingEventArgs);
     }
 
     /// <summary>
     /// Overridden. Raises the RowUpdated event.
     /// </summary>
     /// <param name="value">A MySqlRowUpdatedEventArgs that contains the event data. </param>
-    override protected void OnRowUpdated(RowUpdatedEventArgs value)
+    protected override void OnRowUpdated (RowUpdatedEventArgs value)
     {
-      if (RowUpdated != null)
-        RowUpdated(this, (value as MySqlRowUpdatedEventArgs));
+        if (this.RowUpdated != null)
+            this.RowUpdated (this, value as MySqlRowUpdatedEventArgs);
     }
 
-    #region Async
-    #region Fill
+#region Async
+
+#region Fill
+
     /// <summary>
     /// Asynchronous version of the <see cref="DataAdapter.Fill"/> method.
     /// </summary>
     /// <param name="dataSet">The <see cref="DataSet"/> to fill records with.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataSet"/>.</returns>
-    public Task<int> FillAsync(DataSet dataSet)
+    public Task <int> FillAsync (DataSet dataSet)
     {
-      return FillAsync(dataSet, CancellationToken.None);
+        return this.FillAsync (dataSet, CancellationToken.None);
     }
 
     /// <summary>
@@ -609,26 +626,24 @@ namespace EVESharp.Database.MySql
     /// <param name="dataSet">The <see cref="DataSet"/> to fill records with.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataSet"/>.</returns>
-    public Task<int> FillAsync(DataSet dataSet, CancellationToken cancellationToken)
+    public Task <int> FillAsync (DataSet dataSet, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataSet);
-          result.SetResult(fillResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int fillResult = this.Fill (dataSet);
+                result.SetResult (fillResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -636,9 +651,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="dataTable">The name of the <see cref="DataTable"/> to use for table mapping.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>.</returns>
-    public Task<int> FillAsync(DataTable dataTable)
+    public Task <int> FillAsync (DataTable dataTable)
     {
-      return FillAsync(dataTable, CancellationToken.None);
+        return this.FillAsync (dataTable, CancellationToken.None);
     }
 
     /// <summary>
@@ -647,26 +662,24 @@ namespace EVESharp.Database.MySql
     /// <param name="dataTable">The name of the <see cref="DataTable"/> to use for table mapping.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>.</returns>
-    public Task<int> FillAsync(DataTable dataTable, CancellationToken cancellationToken)
+    public Task <int> FillAsync (DataTable dataTable, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataTable);
-          result.SetResult(fillResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int fillResult = this.Fill (dataTable);
+                result.SetResult (fillResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -675,9 +688,9 @@ namespace EVESharp.Database.MySql
     /// <param name="dataSet">The <see cref="DataSet"/> to fill with records.</param>
     /// <param name="srcTable">The name of the source table to use for table mapping.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataSet"/>.</returns>
-    public Task<int> FillAsync(DataSet dataSet, string srcTable)
+    public Task <int> FillAsync (DataSet dataSet, string srcTable)
     {
-      return FillAsync(dataSet, srcTable, CancellationToken.None);
+        return this.FillAsync (dataSet, srcTable, CancellationToken.None);
     }
 
     /// <summary>
@@ -687,26 +700,24 @@ namespace EVESharp.Database.MySql
     /// <param name="srcTable">The name of the source table to use for table mapping.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataSet"/>.</returns>
-    public Task<int> FillAsync(DataSet dataSet, string srcTable, CancellationToken cancellationToken)
+    public Task <int> FillAsync (DataSet dataSet, string srcTable, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataSet, srcTable);
-          result.SetResult(fillResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int fillResult = this.Fill (dataSet, srcTable);
+                result.SetResult (fillResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -715,9 +726,9 @@ namespace EVESharp.Database.MySql
     /// <param name="dataTable">The <see cref="DataTable"/> to fill with records.</param>
     /// <param name="dataReader">An instance of <see cref="IDataReader"/>.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>.</returns>
-    public Task<int> FillAsync(DataTable dataTable, IDataReader dataReader)
+    public Task <int> FillAsync (DataTable dataTable, IDataReader dataReader)
     {
-      return FillAsync(dataTable, dataReader, CancellationToken.None);
+        return this.FillAsync (dataTable, dataReader, CancellationToken.None);
     }
 
     /// <summary>
@@ -727,26 +738,24 @@ namespace EVESharp.Database.MySql
     /// <param name="dataReader">An instance of <see cref="IDataReader"/>.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>.</returns>
-    public Task<int> FillAsync(DataTable dataTable, IDataReader dataReader, CancellationToken cancellationToken)
+    public Task <int> FillAsync (DataTable dataTable, IDataReader dataReader, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataTable, dataReader);
-          result.SetResult(fillResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int fillResult = base.Fill (dataTable, dataReader);
+                result.SetResult (fillResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -756,9 +765,9 @@ namespace EVESharp.Database.MySql
     /// <param name="command">The SQL SELECT statement used to retrieve rows from the data source.</param>
     /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>.</returns>
-    public Task<int> FillAsync(DataTable dataTable, IDbCommand command, CommandBehavior behavior)
+    public Task <int> FillAsync (DataTable dataTable, IDbCommand command, CommandBehavior behavior)
     {
-      return FillAsync(dataTable, command, behavior, CancellationToken.None);
+        return this.FillAsync (dataTable, command, behavior, CancellationToken.None);
     }
 
     /// <summary>
@@ -769,26 +778,24 @@ namespace EVESharp.Database.MySql
     /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>.</returns>
-    public Task<int> FillAsync(DataTable dataTable, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
+    public Task <int> FillAsync (DataTable dataTable, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataTable, command, behavior);
-          result.SetResult(fillResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int fillResult = this.Fill (dataTable, command, behavior);
+                result.SetResult (fillResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -798,9 +805,9 @@ namespace EVESharp.Database.MySql
     /// <param name="maxRecords">The max number of affected records.</param>
     /// <param name="dataTables">The <see cref="DataTable"/>s to fill with records.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>.</returns>
-    public Task<int> FillAsync(int startRecord, int maxRecords, params DataTable[] dataTables)
+    public Task <int> FillAsync (int startRecord, int maxRecords, params DataTable [] dataTables)
     {
-      return FillAsync(startRecord, maxRecords, CancellationToken.None, dataTables);
+        return this.FillAsync (startRecord, maxRecords, CancellationToken.None, dataTables);
     }
 
     /// <summary>
@@ -811,26 +818,24 @@ namespace EVESharp.Database.MySql
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <param name="dataTables">The <see cref="DataTable"/>s to fill with records.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>.</returns>
-    public Task<int> FillAsync(int startRecord, int maxRecords, CancellationToken cancellationToken, params DataTable[] dataTables)
+    public Task <int> FillAsync (int startRecord, int maxRecords, CancellationToken cancellationToken, params DataTable [] dataTables)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(startRecord, maxRecords, dataTables);
-          result.SetResult(fillResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int fillResult = this.Fill (startRecord, maxRecords, dataTables);
+                result.SetResult (fillResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -841,9 +846,9 @@ namespace EVESharp.Database.MySql
     /// <param name="maxRecords">The max number of affected records.</param>
     /// <param name="srcTable">The name of the source table to use for table mapping.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataSet"/>.</returns>
-    public Task<int> FillAsync(DataSet dataSet, int startRecord, int maxRecords, string srcTable)
+    public Task <int> FillAsync (DataSet dataSet, int startRecord, int maxRecords, string srcTable)
     {
-      return FillAsync(dataSet, startRecord, maxRecords, srcTable, CancellationToken.None);
+        return this.FillAsync (dataSet, startRecord, maxRecords, srcTable, CancellationToken.None);
     }
 
     /// <summary>
@@ -855,26 +860,24 @@ namespace EVESharp.Database.MySql
     /// <param name="srcTable">The name of the source table to use for table mapping.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataSet"/>.</returns>
-    public Task<int> FillAsync(DataSet dataSet, int startRecord, int maxRecords, string srcTable, CancellationToken cancellationToken)
+    public Task <int> FillAsync (DataSet dataSet, int startRecord, int maxRecords, string srcTable, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataSet, startRecord, maxRecords, srcTable);
-          result.SetResult(fillResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int fillResult = this.Fill (dataSet, startRecord, maxRecords, srcTable);
+                result.SetResult (fillResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -886,9 +889,9 @@ namespace EVESharp.Database.MySql
     /// <param name="startRecord">The start record.</param>
     /// <param name="maxRecords">The max number of affected records.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataSet"/>.</returns>
-    public Task<int> FillAsync(DataSet dataSet, string srcTable, IDataReader dataReader, int startRecord, int maxRecords)
+    public Task <int> FillAsync (DataSet dataSet, string srcTable, IDataReader dataReader, int startRecord, int maxRecords)
     {
-      return FillAsync(dataSet, srcTable, dataReader, startRecord, maxRecords, CancellationToken.None);
+        return this.FillAsync (dataSet, srcTable, dataReader, startRecord, maxRecords, CancellationToken.None);
     }
 
     /// <summary>
@@ -901,26 +904,25 @@ namespace EVESharp.Database.MySql
     /// <param name="maxRecords">The max number of affected records.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataSet"/>.</returns>
-    public Task<int> FillAsync(DataSet dataSet, string srcTable, IDataReader dataReader, int startRecord, int maxRecords, CancellationToken cancellationToken)
+    public Task <int> FillAsync
+        (DataSet dataSet, string srcTable, IDataReader dataReader, int startRecord, int maxRecords, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataSet, srcTable, dataReader, startRecord, maxRecords);
-          result.SetResult(fillResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int fillResult = base.Fill (dataSet, srcTable, dataReader, startRecord, maxRecords);
+                result.SetResult (fillResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -932,9 +934,9 @@ namespace EVESharp.Database.MySql
     /// <param name="command">The SQL SELECT statement used to retrieve rows from the data source.</param>
     /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>s.</returns>
-    public Task<int> FillAsync(DataTable[] dataTables, int startRecord, int maxRecords, IDbCommand command, CommandBehavior behavior)
+    public Task <int> FillAsync (DataTable [] dataTables, int startRecord, int maxRecords, IDbCommand command, CommandBehavior behavior)
     {
-      return FillAsync(dataTables, startRecord, maxRecords, command, behavior, CancellationToken.None);
+        return this.FillAsync (dataTables, startRecord, maxRecords, command, behavior, CancellationToken.None);
     }
 
     /// <summary>
@@ -947,26 +949,25 @@ namespace EVESharp.Database.MySql
     /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>s.</returns>
-    public Task<int> FillAsync(DataTable[] dataTables, int startRecord, int maxRecords, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
+    public Task <int> FillAsync
+        (DataTable [] dataTables, int startRecord, int maxRecords, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataTables, startRecord, maxRecords, command, behavior);
-          result.SetResult(fillResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int fillResult = this.Fill (dataTables, startRecord, maxRecords, command, behavior);
+                result.SetResult (fillResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -979,9 +980,9 @@ namespace EVESharp.Database.MySql
     /// <param name="command">The SQL SELECT statement used to retrieve rows from the data source.</param>
     /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>.</returns>
-    public Task<int> FillAsync(DataSet dataSet, int startRecord, int maxRecords, string srcTable, IDbCommand command, CommandBehavior behavior)
+    public Task <int> FillAsync (DataSet dataSet, int startRecord, int maxRecords, string srcTable, IDbCommand command, CommandBehavior behavior)
     {
-      return FillAsync(dataSet, startRecord, maxRecords, srcTable, command, behavior, CancellationToken.None);
+        return this.FillAsync (dataSet, startRecord, maxRecords, srcTable, command, behavior, CancellationToken.None);
     }
 
     /// <summary>
@@ -995,40 +996,42 @@ namespace EVESharp.Database.MySql
     /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of rows successfully added to or refreshed in the <see cref="DataTable"/>.</returns>
-    public Task<int> FillAsync(DataSet dataSet, int startRecord, int maxRecords, string srcTable, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
+    public Task <int> FillAsync
+    (
+        DataSet dataSet, int startRecord, int maxRecords, string srcTable, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken
+    )
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataSet, startRecord, maxRecords, srcTable, command, behavior);
-          result.SetResult(fillResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int fillResult = this.Fill (dataSet, startRecord, maxRecords, srcTable, command, behavior);
+                result.SetResult (fillResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
-    #endregion
+#endregion
 
-    #region FillSchema
+#region FillSchema
+
     /// <summary>
     /// Asynchronous version of the <see cref="DataAdapter.FillSchema"/> method.
     /// </summary>
     /// <param name="dataSet">DataSet to use.</param>
     /// <param name="schemaType">Schema type to use.</param>
     /// <returns><see cref="DataTable"/>[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType)
+    public Task <DataTable []> FillSchemaAsync (DataSet dataSet, SchemaType schemaType)
     {
-      return FillSchemaAsync(dataSet, schemaType, CancellationToken.None);
+        return this.FillSchemaAsync (dataSet, schemaType, CancellationToken.None);
     }
 
     /// <summary>
@@ -1038,26 +1041,24 @@ namespace EVESharp.Database.MySql
     /// <param name="schemaType">Schema type to use.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns><see cref="DataTable"/>[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, CancellationToken cancellationToken)
+    public Task <DataTable []> FillSchemaAsync (DataSet dataSet, SchemaType schemaType, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<DataTable[]>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataSet, schemaType);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <DataTable []> result = new TaskCompletionSource <DataTable []> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                DataTable [] schemaResult = this.FillSchema (dataSet, schemaType);
+                result.SetResult (schemaResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -1067,9 +1068,9 @@ namespace EVESharp.Database.MySql
     /// <param name="schemaType">Schema type to use.</param>
     /// <param name="srcTable">Source table to use.</param>
     /// <returns><see cref="DataTable"/>[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, string srcTable)
+    public Task <DataTable []> FillSchemaAsync (DataSet dataSet, SchemaType schemaType, string srcTable)
     {
-      return FillSchemaAsync(dataSet, schemaType, srcTable, CancellationToken.None);
+        return this.FillSchemaAsync (dataSet, schemaType, srcTable, CancellationToken.None);
     }
 
     /// <summary>
@@ -1080,26 +1081,24 @@ namespace EVESharp.Database.MySql
     /// <param name="srcTable">Source table to use.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns><see cref="DataTable"/>[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, string srcTable, CancellationToken cancellationToken)
+    public Task <DataTable []> FillSchemaAsync (DataSet dataSet, SchemaType schemaType, string srcTable, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<DataTable[]>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataSet, schemaType, srcTable);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <DataTable []> result = new TaskCompletionSource <DataTable []> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                DataTable [] schemaResult = this.FillSchema (dataSet, schemaType, srcTable);
+                result.SetResult (schemaResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -1110,9 +1109,9 @@ namespace EVESharp.Database.MySql
     /// <param name="srcTable">Source table to use.</param>
     /// <param name="dataReader">DataReader to use.</param>
     /// <returns><see cref="DataTable"/>[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, string srcTable, IDataReader dataReader)
+    public Task <DataTable []> FillSchemaAsync (DataSet dataSet, SchemaType schemaType, string srcTable, IDataReader dataReader)
     {
-      return FillSchemaAsync(dataSet, schemaType, srcTable, dataReader, CancellationToken.None);
+        return this.FillSchemaAsync (dataSet, schemaType, srcTable, dataReader, CancellationToken.None);
     }
 
     /// <summary>
@@ -1124,26 +1123,25 @@ namespace EVESharp.Database.MySql
     /// <param name="dataReader"><see cref="IDataReader"/> to use.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns><see cref="DataTable"/>[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, string srcTable, IDataReader dataReader, CancellationToken cancellationToken)
+    public Task <DataTable []> FillSchemaAsync
+        (DataSet dataSet, SchemaType schemaType, string srcTable, IDataReader dataReader, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<DataTable[]>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataSet, schemaType, srcTable, dataReader);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <DataTable []> result = new TaskCompletionSource <DataTable []> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                DataTable [] schemaResult = base.FillSchema (dataSet, schemaType, srcTable, dataReader);
+                result.SetResult (schemaResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -1155,9 +1153,9 @@ namespace EVESharp.Database.MySql
     /// <param name="srcTable">Source table to use.</param>
     /// <param name="behavior">Command Behavior</param>
     /// <returns><see cref="DataTable"/>[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, IDbCommand command, string srcTable, CommandBehavior behavior)
+    public Task <DataTable []> FillSchemaAsync (DataSet dataSet, SchemaType schemaType, IDbCommand command, string srcTable, CommandBehavior behavior)
     {
-      return FillSchemaAsync(dataSet, schemaType, command, srcTable, behavior, CancellationToken.None);
+        return this.FillSchemaAsync (dataSet, schemaType, command, srcTable, behavior, CancellationToken.None);
     }
 
     /// <summary>
@@ -1170,26 +1168,25 @@ namespace EVESharp.Database.MySql
     /// <param name="behavior">Command Behavior</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns><see cref="DataTable"/>[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, IDbCommand command, string srcTable, CommandBehavior behavior, CancellationToken cancellationToken)
+    public Task <DataTable []> FillSchemaAsync
+        (DataSet dataSet, SchemaType schemaType, IDbCommand command, string srcTable, CommandBehavior behavior, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<DataTable[]>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataSet, schemaType, command, srcTable, behavior);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <DataTable []> result = new TaskCompletionSource <DataTable []> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                DataTable [] schemaResult = this.FillSchema (dataSet, schemaType, command, srcTable, behavior);
+                result.SetResult (schemaResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -1198,9 +1195,9 @@ namespace EVESharp.Database.MySql
     /// <param name="dataTable">DataTable to use.</param>
     /// <param name="schemaType">Schema type to use.</param>
     /// <returns>DataTable</returns>
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType)
+    public Task <DataTable> FillSchemaAsync (DataTable dataTable, SchemaType schemaType)
     {
-      return FillSchemaAsync(dataTable, schemaType, CancellationToken.None);
+        return this.FillSchemaAsync (dataTable, schemaType, CancellationToken.None);
     }
 
     /// <summary>
@@ -1210,26 +1207,24 @@ namespace EVESharp.Database.MySql
     /// <param name="schemaType">Schema type to use.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns><see cref="DataTable"/></returns>
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType, CancellationToken cancellationToken)
+    public Task <DataTable> FillSchemaAsync (DataTable dataTable, SchemaType schemaType, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<DataTable>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataTable, schemaType);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <DataTable> result = new TaskCompletionSource <DataTable> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                DataTable schemaResult = this.FillSchema (dataTable, schemaType);
+                result.SetResult (schemaResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -1239,9 +1234,9 @@ namespace EVESharp.Database.MySql
     /// <param name="schemaType">Schema type to use.</param>
     /// <param name="dataReader">DataReader to use.</param>
     /// <returns><see cref="DataTable"/></returns>
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType, IDataReader dataReader)
+    public Task <DataTable> FillSchemaAsync (DataTable dataTable, SchemaType schemaType, IDataReader dataReader)
     {
-      return FillSchemaAsync(dataTable, schemaType, dataReader, CancellationToken.None);
+        return this.FillSchemaAsync (dataTable, schemaType, dataReader, CancellationToken.None);
     }
 
     /// <summary>
@@ -1252,26 +1247,24 @@ namespace EVESharp.Database.MySql
     /// <param name="dataReader">DataReader to use.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns><see cref="DataTable"/></returns>
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType, IDataReader dataReader, CancellationToken cancellationToken)
+    public Task <DataTable> FillSchemaAsync (DataTable dataTable, SchemaType schemaType, IDataReader dataReader, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<DataTable>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataTable, schemaType, dataReader);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <DataTable> result = new TaskCompletionSource <DataTable> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                DataTable schemaResult = base.FillSchema (dataTable, schemaType, dataReader);
+                result.SetResult (schemaResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -1282,9 +1275,9 @@ namespace EVESharp.Database.MySql
     /// <param name="command">DBCommand to use.</param>
     /// <param name="behavior">Command Behavior</param>
     /// <returns><see cref="DataTable"/></returns>
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType, IDbCommand command, CommandBehavior behavior)
+    public Task <DataTable> FillSchemaAsync (DataTable dataTable, SchemaType schemaType, IDbCommand command, CommandBehavior behavior)
     {
-      return FillSchemaAsync(dataTable, schemaType, command, behavior, CancellationToken.None);
+        return this.FillSchemaAsync (dataTable, schemaType, command, behavior, CancellationToken.None);
     }
 
     /// <summary>
@@ -1296,39 +1289,39 @@ namespace EVESharp.Database.MySql
     /// <param name="behavior">Command behavior.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns><see cref="DataTable"/></returns>
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
+    public Task <DataTable> FillSchemaAsync
+        (DataTable dataTable, SchemaType schemaType, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<DataTable>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataTable, schemaType, command, behavior);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <DataTable> result = new TaskCompletionSource <DataTable> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                DataTable schemaResult = this.FillSchema (dataTable, schemaType, command, behavior);
+                result.SetResult (schemaResult);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
-    #endregion
+#endregion
 
-    #region Update
+#region Update
+
     /// <summary>
     /// Asynchronous version of the <see cref="DataAdapter.Update"/> method.
     /// </summary>
     /// <param name="dataRows">DataRow[] to use.</param>
     /// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-    public Task<int> UpdateAsync(DataRow[] dataRows)
+    public Task <int> UpdateAsync (DataRow [] dataRows)
     {
-      return UpdateAsync(dataRows, CancellationToken.None);
+        return this.UpdateAsync (dataRows, CancellationToken.None);
     }
 
     /// <summary>
@@ -1337,27 +1330,24 @@ namespace EVESharp.Database.MySql
     /// <param name="dataRows">DataRow[] to use.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-
-    public Task<int> UpdateAsync(DataRow[] dataRows, CancellationToken cancellationToken)
+    public Task <int> UpdateAsync (DataRow [] dataRows, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var update = base.Update(dataRows);
-          result.SetResult(update);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int update = base.Update (dataRows);
+                result.SetResult (update);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -1365,10 +1355,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="dataSet">DataSet to use.</param>
     /// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-
-    public Task<int> UpdateAsync(DataSet dataSet)
+    public Task <int> UpdateAsync (DataSet dataSet)
     {
-      return UpdateAsync(dataSet, CancellationToken.None);
+        return this.UpdateAsync (dataSet, CancellationToken.None);
     }
 
     /// <summary>
@@ -1377,27 +1366,24 @@ namespace EVESharp.Database.MySql
     /// <param name="dataSet">DataSet to use.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-
-    public Task<int> UpdateAsync(DataSet dataSet, CancellationToken cancellationToken)
+    public Task <int> UpdateAsync (DataSet dataSet, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var update = base.Update(dataSet);
-          result.SetResult(update);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int update = base.Update (dataSet);
+                result.SetResult (update);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -1405,10 +1391,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="dataTable">DataTable to use.</param>
     /// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-
-    public Task<int> UpdateAsync(DataTable dataTable)
+    public Task <int> UpdateAsync (DataTable dataTable)
     {
-      return UpdateAsync(dataTable, CancellationToken.None);
+        return this.UpdateAsync (dataTable, CancellationToken.None);
     }
 
     /// <summary>
@@ -1417,27 +1402,24 @@ namespace EVESharp.Database.MySql
     /// <param name="dataTable">DataTable to use.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-
-    public Task<int> UpdateAsync(DataTable dataTable, CancellationToken cancellationToken)
+    public Task <int> UpdateAsync (DataTable dataTable, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var update = base.Update(dataTable);
-          result.SetResult(update);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int update = base.Update (dataTable);
+                result.SetResult (update);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -1446,10 +1428,9 @@ namespace EVESharp.Database.MySql
     /// <param name="dataRows">DataRow[] to use.</param>
     /// <param name="tableMapping">Data Table Mapping</param>
     /// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-
-    public Task<int> UpdateAsync(DataRow[] dataRows, DataTableMapping tableMapping)
+    public Task <int> UpdateAsync (DataRow [] dataRows, DataTableMapping tableMapping)
     {
-      return UpdateAsync(dataRows, tableMapping, CancellationToken.None);
+        return this.UpdateAsync (dataRows, tableMapping, CancellationToken.None);
     }
 
     /// <summary>
@@ -1459,27 +1440,24 @@ namespace EVESharp.Database.MySql
     /// <param name="tableMapping">Data Table Mapping</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-
-    public Task<int> UpdateAsync(DataRow[] dataRows, DataTableMapping tableMapping, CancellationToken cancellationToken)
+    public Task <int> UpdateAsync (DataRow [] dataRows, DataTableMapping tableMapping, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var update = base.Update(dataRows, tableMapping);
-          result.SetResult(update);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int update = base.Update (dataRows, tableMapping);
+                result.SetResult (update);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
     /// <summary>
@@ -1488,10 +1466,9 @@ namespace EVESharp.Database.MySql
     /// <param name="dataSet">DataSet to use.</param>
     /// <param name="srcTable">Source table to use.</param>
     /// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-
-    public Task<int> UpdateAsync(DataSet dataSet, string srcTable)
+    public Task <int> UpdateAsync (DataSet dataSet, string srcTable)
     {
-      return UpdateAsync(dataSet, srcTable, CancellationToken.None);
+        return this.UpdateAsync (dataSet, srcTable, CancellationToken.None);
     }
 
     /// <summary>
@@ -1501,49 +1478,46 @@ namespace EVESharp.Database.MySql
     /// <param name="srcTable">Source table to use.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> to use.</param>
     /// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-
-    public Task<int> UpdateAsync(DataSet dataSet, string srcTable, CancellationToken cancellationToken)
+    public Task <int> UpdateAsync (DataSet dataSet, string srcTable, CancellationToken cancellationToken)
     {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var update = base.Update(dataSet, srcTable);
-          result.SetResult(update);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
+        TaskCompletionSource <int> result = new TaskCompletionSource <int> ();
+
+        if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
+            try
+            {
+                int update = base.Update (dataSet, srcTable);
+                result.SetResult (update);
+            }
+            catch (Exception ex)
+            {
+                result.SetException (ex);
+            }
+        else
+            result.SetCanceled ();
+
+        return result.Task;
     }
 
-    #endregion
-    #endregion
+#endregion
 
-  }
+#endregion
+}
 
-  /// <summary>
-  /// Represents the method that will handle the <see cref="MySqlDataAdapter.RowUpdating"/> event of a <see cref="MySqlDataAdapter"/>.
-  /// </summary>
-  public delegate void MySqlRowUpdatingEventHandler(object sender, MySqlRowUpdatingEventArgs e);
+/// <summary>
+/// Represents the method that will handle the <see cref="MySqlDataAdapter.RowUpdating"/> event of a <see cref="MySqlDataAdapter"/>.
+/// </summary>
+public delegate void MySqlRowUpdatingEventHandler (object sender, MySqlRowUpdatingEventArgs e);
 
-  /// <summary>
-  /// Represents the method that will handle the <see cref="MySqlDataAdapter.RowUpdated"/> event of a <see cref="MySqlDataAdapter"/>.
-  /// </summary>
-  public delegate void MySqlRowUpdatedEventHandler(object sender, MySqlRowUpdatedEventArgs e);
+/// <summary>
+/// Represents the method that will handle the <see cref="MySqlDataAdapter.RowUpdated"/> event of a <see cref="MySqlDataAdapter"/>.
+/// </summary>
+public delegate void MySqlRowUpdatedEventHandler (object sender, MySqlRowUpdatedEventArgs e);
 
-  /// <summary>
-  /// Provides data for the RowUpdating event. This class cannot be inherited.
-  /// </summary>
-  public sealed class MySqlRowUpdatingEventArgs : RowUpdatingEventArgs
-  {
+/// <summary>
+/// Provides data for the RowUpdating event. This class cannot be inherited.
+/// </summary>
+public sealed class MySqlRowUpdatingEventArgs : RowUpdatingEventArgs
+{
     /// <summary>
     /// Initializes a new instance of the MySqlRowUpdatingEventArgs class.
     /// </summary>
@@ -1552,26 +1526,24 @@ namespace EVESharp.Database.MySql
     /// <param name="command">The <see cref="IDbCommand"/> to execute during <see cref="DbDataAdapter.Update(DataSet)"/>.</param>
     /// <param name="statementType">One of the <see cref="StatementType"/> values that specifies the type of query executed.</param>
     /// <param name="tableMapping">The <see cref="DataTableMapping"/> sent through an <see cref="DbDataAdapter.Update(DataSet)"/>.</param>
-    public MySqlRowUpdatingEventArgs(DataRow row, IDbCommand command, StatementType statementType, DataTableMapping tableMapping)
-      : base(row, command, statementType, tableMapping)
-    {
-    }
+    public MySqlRowUpdatingEventArgs (DataRow row, IDbCommand command, StatementType statementType, DataTableMapping tableMapping)
+        : base (row, command, statementType, tableMapping) { }
 
     /// <summary>
     /// Gets or sets the MySqlCommand to execute when performing the Update.
     /// </summary>
-    new public MySqlCommand Command
+    public new MySqlCommand Command
     {
-      get { return (MySqlCommand)base.Command; }
-      set { base.Command = value; }
+        get => (MySqlCommand) base.Command;
+        set => base.Command = value;
     }
-  }
+}
 
-  /// <summary>
-  /// Provides data for the RowUpdated event. This class cannot be inherited.
-  /// </summary>
-  public sealed class MySqlRowUpdatedEventArgs : RowUpdatedEventArgs
-  {
+/// <summary>
+/// Provides data for the RowUpdated event. This class cannot be inherited.
+/// </summary>
+public sealed class MySqlRowUpdatedEventArgs : RowUpdatedEventArgs
+{
     /// <summary>
     /// Initializes a new instance of the MySqlRowUpdatedEventArgs class.
     /// </summary>
@@ -1579,17 +1551,11 @@ namespace EVESharp.Database.MySql
     /// <param name="command">The <see cref="IDbCommand"/> executed when <see cref="DbDataAdapter.Update(DataSet)"/> is called.</param>
     /// <param name="statementType">One of the <see cref="StatementType"/> values that specifies the type of query executed.</param>
     /// <param name="tableMapping">The <see cref="DataTableMapping"/> sent through an <see cref="DbDataAdapter.Update(DataSet)"/>.</param>
-    public MySqlRowUpdatedEventArgs(DataRow row, IDbCommand command, StatementType statementType, DataTableMapping tableMapping)
-      : base(row, command, statementType, tableMapping)
-    {
-    }
+    public MySqlRowUpdatedEventArgs (DataRow row, IDbCommand command, StatementType statementType, DataTableMapping tableMapping)
+        : base (row, command, statementType, tableMapping) { }
 
     /// <summary>
     /// Gets or sets the MySqlCommand executed when Update is called.
     /// </summary>
-    new public MySqlCommand Command
-    {
-      get { return (MySqlCommand)base.Command; }
-    }
-  }
+    public new MySqlCommand Command => (MySqlCommand) base.Command;
 }

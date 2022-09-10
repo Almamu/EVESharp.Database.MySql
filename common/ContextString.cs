@@ -30,142 +30,155 @@ using System;
 using System.Collections;
 using System.Text;
 
-namespace EVESharp.Database.MySql.Common
+namespace EVESharp.Database.MySql.Common;
+
+internal class ContextString
 {
-  internal class ContextString
-  {
-    readonly bool _escapeBackslash;
+    private readonly bool _escapeBackslash;
 
     // Create a private ctor so the compiler doesn't give us a default one
-    public ContextString(string contextMarkers, bool escapeBackslash)
+    public ContextString (string contextMarkers, bool escapeBackslash)
     {
-      ContextMarkers = contextMarkers;
-      _escapeBackslash = escapeBackslash;
+        this.ContextMarkers   = contextMarkers;
+        this._escapeBackslash = escapeBackslash;
     }
 
     public string ContextMarkers { get; set; }
 
-    public int IndexOf(string src, string target)
+    public int IndexOf (string src, string target)
     {
-      return IndexOf(src, target, 0);
+        return this.IndexOf (src, target, 0);
     }
 
-    public int IndexOf(string src, string target, int startIndex)
+    public int IndexOf (string src, string target, int startIndex)
     {
-      int index = src.IndexOf(target, startIndex);
-      while (index != -1)
-      {
-        if (!IndexInQuotes(src, index, startIndex)) break;
-        index = src.IndexOf(target, index + 1);
-      }
-      return index;
-    }
+        int index = src.IndexOf (target, startIndex);
 
-    private bool IndexInQuotes(string src, int index, int startIndex)
-    {
-      char contextMarker = Char.MinValue;
-      bool escaped = false;
-
-      for (int i = startIndex; i < index; i++)
-      {
-        char c = src[i];
-
-        int contextIndex = ContextMarkers.IndexOf(c);
-
-        // if we have found the closing marker for our open marker, then close the context
-        if (contextIndex > -1 && contextMarker == ContextMarkers[contextIndex] && !escaped)
-          contextMarker = Char.MinValue;
-
-        // if we have found a context marker and we are not in a context yet, then start one
-        else if (contextMarker == Char.MinValue && contextIndex > -1 && !escaped)
-          contextMarker = c;
-
-        else if (c == '\\' && _escapeBackslash)
-          escaped = !escaped;
-      }
-      return contextMarker != Char.MinValue || escaped;
-    }
-
-    public int IndexOf(string src, char target)
-    {
-      char contextMarker = Char.MinValue;
-      bool escaped = false;
-      int pos = 0;
-
-      foreach (char c in src)
-      {
-        int contextIndex = ContextMarkers.IndexOf(c);
-
-        // if we have found the closing marker for our open marker, then close the context
-        if (contextIndex > -1 && contextMarker == ContextMarkers[contextIndex] && !escaped)
-          contextMarker = Char.MinValue;
-
-        // if we have found a context marker and we are not in a context yet, then start one
-        else if (contextMarker == Char.MinValue && contextIndex > -1 && !escaped)
-          contextMarker = c;
-
-        else if (contextMarker == Char.MinValue && c == target)
-          return pos;
-        else if (c == '\\' && _escapeBackslash)
-          escaped = !escaped;
-        pos++;
-      }
-      return -1;
-    }
-
-    public string[] Split(string src, string delimiters)
-    {
-      ArrayList parts = new ArrayList();
-      StringBuilder sb = new StringBuilder();
-      bool escaped = false;
-
-      char contextMarker = Char.MinValue;
-
-      foreach (char c in src)
-      {
-        if (delimiters.IndexOf(c) != -1 && !escaped)
+        while (index != -1)
         {
-          if (contextMarker != Char.MinValue)
-            sb.Append(c);
-          else
-          {
-            if (sb.Length <= 0) continue;
-            parts.Add(sb.ToString());
-            sb.Remove(0, sb.Length);
-          }
+            if (!this.IndexInQuotes (src, index, startIndex))
+                break;
+
+            index = src.IndexOf (target, index + 1);
         }
-        else if (c == '\\' && _escapeBackslash)
-          escaped = !escaped;
-        else
+
+        return index;
+    }
+
+    private bool IndexInQuotes (string src, int index, int startIndex)
+    {
+        char contextMarker = char.MinValue;
+        bool escaped       = false;
+
+        for (int i = startIndex; i < index; i++)
         {
-          int contextIndex = ContextMarkers.IndexOf(c);
-          if (!escaped && contextIndex != -1)
-          {
-            // if we have found the closing marker for our open 
-            // marker, then close the context
-            if ((contextIndex % 2) == 1)
+            char c = src [i];
+
+            int contextIndex = this.ContextMarkers.IndexOf (c);
+
+            // if we have found the closing marker for our open marker, then close the context
+            if (contextIndex > -1 && contextMarker == this.ContextMarkers [contextIndex] && !escaped)
+                contextMarker = char.MinValue;
+
+            // if we have found a context marker and we are not in a context yet, then start one
+            else if (contextMarker == char.MinValue && contextIndex > -1 && !escaped)
+                contextMarker = c;
+
+            else if (c == '\\' && this._escapeBackslash)
+                escaped = !escaped;
+        }
+
+        return contextMarker != char.MinValue || escaped;
+    }
+
+    public int IndexOf (string src, char target)
+    {
+        char contextMarker = char.MinValue;
+        bool escaped       = false;
+        int  pos           = 0;
+
+        foreach (char c in src)
+        {
+            int contextIndex = this.ContextMarkers.IndexOf (c);
+
+            // if we have found the closing marker for our open marker, then close the context
+            if (contextIndex > -1 && contextMarker == this.ContextMarkers [contextIndex] && !escaped)
+                contextMarker = char.MinValue;
+
+            // if we have found a context marker and we are not in a context yet, then start one
+            else if (contextMarker == char.MinValue && contextIndex > -1 && !escaped)
+                contextMarker = c;
+
+            else if (contextMarker == char.MinValue && c == target)
+                return pos;
+            else if (c == '\\' && this._escapeBackslash)
+                escaped = !escaped;
+
+            pos++;
+        }
+
+        return -1;
+    }
+
+    public string [] Split (string src, string delimiters)
+    {
+        ArrayList     parts   = new ArrayList ();
+        StringBuilder sb      = new StringBuilder ();
+        bool          escaped = false;
+
+        char contextMarker = char.MinValue;
+
+        foreach (char c in src)
+            if (delimiters.IndexOf (c) != -1 && !escaped)
             {
-              if (contextMarker == ContextMarkers[contextIndex - 1])
-                contextMarker = Char.MinValue;
+                if (contextMarker != char.MinValue)
+                {
+                    sb.Append (c);
+                }
+                else
+                {
+                    if (sb.Length <= 0)
+                        continue;
+
+                    parts.Add (sb.ToString ());
+                    sb.Remove (0, sb.Length);
+                }
+            }
+            else if (c == '\\' && this._escapeBackslash)
+            {
+                escaped = !escaped;
             }
             else
             {
-              // if the opening and closing context markers are 
-              // the same then we will always find the opening
-              // marker.
-              if (contextMarker == ContextMarkers[contextIndex + 1])
-                contextMarker = Char.MinValue;
-              else if (contextMarker == Char.MinValue)
-                contextMarker = c;
-            }
-          }
+                int contextIndex = this.ContextMarkers.IndexOf (c);
 
-          sb.Append(c);
-        }
-      }
-      if (sb.Length > 0)
-        parts.Add(sb.ToString());
-      return (string[])parts.ToArray(typeof(string));
+                if (!escaped && contextIndex != -1)
+                {
+                    // if we have found the closing marker for our open 
+                    // marker, then close the context
+                    if (contextIndex % 2 == 1)
+                    {
+                        if (contextMarker == this.ContextMarkers [contextIndex - 1])
+                            contextMarker = char.MinValue;
+                    }
+                    else
+                    {
+                        // if the opening and closing context markers are 
+                        // the same then we will always find the opening
+                        // marker.
+                        if (contextMarker == this.ContextMarkers [contextIndex + 1])
+                            contextMarker = char.MinValue;
+                        else if (contextMarker == char.MinValue)
+                            contextMarker = c;
+                    }
+                }
+
+                sb.Append (c);
+            }
+
+        if (sb.Length > 0)
+            parts.Add (sb.ToString ());
+
+        return (string []) parts.ToArray (typeof (string));
     }
-  }
 }

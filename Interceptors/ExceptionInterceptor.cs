@@ -31,21 +31,20 @@ using System.Collections.Generic;
 using System.Linq;
 using EVESharp.Database.MySql;
 
+namespace EVESharp.Database.MySql.Interceptors;
 
-namespace EVESharp.Database.MySql.Interceptors
+/// <summary>
+/// BaseExceptionInterceptor is the base class that should be used for all userland 
+/// exception interceptors.
+/// </summary>
+public abstract class BaseExceptionInterceptor
 {
-  /// <summary>
-  /// BaseExceptionInterceptor is the base class that should be used for all userland 
-  /// exception interceptors.
-  /// </summary>
-  public abstract class BaseExceptionInterceptor
-  {
     /// <summary>
     /// Returns the received exception.
     /// </summary>
     /// <param name="exception">The exception to be returned.</param>
     /// <returns>The exception originally received.</returns>
-    public abstract Exception InterceptException(Exception exception);
+    public abstract Exception InterceptException (Exception exception);
 
     /// <summary>
     /// Gets the active connection.
@@ -56,75 +55,80 @@ namespace EVESharp.Database.MySql.Interceptors
     /// Initilizes this object by setting the active connection.
     /// </summary>
     /// <param name="connection">The connection to become active.</param>
-    public virtual void Init(MySqlConnection connection)
+    public virtual void Init (MySqlConnection connection)
     {
-      ActiveConnection = connection;
+        this.ActiveConnection = connection;
     }
-  }
+}
 
-  /// <summary>
-  /// StandardExceptionInterceptor is the standard interceptor that simply returns the exception.
-  /// It is the default action.
-  /// </summary>
-  internal sealed class StandardExceptionInterceptor : BaseExceptionInterceptor
-  {
+/// <summary>
+/// StandardExceptionInterceptor is the standard interceptor that simply returns the exception.
+/// It is the default action.
+/// </summary>
+internal sealed class StandardExceptionInterceptor : BaseExceptionInterceptor
+{
     /// <summary>
     /// Returns the received exception, which is the default action
     /// </summary>
     /// <param name="exception">The exception to be returned.</param>
     /// <returns>The exception originally received.</returns>
-    public override Exception InterceptException(Exception exception)
+    public override Exception InterceptException (Exception exception)
     {
-      return exception;
+        return exception;
     }
-  }
+}
 
-  /// <summary>
-  /// ExceptionInterceptor is the "manager" class that keeps the list of registered interceptors
-  /// for the given connection.
-  /// </summary>
-  internal sealed class ExceptionInterceptor : Interceptor
-  {
-    readonly List<BaseExceptionInterceptor> _interceptors = new List<BaseExceptionInterceptor>();
+/// <summary>
+/// ExceptionInterceptor is the "manager" class that keeps the list of registered interceptors
+/// for the given connection.
+/// </summary>
+internal sealed class ExceptionInterceptor : Interceptor
+{
+    private readonly List <BaseExceptionInterceptor> _interceptors = new List <BaseExceptionInterceptor> ();
 
-    public ExceptionInterceptor(MySqlConnection connection) 
+    public ExceptionInterceptor (MySqlConnection connection)
     {
-      Connection = connection;
+        this.Connection = connection;
 
-      LoadInterceptors(connection.Settings.ExceptionInterceptors);
+        this.LoadInterceptors (connection.Settings.ExceptionInterceptors);
 
-      // we always have the standard interceptor
-      _interceptors.Add(new StandardExceptionInterceptor());
-
-    }
-
-    protected override void AddInterceptor(object o)
-    {
-      if (o == null)
-        throw new ArgumentException("Unable to instantiate ExceptionInterceptor");
-
-      if (!(o is BaseExceptionInterceptor))
-        throw new InvalidOperationException(String.Format(Resources.TypeIsNotExceptionInterceptor,
-          o.GetType()));
-      BaseExceptionInterceptor ie = o as BaseExceptionInterceptor;
-      ie.Init(Connection);
-      _interceptors.Insert(0, (BaseExceptionInterceptor)o);
+        // we always have the standard interceptor
+        this._interceptors.Add (new StandardExceptionInterceptor ());
     }
 
-    public void Throw(Exception exception)
+    protected override void AddInterceptor (object o)
     {
-      Exception e = _interceptors.Aggregate(exception, (current, ie) => ie.InterceptException(current));
-      throw e;
+        if (o == null)
+            throw new ArgumentException ("Unable to instantiate ExceptionInterceptor");
+
+        if (!(o is BaseExceptionInterceptor))
+            throw new InvalidOperationException (
+                string.Format (
+                    Resources.TypeIsNotExceptionInterceptor,
+                    o.GetType ()
+                )
+            );
+
+        BaseExceptionInterceptor ie = o as BaseExceptionInterceptor;
+        ie.Init (this.Connection);
+        this._interceptors.Insert (0, (BaseExceptionInterceptor) o);
     }
 
-    protected override string ResolveType(string nameOrType)
+    public void Throw (Exception exception)
     {
-      if (MySqlConfiguration.Settings == null || MySqlConfiguration.Settings.ExceptionInterceptors == null)
-        return base.ResolveType(nameOrType);
-      foreach (InterceptorConfigurationElement e in MySqlConfiguration.Settings.ExceptionInterceptors)
-        if (String.Compare(e.Name, nameOrType, true) == 0)
-          return e.Type;
-      return base.ResolveType(nameOrType);
+        Exception e = this._interceptors.Aggregate (exception, (current, ie) => ie.InterceptException (current));
+        throw e;
     }
-  }
+
+    protected override string ResolveType (string nameOrType)
+    {
+        if (MySqlConfiguration.Settings == null || MySqlConfiguration.Settings.ExceptionInterceptors == null)
+            return base.ResolveType (nameOrType);
+
+        foreach (InterceptorConfigurationElement e in MySqlConfiguration.Settings.ExceptionInterceptors)
+            if (string.Compare (e.Name, nameOrType, true) == 0)
+                return e.Type;
+
+        return base.ResolveType (nameOrType);
+    }
 }

@@ -36,27 +36,27 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 
-namespace EVESharp.Database.MySql
-{
-  /// <summary>
-  /// Represents a parameter to a <see cref="MySqlCommand"/>, This class cannot be inherited.
-  /// </summary>
-  /// <remarks>
-  ///  Parameter names are not case sensitive.
-  /// You can read more about it <see href="https://dev.mysql.com/doc/connector-net/en/connector-net-tutorials-parameters.html">here</see>.
-  /// </remarks>
-  [TypeConverter(typeof(MySqlParameterConverter))]
-  public sealed partial class MySqlParameter : DbParameter, IDbDataParameter
-  {
-    private const int UNSIGNED_MASK = 0x8000;
-    private object _paramValue;
-    private string _paramName;
-    private MySqlDbType _mySqlDbType;
-    private bool _inferType = true;
-    private const int GEOMETRY_LENGTH = 25;
-    private DbType _dbType;
+namespace EVESharp.Database.MySql;
 
-    #region Constructors
+/// <summary>
+/// Represents a parameter to a <see cref="MySqlCommand"/>, This class cannot be inherited.
+/// </summary>
+/// <remarks>
+///  Parameter names are not case sensitive.
+/// You can read more about it <see href="https://dev.mysql.com/doc/connector-net/en/connector-net-tutorials-parameters.html">here</see>.
+/// </remarks>
+[TypeConverter (typeof (MySqlParameterConverter))]
+public sealed partial class MySqlParameter : DbParameter, IDbDataParameter
+{
+    private const int         UNSIGNED_MASK = 0x8000;
+    private       object      _paramValue;
+    private       string      _paramName;
+    private       MySqlDbType _mySqlDbType;
+    private       bool        _inferType      = true;
+    private const int         GEOMETRY_LENGTH = 25;
+    private       DbType      _dbType;
+
+#region Constructors
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MySqlParameter"/> class with the parameter name, the <see cref="MySqlParameter.MySqlDbType"/>, the size, and the source column name.
@@ -65,21 +65,21 @@ namespace EVESharp.Database.MySql
     /// <param name="dbType">One of the <see cref="MySqlParameter.MySqlDbType"/> values. </param>
     /// <param name="size">The length of the parameter. </param>
     /// <param name="sourceColumn">The name of the source column. </param>
-    public MySqlParameter(string parameterName, MySqlDbType dbType, int size, string sourceColumn) : this(parameterName, dbType)
+    public MySqlParameter (string parameterName, MySqlDbType dbType, int size, string sourceColumn) : this (parameterName, dbType)
     {
-      Size = size;
-      Direction = ParameterDirection.Input;
-      SourceColumn = sourceColumn;
-      SourceVersion = DataRowVersion.Default;
+        this.Size          = size;
+        this.Direction     = ParameterDirection.Input;
+        this.SourceColumn  = sourceColumn;
+        this.SourceVersion = DataRowVersion.Default;
     }
 
-    public MySqlParameter()
+    public MySqlParameter ()
     {
-      DbType = DbType.String;
-      MySqlDbType = MySqlDbType.VarChar;
-      SourceVersion = DataRowVersion.Default;
-      Direction = ParameterDirection.Input;
-      _inferType = true;
+        this.DbType        = DbType.String;
+        this.MySqlDbType   = MySqlDbType.VarChar;
+        this.SourceVersion = DataRowVersion.Default;
+        this.Direction     = ParameterDirection.Input;
+        this._inferType    = true;
     }
 
     /// <summary>
@@ -87,10 +87,10 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="parameterName">The name of the parameter to map. </param>
     /// <param name="value">An <see cref="Object"/> that is the value of the <see cref="MySqlParameter"/>. </param>
-    public MySqlParameter(string parameterName, object value) : this()
+    public MySqlParameter (string parameterName, object value) : this ()
     {
-      ParameterName = parameterName;
-      Value = value;
+        this.ParameterName = parameterName;
+        this.Value         = value;
     }
 
     /// <summary>
@@ -98,9 +98,9 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="parameterName">The name of the parameter to map. </param>
     /// <param name="dbType">One of the <see cref="MySqlDbType"/> values. </param>
-    public MySqlParameter(string parameterName, MySqlDbType dbType) : this(parameterName, null)
+    public MySqlParameter (string parameterName, MySqlDbType dbType) : this (parameterName, null)
     {
-      MySqlDbType = dbType;
+        this.MySqlDbType = dbType;
     }
 
     /// <summary>
@@ -109,9 +109,9 @@ namespace EVESharp.Database.MySql
     /// <param name="parameterName">The name of the parameter to map. </param>
     /// <param name="dbType">One of the <see cref="MySqlDbType"/> values. </param>
     /// <param name="size">The length of the parameter. </param>
-    public MySqlParameter(string parameterName, MySqlDbType dbType, int size) : this(parameterName, dbType)
+    public MySqlParameter (string parameterName, MySqlDbType dbType, int size) : this (parameterName, dbType)
     {
-      Size = size;
+        this.Size = size;
     }
 
     /// <summary>
@@ -128,123 +128,128 @@ namespace EVESharp.Database.MySql
     /// <param name="sourceVersion">One of the <see cref="DataRowVersion"/> values. </param>
     /// <param name="value">An <see cref="Object"/> that is the value of the <see cref="MySqlParameter"/>. </param>
     /// <exception cref="ArgumentException"/>
-    public MySqlParameter(string parameterName, MySqlDbType dbType, int size, ParameterDirection direction,
-                          bool isNullable, byte precision, byte scale, string sourceColumn,
-                          DataRowVersion sourceVersion, object value)
-      : this(parameterName, dbType, size, sourceColumn)
+    public MySqlParameter
+    (
+        string         parameterName, MySqlDbType dbType,    int  size,  ParameterDirection direction,
+        bool           isNullable,    byte        precision, byte scale, string             sourceColumn,
+        DataRowVersion sourceVersion, object      value
+    )
+        : this (parameterName, dbType, size, sourceColumn)
     {
-      Direction = direction;
-      IsNullable = isNullable;
-      Precision = precision;
-      Scale = scale;
-      Value = value;
-      SourceVersion = sourceVersion;
+        this.Direction     = direction;
+        this.IsNullable    = isNullable;
+        this.Precision     = precision;
+        this.Scale         = scale;
+        this.Value         = value;
+        this.SourceVersion = sourceVersion;
     }
 
-    internal MySqlParameter(string name, MySqlDbType type, ParameterDirection dir, string col, DataRowVersion sourceVersion, object val, bool sourceColumnNullMapping)
-      : this(name, type)
+    internal MySqlParameter
+        (string name, MySqlDbType type, ParameterDirection dir, string col, DataRowVersion sourceVersion, object val, bool sourceColumnNullMapping)
+        : this (name, type)
     {
-      Direction = dir;
-      SourceColumn = col;
-      Value = val;
-      SourceVersion = sourceVersion;
-      SourceColumnNullMapping = sourceColumnNullMapping;
+        this.Direction               = dir;
+        this.SourceColumn            = col;
+        this.Value                   = val;
+        this.SourceVersion           = sourceVersion;
+        this.SourceColumnNullMapping = sourceColumnNullMapping;
     }
 
-    #endregion
+#endregion
 
-    #region Properties
+#region Properties
 
-    [Category("Misc")]
-    public override String ParameterName
+    [Category ("Misc")]
+    public override string ParameterName
     {
-      get { return _paramName; }
-      set { SetParameterName(value); }
+        get => this._paramName;
+        set => this.SetParameterName (value);
     }
 
     internal MySqlParameterCollection Collection { get; set; }
-    internal Encoding Encoding { get; set; }
+    internal Encoding                 Encoding   { get; set; }
 
-    internal bool TypeHasBeenSet => _inferType == false;
-
+    internal bool TypeHasBeenSet => this._inferType == false;
 
     internal string BaseName
     {
-      get
-      {
-        if (ParameterName.StartsWith("@", StringComparison.Ordinal) || ParameterName.StartsWith("?", StringComparison.Ordinal))
-          return ParameterName.Substring(1);
-        return ParameterName;
-      }
+        get
+        {
+            if (this.ParameterName.StartsWith ("@", StringComparison.Ordinal) || this.ParameterName.StartsWith ("?", StringComparison.Ordinal))
+                return this.ParameterName.Substring (1);
+
+            return this.ParameterName;
+        }
     }
 
     /// <summary>
     /// Gets or sets a value indicating whether the parameter is input-only, output-only, bidirectional, or a stored procedure return value parameter.
     /// As of MySql version 4.1 and earlier, input-only is the only valid choice.
     /// </summary>
-    [Category("Data")]
+    [Category ("Data")]
     public override ParameterDirection Direction { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the parameter accepts null values.
     /// </summary>
-    [Browsable(false)]
-    public override Boolean IsNullable { get; set; }
+    [Browsable (false)]
+    public override bool IsNullable { get; set; }
 
     /// <summary>
     /// Gets or sets the <see cref="MySqlParameter.MySqlDbType"/> of the parameter.
     /// </summary>
-    [Category("Data")]
-    [DbProviderSpecificTypeProperty(true)]
+    [Category ("Data")]
+    [DbProviderSpecificTypeProperty (true)]
     public MySqlDbType MySqlDbType
     {
-      get { return _mySqlDbType; }
-      set
-      {
-        SetMySqlDbType(value);
-        _inferType = false;
-      }
+        get => this._mySqlDbType;
+        set
+        {
+            this.SetMySqlDbType (value);
+            this._inferType = false;
+        }
     }
 
     /// <summary>
     /// Gets or sets the maximum number of digits used to represent the <see cref="Value"/> property.
     /// </summary>
-    [Category("Data")]
+    [Category ("Data")]
     public override byte Precision { get; set; }
 
     /// <summary>
     /// Gets or sets the number of decimal places to which <see cref="Value"/> is resolved.
     /// </summary>
-    [Category("Data")]
+    [Category ("Data")]
     public override byte Scale { get; set; }
 
     /// <summary>
     /// Gets or sets the maximum size, in bytes, of the data within the column.
     /// </summary>
-    [Category("Data")]
+    [Category ("Data")]
     public override int Size { get; set; }
 
     /// <summary>
     /// Gets or sets the value of the parameter.
     /// </summary>
-    [TypeConverter(typeof(StringConverter))]
-    [Category("Data")]
+    [TypeConverter (typeof (StringConverter))]
+    [Category ("Data")]
     public override object Value
     {
-      get { return _paramValue; }
-      set
-      {
-        _paramValue = value;
-        byte[] valueAsByte = value as byte[];
-        string valueAsString = value as string;
+        get => this._paramValue;
+        set
+        {
+            this._paramValue = value;
+            byte [] valueAsByte   = value as byte [];
+            string  valueAsString = value as string;
 
-        if (valueAsByte != null)
-          Size = valueAsByte.Length;
-        else if (valueAsString != null)
-          Size = valueAsString.Length;
-        if (_inferType)
-          SetTypeFromValue();
-      }
+            if (valueAsByte != null)
+                this.Size = valueAsByte.Length;
+            else if (valueAsString != null)
+                this.Size = valueAsString.Length;
+
+            if (this._inferType)
+                this.SetTypeFromValue ();
+        }
     }
 
     internal IMySqlValue ValueObject { get; private set; }
@@ -258,8 +263,8 @@ namespace EVESharp.Database.MySql
     /// <summary>
     /// Gets or sets the name of the source column that is mapped to the <see cref="System.Data.DataSet"/> and used for loading or returning the <see cref="MySqlParameter.Value"/>.
     /// </summary>
-    [Category("Data")]
-    public override String SourceColumn { get; set; }
+    [Category ("Data")]
+    public override string SourceColumn { get; set; }
 
     /// <summary>
     /// Sets or gets a value which indicates whether the source column is nullable. 
@@ -273,360 +278,406 @@ namespace EVESharp.Database.MySql
     /// </summary>
     public override DbType DbType
     {
-      get { return _dbType; }
-      set
-      {
-        SetDbType(value);
-        _inferType = false;
-      }
+        get => this._dbType;
+        set
+        {
+            this.SetDbType (value);
+            this._inferType = false;
+        }
     }
 
-    #endregion
+#endregion
 
-    private void SetParameterName(string name)
+    private void SetParameterName (string name)
     {
-      Collection?.ParameterNameChanged(this, _paramName, name);
-      _paramName = name;
+        this.Collection?.ParameterNameChanged (this, this._paramName, name);
+        this._paramName = name;
     }
 
     /// <summary>
     /// Overridden. Gets a string containing the <see cref="ParameterName"/>.
     /// </summary>
     /// <returns></returns>
-    public override string ToString() => _paramName;
-
-    internal int GetPSType()
+    public override string ToString ()
     {
-      switch (_mySqlDbType)
-      {
-        case MySqlDbType.Bit:
-          return (int)MySqlDbType.Int64 | UNSIGNED_MASK;
-        case MySqlDbType.UByte:
-          return (int)MySqlDbType.Byte | UNSIGNED_MASK;
-        case MySqlDbType.UInt64:
-          return (int)MySqlDbType.Int64 | UNSIGNED_MASK;
-        case MySqlDbType.UInt32:
-          return (int)MySqlDbType.Int32 | UNSIGNED_MASK;
-        case MySqlDbType.UInt24:
-          return (int)MySqlDbType.Int32 | UNSIGNED_MASK;
-        case MySqlDbType.UInt16:
-          return (int)MySqlDbType.Int16 | UNSIGNED_MASK;
-        case MySqlDbType.Guid:
-          return (int)MySqlDbType.Guid - 600;
-        case MySqlDbType.Enum:
-          return (int)MySqlDbType.VarChar;
-        default:
-          int value = (int)_mySqlDbType;
-          value = value > 255 ? value - 500 : value;
-          return value;
-      }
+        return this._paramName;
     }
 
-    internal void Serialize(MySqlPacket packet, bool binary, MySqlConnectionStringBuilder settings)
+    internal int GetPSType ()
     {
-      if (!binary && (_paramValue == null || _paramValue == DBNull.Value))
-        packet.WriteStringNoNull("NULL");
-      else
-      {
-        if (ValueObject.MySqlDbType == MySqlDbType.Guid)
+        switch (this._mySqlDbType)
         {
-          MySqlGuid g = (MySqlGuid)ValueObject;
-          g.OldGuids = settings.OldGuids;
-          ValueObject = g;
+            case MySqlDbType.Bit:    return (int) MySqlDbType.Int64 | UNSIGNED_MASK;
+            case MySqlDbType.UByte:  return (int) MySqlDbType.Byte | UNSIGNED_MASK;
+            case MySqlDbType.UInt64: return (int) MySqlDbType.Int64 | UNSIGNED_MASK;
+            case MySqlDbType.UInt32: return (int) MySqlDbType.Int32 | UNSIGNED_MASK;
+            case MySqlDbType.UInt24: return (int) MySqlDbType.Int32 | UNSIGNED_MASK;
+            case MySqlDbType.UInt16: return (int) MySqlDbType.Int16 | UNSIGNED_MASK;
+            case MySqlDbType.Guid:   return (int) MySqlDbType.Guid - 600;
+            case MySqlDbType.Enum:   return (int) MySqlDbType.VarChar;
+            default:
+                int value = (int) this._mySqlDbType;
+                value = value > 255 ? value - 500 : value;
+                return value;
         }
-        if (ValueObject.MySqlDbType == MySqlDbType.Geometry)
-        {
-          MySqlGeometry v = (MySqlGeometry)ValueObject;
-          if (v.IsNull && Value != null)
-          {
-            MySqlGeometry.TryParse(Value.ToString(), out v);
-          }
-          ValueObject = v;
-        }
-        ValueObject.WriteValue(packet, binary, _paramValue, Size);
-      }
     }
 
-    private void SetMySqlDbType(MySqlDbType mysqlDbtype)
+    internal void Serialize (MySqlPacket packet, bool binary, MySqlConnectionStringBuilder settings)
     {
-      // JSON type is treated as VarChar because in MySQL Server since 8.0.13
-      /// MYSQL_TYPE_JSON is not allowed as Item_param lacks a proper
-      /// implementation for val_json.
-      _mySqlDbType = mysqlDbtype == MySqlDbType.JSON ? MySqlDbType.VarChar : mysqlDbtype;
-      ValueObject = MySqlField.GetIMySqlValue(_mySqlDbType);
-      SetDbTypeFromMySqlDbType();
+        if (!binary && (this._paramValue == null || this._paramValue == DBNull.Value))
+        {
+            packet.WriteStringNoNull ("NULL");
+        }
+        else
+        {
+            if (this.ValueObject.MySqlDbType == MySqlDbType.Guid)
+            {
+                MySqlGuid g = (MySqlGuid) this.ValueObject;
+                g.OldGuids       = settings.OldGuids;
+                this.ValueObject = g;
+            }
+
+            if (this.ValueObject.MySqlDbType == MySqlDbType.Geometry)
+            {
+                MySqlGeometry v = (MySqlGeometry) this.ValueObject;
+
+                if (v.IsNull && this.Value != null)
+                    MySqlGeometry.TryParse (this.Value.ToString (), out v);
+
+                this.ValueObject = v;
+            }
+
+            this.ValueObject.WriteValue (packet, binary, this._paramValue, this.Size);
+        }
     }
 
-    private void SetTypeFromValue()
+    private void SetMySqlDbType (MySqlDbType mysqlDbtype)
     {
-      if (_paramValue == null || _paramValue == DBNull.Value) return;
+        // JSON type is treated as VarChar because in MySQL Server since 8.0.13
+        /// MYSQL_TYPE_JSON is not allowed as Item_param lacks a proper
+        /// implementation for val_json.
+        this._mySqlDbType = mysqlDbtype == MySqlDbType.JSON ? MySqlDbType.VarChar : mysqlDbtype;
+        this.ValueObject  = MySqlField.GetIMySqlValue (this._mySqlDbType);
+        this.SetDbTypeFromMySqlDbType ();
+    }
 
-      if (_paramValue is Guid)
-        MySqlDbType = MySqlDbType.Guid;
-      else if (_paramValue is TimeSpan)
-        MySqlDbType = MySqlDbType.Time;
-      else if (_paramValue is DateTimeOffset)
-        MySqlDbType = MySqlDbType.DateTime;
-      else if (_paramValue is bool)
-        MySqlDbType = MySqlDbType.Byte;
-      else
-      {
-        Type t = _paramValue.GetType();
-        if (t.GetTypeInfo().BaseType == typeof(Enum))
-          t = t.GetTypeInfo().GetEnumUnderlyingType();
-        switch (t.Name)
+    private void SetTypeFromValue ()
+    {
+        if (this._paramValue == null || this._paramValue == DBNull.Value)
+            return;
+
+        if (this._paramValue is Guid)
         {
-          case "SByte": MySqlDbType = MySqlDbType.Byte; break;
-          case "Byte": MySqlDbType = MySqlDbType.UByte; break;
-          case "Int16": MySqlDbType = MySqlDbType.Int16; break;
-          case "UInt16": MySqlDbType = MySqlDbType.UInt16; break;
-          case "Int32": MySqlDbType = MySqlDbType.Int32; break;
-          case "UInt32": MySqlDbType = MySqlDbType.UInt32; break;
-          case "Int64": MySqlDbType = MySqlDbType.Int64; break;
-          case "UInt64": MySqlDbType = MySqlDbType.UInt64; break;
-          case "DateTime": MySqlDbType = MySqlDbType.DateTime; break;
-          case "String": MySqlDbType = MySqlDbType.VarChar; break;
-          case "Single": MySqlDbType = MySqlDbType.Float; break;
-          case "Double": MySqlDbType = MySqlDbType.Double; break;
-          case "MySqlGeometry": MySqlDbType = MySqlDbType.Geometry; break;
-          case "Decimal": MySqlDbType = MySqlDbType.Decimal; break;
-          case "Object":
-          default:
-            MySqlDbType = MySqlDbType.Blob;
-            break;
+            this.MySqlDbType = MySqlDbType.Guid;
         }
-      }
+        else if (this._paramValue is TimeSpan)
+        {
+            this.MySqlDbType = MySqlDbType.Time;
+        }
+        else if (this._paramValue is DateTimeOffset)
+        {
+            this.MySqlDbType = MySqlDbType.DateTime;
+        }
+        else if (this._paramValue is bool)
+        {
+            this.MySqlDbType = MySqlDbType.Byte;
+        }
+        else
+        {
+            Type t = this._paramValue.GetType ();
+
+            if (t.GetTypeInfo ().BaseType == typeof (Enum))
+                t = t.GetTypeInfo ().GetEnumUnderlyingType ();
+
+            switch (t.Name)
+            {
+                case "SByte":
+                    this.MySqlDbType = MySqlDbType.Byte;
+                    break;
+                case "Byte":
+                    this.MySqlDbType = MySqlDbType.UByte;
+                    break;
+                case "Int16":
+                    this.MySqlDbType = MySqlDbType.Int16;
+                    break;
+                case "UInt16":
+                    this.MySqlDbType = MySqlDbType.UInt16;
+                    break;
+                case "Int32":
+                    this.MySqlDbType = MySqlDbType.Int32;
+                    break;
+                case "UInt32":
+                    this.MySqlDbType = MySqlDbType.UInt32;
+                    break;
+                case "Int64":
+                    this.MySqlDbType = MySqlDbType.Int64;
+                    break;
+                case "UInt64":
+                    this.MySqlDbType = MySqlDbType.UInt64;
+                    break;
+                case "DateTime":
+                    this.MySqlDbType = MySqlDbType.DateTime;
+                    break;
+                case "String":
+                    this.MySqlDbType = MySqlDbType.VarChar;
+                    break;
+                case "Single":
+                    this.MySqlDbType = MySqlDbType.Float;
+                    break;
+                case "Double":
+                    this.MySqlDbType = MySqlDbType.Double;
+                    break;
+                case "MySqlGeometry":
+                    this.MySqlDbType = MySqlDbType.Geometry;
+                    break;
+                case "Decimal":
+                    this.MySqlDbType = MySqlDbType.Decimal;
+                    break;
+                case "Object":
+                default:
+                    this.MySqlDbType = MySqlDbType.Blob;
+                    break;
+            }
+        }
     }
 
     // this method is pretty dumb but we want it to be fast.  it doesn't return size based
     // on value and type but just on the value.
-    internal long EstimatedSize()
+    internal long EstimatedSize ()
     {
-      if (Value == null || Value == DBNull.Value)
-        return 4; // size of NULL
-      if (Value is byte[])
-        return ((byte[])Value).Length;
-      if (Value is string)
-        return ((string)Value).Length * 4; // account for UTF-8 (yeah I know)
-      if (Value is decimal || Value is float)
-        return 64;
-      return 32;
+        if (this.Value == null || this.Value == DBNull.Value)
+            return 4; // size of NULL
+
+        if (this.Value is byte [])
+            return ((byte []) this.Value).Length;
+
+        if (this.Value is string)
+            return ((string) this.Value).Length * 4; // account for UTF-8 (yeah I know)
+
+        if (this.Value is decimal || this.Value is float)
+            return 64;
+
+        return 32;
     }
 
     /// <summary>
     /// Resets the <b>DbType</b> property to its original settings. 
     /// </summary>
-    public override void ResetDbType()
+    public override void ResetDbType ()
     {
-      _inferType = true;
+        this._inferType = true;
     }
 
-
-    void SetDbTypeFromMySqlDbType()
+    private void SetDbTypeFromMySqlDbType ()
     {
-      switch (_mySqlDbType)
-      {
-        case MySqlDbType.NewDecimal:
-        case MySqlDbType.Decimal:
-          _dbType = DbType.Decimal;
-          break;
-        case MySqlDbType.Byte:
-          _dbType = DbType.SByte;
-          break;
-        case MySqlDbType.UByte:
-          _dbType = DbType.Byte;
-          break;
-        case MySqlDbType.Int16:
-          _dbType = DbType.Int16;
-          break;
-        case MySqlDbType.UInt16:
-          _dbType = DbType.UInt16;
-          break;
-        case MySqlDbType.Int24:
-        case MySqlDbType.Int32:
-          _dbType = DbType.Int32;
-          break;
-        case MySqlDbType.UInt24:
-        case MySqlDbType.UInt32:
-          _dbType = DbType.UInt32;
-          break;
-        case MySqlDbType.Int64:
-          _dbType = DbType.Int64;
-          break;
-        case MySqlDbType.UInt64:
-          _dbType = DbType.UInt64;
-          break;
-        case MySqlDbType.Bit:
-          _dbType = DbType.UInt64;
-          break;
-        case MySqlDbType.Float:
-          _dbType = DbType.Single;
-          break;
-        case MySqlDbType.Double:
-          _dbType = DbType.Double;
-          break;
-        case MySqlDbType.Timestamp:
-        case MySqlDbType.DateTime:
-          _dbType = DbType.DateTime;
-          break;
-        case MySqlDbType.Date:
-        case MySqlDbType.Newdate:
-        case MySqlDbType.Year:
-          _dbType = DbType.Date;
-          break;
-        case MySqlDbType.Time:
-          _dbType = DbType.Time;
-          break;
-        case MySqlDbType.Enum:
-        case MySqlDbType.Set:
-        case MySqlDbType.VarChar:
-          _dbType = DbType.String;
-          break;
-        case MySqlDbType.TinyBlob:
-        case MySqlDbType.MediumBlob:
-        case MySqlDbType.LongBlob:
-        case MySqlDbType.Blob:
-          _dbType = DbType.Object;
-          break;
-        case MySqlDbType.String:
-          _dbType = DbType.StringFixedLength;
-          break;
-        case MySqlDbType.Guid:
-          _dbType = DbType.Guid;
-          break;
-      }
+        switch (this._mySqlDbType)
+        {
+            case MySqlDbType.NewDecimal:
+            case MySqlDbType.Decimal:
+                this._dbType = DbType.Decimal;
+                break;
+            case MySqlDbType.Byte:
+                this._dbType = DbType.SByte;
+                break;
+            case MySqlDbType.UByte:
+                this._dbType = DbType.Byte;
+                break;
+            case MySqlDbType.Int16:
+                this._dbType = DbType.Int16;
+                break;
+            case MySqlDbType.UInt16:
+                this._dbType = DbType.UInt16;
+                break;
+            case MySqlDbType.Int24:
+            case MySqlDbType.Int32:
+                this._dbType = DbType.Int32;
+                break;
+            case MySqlDbType.UInt24:
+            case MySqlDbType.UInt32:
+                this._dbType = DbType.UInt32;
+                break;
+            case MySqlDbType.Int64:
+                this._dbType = DbType.Int64;
+                break;
+            case MySqlDbType.UInt64:
+                this._dbType = DbType.UInt64;
+                break;
+            case MySqlDbType.Bit:
+                this._dbType = DbType.UInt64;
+                break;
+            case MySqlDbType.Float:
+                this._dbType = DbType.Single;
+                break;
+            case MySqlDbType.Double:
+                this._dbType = DbType.Double;
+                break;
+            case MySqlDbType.Timestamp:
+            case MySqlDbType.DateTime:
+                this._dbType = DbType.DateTime;
+                break;
+            case MySqlDbType.Date:
+            case MySqlDbType.Newdate:
+            case MySqlDbType.Year:
+                this._dbType = DbType.Date;
+                break;
+            case MySqlDbType.Time:
+                this._dbType = DbType.Time;
+                break;
+            case MySqlDbType.Enum:
+            case MySqlDbType.Set:
+            case MySqlDbType.VarChar:
+                this._dbType = DbType.String;
+                break;
+            case MySqlDbType.TinyBlob:
+            case MySqlDbType.MediumBlob:
+            case MySqlDbType.LongBlob:
+            case MySqlDbType.Blob:
+                this._dbType = DbType.Object;
+                break;
+            case MySqlDbType.String:
+                this._dbType = DbType.StringFixedLength;
+                break;
+            case MySqlDbType.Guid:
+                this._dbType = DbType.Guid;
+                break;
+        }
     }
 
-    private void SetDbType(DbType dbType)
+    private void SetDbType (DbType dbType)
     {
-      _dbType = dbType;
-      switch (_dbType)
-      {
-        case DbType.Guid:
-          _mySqlDbType = MySqlDbType.Guid;
-          break;
+        this._dbType = dbType;
 
-        case DbType.AnsiString:
-        case DbType.String:
-          _mySqlDbType = MySqlDbType.VarChar;
-          break;
+        switch (this._dbType)
+        {
+            case DbType.Guid:
+                this._mySqlDbType = MySqlDbType.Guid;
+                break;
 
-        case DbType.AnsiStringFixedLength:
-        case DbType.StringFixedLength:
-          _mySqlDbType = MySqlDbType.String;
-          break;
+            case DbType.AnsiString:
+            case DbType.String:
+                this._mySqlDbType = MySqlDbType.VarChar;
+                break;
 
-        case DbType.Boolean:
-        case DbType.Byte:
-          _mySqlDbType = MySqlDbType.UByte;
-          break;
+            case DbType.AnsiStringFixedLength:
+            case DbType.StringFixedLength:
+                this._mySqlDbType = MySqlDbType.String;
+                break;
 
-        case DbType.SByte:
-          _mySqlDbType = MySqlDbType.Byte;
-          break;
+            case DbType.Boolean:
+            case DbType.Byte:
+                this._mySqlDbType = MySqlDbType.UByte;
+                break;
 
-        case DbType.Date:
-          _mySqlDbType = MySqlDbType.Date;
-          break;
-        case DbType.DateTime:
-        case DbType.DateTimeOffset:
-          _mySqlDbType = MySqlDbType.DateTime;
-          break;
+            case DbType.SByte:
+                this._mySqlDbType = MySqlDbType.Byte;
+                break;
 
-        case DbType.Time:
-          _mySqlDbType = MySqlDbType.Time;
-          break;
-        case DbType.Single:
-          _mySqlDbType = MySqlDbType.Float;
-          break;
-        case DbType.Double:
-          _mySqlDbType = MySqlDbType.Double;
-          break;
+            case DbType.Date:
+                this._mySqlDbType = MySqlDbType.Date;
+                break;
+            case DbType.DateTime:
+            case DbType.DateTimeOffset:
+                this._mySqlDbType = MySqlDbType.DateTime;
+                break;
 
-        case DbType.Int16:
-          _mySqlDbType = MySqlDbType.Int16;
-          break;
-        case DbType.UInt16:
-          _mySqlDbType = MySqlDbType.UInt16;
-          break;
+            case DbType.Time:
+                this._mySqlDbType = MySqlDbType.Time;
+                break;
+            case DbType.Single:
+                this._mySqlDbType = MySqlDbType.Float;
+                break;
+            case DbType.Double:
+                this._mySqlDbType = MySqlDbType.Double;
+                break;
 
-        case DbType.Int32:
-          _mySqlDbType = MySqlDbType.Int32;
-          break;
-        case DbType.UInt32:
-          _mySqlDbType = MySqlDbType.UInt32;
-          break;
+            case DbType.Int16:
+                this._mySqlDbType = MySqlDbType.Int16;
+                break;
+            case DbType.UInt16:
+                this._mySqlDbType = MySqlDbType.UInt16;
+                break;
 
-        case DbType.Int64:
-          _mySqlDbType = MySqlDbType.Int64;
-          break;
-        case DbType.UInt64:
-          _mySqlDbType = MySqlDbType.UInt64;
-          break;
+            case DbType.Int32:
+                this._mySqlDbType = MySqlDbType.Int32;
+                break;
+            case DbType.UInt32:
+                this._mySqlDbType = MySqlDbType.UInt32;
+                break;
 
-        case DbType.Decimal:
-        case DbType.Currency:
-          _mySqlDbType = MySqlDbType.Decimal;
-          break;
+            case DbType.Int64:
+                this._mySqlDbType = MySqlDbType.Int64;
+                break;
+            case DbType.UInt64:
+                this._mySqlDbType = MySqlDbType.UInt64;
+                break;
 
-        case DbType.Object:
-        case DbType.VarNumeric:
-        case DbType.Binary:
-        default:
-          _mySqlDbType = MySqlDbType.Blob;
-          break;
-      }
+            case DbType.Decimal:
+            case DbType.Currency:
+                this._mySqlDbType = MySqlDbType.Decimal;
+                break;
 
-      if (_dbType == DbType.Object)
-      {
-        var value = this._paramValue as byte[];
-        if (value != null && value.Length == GEOMETRY_LENGTH)
-          _mySqlDbType = MySqlDbType.Geometry;
-      }
+            case DbType.Object:
+            case DbType.VarNumeric:
+            case DbType.Binary:
+            default:
+                this._mySqlDbType = MySqlDbType.Blob;
+                break;
+        }
 
-      ValueObject = MySqlField.GetIMySqlValue(_mySqlDbType);
+        if (this._dbType == DbType.Object)
+        {
+            byte [] value = this._paramValue as byte [];
+
+            if (value != null && value.Length == GEOMETRY_LENGTH)
+                this._mySqlDbType = MySqlDbType.Geometry;
+        }
+
+        this.ValueObject = MySqlField.GetIMySqlValue (this._mySqlDbType);
     }
-  }
+}
 
-
-
-  internal class MySqlParameterConverter : TypeConverter
-  {
-
-    public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+internal class MySqlParameterConverter : TypeConverter
+{
+    public override bool CanConvertTo (ITypeDescriptorContext context, Type destinationType)
     {
-      if (destinationType == typeof(System.ComponentModel.Design.Serialization.InstanceDescriptor))
-      {
-        return true;
-      }
+        if (destinationType == typeof (System.ComponentModel.Design.Serialization.InstanceDescriptor))
+            return true;
 
-      // Always call the base to see if it can perform the conversion.
-      return base.CanConvertTo(context, destinationType);
+        // Always call the base to see if it can perform the conversion.
+        return base.CanConvertTo (context, destinationType);
     }
 
-    public override object ConvertTo(ITypeDescriptorContext context,
-                                     CultureInfo culture, object value, Type destinationType)
+    public override object ConvertTo
+    (
+        ITypeDescriptorContext context,
+        CultureInfo            culture, object value, Type destinationType
+    )
     {
-      if (destinationType == typeof(System.ComponentModel.Design.Serialization.InstanceDescriptor))
-      {
-        ConstructorInfo ci = typeof(MySqlParameter).GetConstructor(
-            new[]
-                            {
-                                typeof (string), typeof (MySqlDbType), typeof (int), typeof (ParameterDirection),
-                                typeof (bool), typeof (byte), typeof (byte), typeof (string),
-                                typeof (object)
-                            });
-        MySqlParameter p = (MySqlParameter)value;
-        return new System.ComponentModel.Design.Serialization.InstanceDescriptor(ci, new object[]
-                                                          {
-                                                              p.ParameterName, p.DbType, p.Size, p.Direction,
-                                                              p.IsNullable, p.Precision,
-                                                              p.Scale, p.SourceColumn, p.Value
-                                                          });
-      }
+        if (destinationType == typeof (System.ComponentModel.Design.Serialization.InstanceDescriptor))
+        {
+            ConstructorInfo ci = typeof (MySqlParameter).GetConstructor (
+                new []
+                {
+                    typeof (string),
+                    typeof (MySqlDbType),
+                    typeof (int),
+                    typeof (ParameterDirection),
+                    typeof (bool),
+                    typeof (byte),
+                    typeof (byte),
+                    typeof (string),
+                    typeof (object)
+                }
+            );
 
-      // Always call base, even if you can't convert.
-      return base.ConvertTo(context, culture, value, destinationType);
+            MySqlParameter p = (MySqlParameter) value;
+
+            return new System.ComponentModel.Design.Serialization.InstanceDescriptor (
+                ci, new object [] {p.ParameterName, p.DbType, p.Size, p.Direction, p.IsNullable, p.Precision, p.Scale, p.SourceColumn, p.Value}
+            );
+        }
+
+        // Always call base, even if you can't convert.
+        return base.ConvertTo (context, culture, value, destinationType);
     }
-  }
 }

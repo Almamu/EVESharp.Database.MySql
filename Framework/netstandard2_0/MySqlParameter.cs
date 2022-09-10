@@ -31,34 +31,33 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+public sealed partial class MySqlParameter : DbParameter, IDbDataParameter, ICloneable
 {
-  public sealed partial class MySqlParameter : DbParameter, IDbDataParameter, ICloneable
-  {
     /// <summary>
     /// Gets or sets the <see cref="DataRowVersion"/> to use when loading <see cref="Value"/>.
     /// </summary>
-    [Category("Data")]
+    [Category ("Data")]
     public override DataRowVersion SourceVersion { get; set; }
 
     /// <summary>
     /// Clones this object.
     /// </summary>
     /// <returns>An object that is a clone of this object.</returns>
-    public MySqlParameter Clone()
+    public MySqlParameter Clone ()
     {
-      MySqlParameter clone = new MySqlParameter(_paramName, _mySqlDbType, Direction, SourceColumn, SourceVersion, _paramValue, SourceColumnNullMapping)
-      {
-        _inferType = _inferType
-      };
+        MySqlParameter clone =
+            new MySqlParameter (
+                this._paramName, this._mySqlDbType, this.Direction, this.SourceColumn, this.SourceVersion, this._paramValue, this.SourceColumnNullMapping
+            ) {_inferType = this._inferType};
 
-      // if we have not had our type set yet then our clone should not either
-      return clone;
+        // if we have not had our type set yet then our clone should not either
+        return clone;
     }
 
-    object ICloneable.Clone()
+    object ICloneable.Clone ()
     {
-      return this.Clone();
+        return this.Clone ();
     }
-  }
 }

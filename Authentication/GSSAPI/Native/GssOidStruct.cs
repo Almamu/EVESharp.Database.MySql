@@ -29,25 +29,24 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native;
+
+[StructLayout (LayoutKind.Sequential)]
+internal struct GssOidDescStruct
 {
-  [StructLayout(LayoutKind.Sequential)]
-  internal struct GssOidDescStruct
-  {
     /// OM_uint32->gss_uint32->unsigned int
     public uint length;
 
     /// void*
     public IntPtr elements;
-  }
+}
 
-  [StructLayout(LayoutKind.Sequential)]
-  internal struct GssOidSetStruct
-  {
+[StructLayout (LayoutKind.Sequential)]
+internal struct GssOidSetStruct
+{
     /// OM_uint32->gss_uint32->unsigned int
     public uint count;
-    
+
     /// void*
     public IntPtr elements;
-  }
 }

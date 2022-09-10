@@ -31,96 +31,114 @@ using System.Security.Cryptography;
 using System.Text;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Authentication
+namespace EVESharp.Database.MySql.Authentication;
+
+/// <summary>
+/// The implementation of the sha256_password authentication plugin.
+/// </summary>
+internal class Sha256AuthenticationPlugin : MySqlAuthenticationPlugin
 {
-  /// <summary>
-  /// The implementation of the sha256_password authentication plugin.
-  /// </summary>
-  internal class Sha256AuthenticationPlugin : MySqlAuthenticationPlugin
-  {
     /// <summary>
     /// The byte array representation of the public key provided by the server.
     /// </summary>
-    protected byte[] rawPubkey;
+    protected byte [] rawPubkey;
 
     public override string PluginName => "sha256_password";
 
-    protected override byte[] MoreData(byte[] data)
+    protected override byte [] MoreData (byte [] data)
     {
-      rawPubkey = data;
-      byte[] buffer = GetNonLengthEncodedPassword();
-      return buffer;
+        this.rawPubkey = data;
+        byte [] buffer = this.GetNonLengthEncodedPassword ();
+        return buffer;
     }
 
-    public override object GetPassword()
+    public override object GetPassword ()
     {
-      if (Settings.SslMode != MySqlSslMode.Disabled)
-      {
-        // send as clear text, since the channel is already encrypted
-        byte[] passBytes = Encoding.GetBytes(GetMFAPassword());
-        byte[] buffer = new byte[passBytes.Length + 2];
-        Array.Copy(passBytes, 0, buffer, 1, passBytes.Length);
-        buffer[0] = (byte)(passBytes.Length + 1);
-        buffer[buffer.Length - 1] = 0x00;
-        return buffer;
-      }
-      else
-      {
-        if (GetMFAPassword().Length == 0) return new byte[1];
-        // send RSA encrypted, since the channel is not protected
-        else if (rawPubkey == null) return new byte[] { 0x01 };
-        else if (!Settings.AllowPublicKeyRetrieval)
-          throw new MySqlException(Resources.RSAPublicKeyRetrievalNotEnabled);
+        if (this.Settings.SslMode != MySqlSslMode.Disabled)
+        {
+            // send as clear text, since the channel is already encrypted
+            byte [] passBytes = this.Encoding.GetBytes (this.GetMFAPassword ());
+            byte [] buffer    = new byte[passBytes.Length + 2];
+            Array.Copy (passBytes, 0, buffer, 1, passBytes.Length);
+            buffer [0]                 = (byte) (passBytes.Length + 1);
+            buffer [buffer.Length - 1] = 0x00;
+            return buffer;
+        }
         else
         {
-          byte[] bytes = GetRsaPassword(GetMFAPassword(), AuthenticationData, rawPubkey);
-          if (bytes != null && bytes.Length == 1 && bytes[0] == 0) return null;
-          return bytes;
+            if (this.GetMFAPassword ().Length == 0)
+            {
+                return new byte[1];
+            }
+            // send RSA encrypted, since the channel is not protected
+            else if (this.rawPubkey == null)
+            {
+                return new byte [] {0x01};
+            }
+            else if (!this.Settings.AllowPublicKeyRetrieval)
+            {
+                throw new MySqlException (Resources.RSAPublicKeyRetrievalNotEnabled);
+            }
+            else
+            {
+                byte [] bytes = this.GetRsaPassword (this.GetMFAPassword (), this.AuthenticationData, this.rawPubkey);
+
+                if (bytes != null && bytes.Length == 1 && bytes [0] == 0)
+                    return null;
+
+                return bytes;
+            }
         }
-      }
     }
 
-    private byte[] GetNonLengthEncodedPassword()
+    private byte [] GetNonLengthEncodedPassword ()
     {
-      // Required for AuthChange requests.
-      if (Settings.SslMode != MySqlSslMode.Disabled)
-      {
-        // Send as clear text, since the channel is already encrypted.
-        byte[] passBytes = Encoding.GetBytes(GetMFAPassword());
-        byte[] buffer = new byte[passBytes.Length + 1];
-        Array.Copy(passBytes, 0, buffer, 0, passBytes.Length);
-        buffer[passBytes.Length] = 0;
-        return buffer;
-      }
-      else return GetPassword() as byte[];
+        // Required for AuthChange requests.
+        if (this.Settings.SslMode != MySqlSslMode.Disabled)
+        {
+            // Send as clear text, since the channel is already encrypted.
+            byte [] passBytes = this.Encoding.GetBytes (this.GetMFAPassword ());
+            byte [] buffer    = new byte[passBytes.Length + 1];
+            Array.Copy (passBytes, 0, buffer, 0, passBytes.Length);
+            buffer [passBytes.Length] = 0;
+            return buffer;
+        }
+        else
+        {
+            return this.GetPassword () as byte [];
+        }
     }
 
-    private byte[] GetRsaPassword(string password, byte[] seedBytes, byte[] rawPublicKey)
+    private byte [] GetRsaPassword (string password, byte [] seedBytes, byte [] rawPublicKey)
     {
-      if (password.Length == 0) return new byte[1];
-      // Obfuscate the plain text password with the session scramble
-      byte[] obfuscated = GetXor(Encoding.Default.GetBytes(password), seedBytes);
-      // Encrypt the password and send it to the server
-      RSACryptoServiceProvider rsa = MySqlPemReader.ConvertPemToRSAProvider(rawPublicKey);
-      if (rsa == null) throw new MySqlException(Resources.UnableToReadRSAKey);
-      return rsa.Encrypt(obfuscated, true);
+        if (password.Length == 0)
+            return new byte[1];
+
+        // Obfuscate the plain text password with the session scramble
+        byte [] obfuscated = this.GetXor (Encoding.Default.GetBytes (password), seedBytes);
+        // Encrypt the password and send it to the server
+        RSACryptoServiceProvider rsa = MySqlPemReader.ConvertPemToRSAProvider (rawPublicKey);
+
+        if (rsa == null)
+            throw new MySqlException (Resources.UnableToReadRSAKey);
+
+        return rsa.Encrypt (obfuscated, true);
     }
 
     /// <summary>
     /// Applies XOR to the byte arrays provided as input.
     /// </summary>
     /// <returns>A byte array that contains the results of the XOR operation.</returns>
-    protected byte[] GetXor(byte[] src, byte[] pattern)
+    protected byte [] GetXor (byte [] src, byte [] pattern)
     {
-      byte[] src2 = new byte[src.Length + 1];
-      Array.Copy(src, 0, src2, 0, src.Length);
-      src2[src.Length] = 0;
-      byte[] result = new byte[src2.Length];
-      for (int i = 0; i < src2.Length; i++)
-      {
-        result[i] = (byte)(src2[i] ^ (pattern[i % pattern.Length]));
-      }
-      return result;
+        byte [] src2 = new byte[src.Length + 1];
+        Array.Copy (src, 0, src2, 0, src.Length);
+        src2 [src.Length] = 0;
+        byte [] result = new byte[src2.Length];
+
+        for (int i = 0; i < src2.Length; i++)
+            result [i] = (byte) (src2 [i] ^ pattern [i % pattern.Length]);
+
+        return result;
     }
-  }
 }

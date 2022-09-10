@@ -28,11 +28,11 @@
 
 using System;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI
+namespace EVESharp.Database.MySql.Authentication.GSSAPI;
+
+[Flags]
+internal enum GssContextFlags
 {
-  [Flags]
-  internal enum GssContextFlags
-  {
     /// <summary>
     /// No flags provided
     /// </summary>
@@ -76,5 +76,4 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI
     /// </summary>
     Trans = 256,
     DelegPolicy = 32768
-  }
 }

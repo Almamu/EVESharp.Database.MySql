@@ -28,66 +28,63 @@
 
 using System.Collections.Generic;
 
-namespace EVESharp.Database.MySql.Failover
+namespace EVESharp.Database.MySql.Failover;
+
+internal abstract class FailoverGroup
 {
-    internal abstract class FailoverGroup
+#region Properties
+
+    /// <summary>
+    /// Gets and sets the host list.
+    /// </summary>
+    protected internal List <FailoverServer> Hosts { get; set; }
+
+    /// <summary>
+    /// Gets the active host.
+    /// </summary>
+    protected internal FailoverServer ActiveHost
     {
-      #region Properties
-
-      /// <summary>
-      /// Gets and sets the host list.
-      /// </summary>
-      protected internal List<FailoverServer> Hosts { get; set; }
-
-      /// <summary>
-      /// Gets the active host.
-      /// </summary>
-      protected internal FailoverServer ActiveHost
-      {
         get
         {
-          if (Hosts == null)
+            if (this.Hosts == null)
+                return null;
+
+            if (this._activeHost != null)
+                return this._activeHost;
+
+            foreach (FailoverServer host in this.Hosts)
+                if (host.IsActive)
+                    return host;
+
             return null;
-
-          if (_activeHost != null)
-            return _activeHost;
-
-          foreach (var host in Hosts)
-          {
-            if (host.IsActive)
-              return host;
-          }
-
-          return null;
         }
-      }
-
-      #endregion
-
-      #region Fields
-
-      /// <summary>
-      /// Active host.
-      /// </summary>
-      protected internal FailoverServer _activeHost;
-
-      #endregion
-
-      internal FailoverGroup(List<FailoverServer> hosts)
-      {
-        Hosts = hosts;
-        SetInitialActiveServer();
-      }
-
-      /// <summary>
-      /// Sets the initial active host.
-      /// </summary>
-      protected internal abstract void SetInitialActiveServer();
-
-      /// <summary>
-      /// Determines the next host.
-      /// </summary>
-      /// <returns><see cref="FailoverServer"/> object that represents the next available host.</returns>
-      protected internal abstract FailoverServer GetNextHost();
     }
+
+#endregion
+
+#region Fields
+
+    /// <summary>
+    /// Active host.
+    /// </summary>
+    protected internal FailoverServer _activeHost;
+
+#endregion
+
+    internal FailoverGroup (List <FailoverServer> hosts)
+    {
+        this.Hosts = hosts;
+        this.SetInitialActiveServer ();
+    }
+
+    /// <summary>
+    /// Sets the initial active host.
+    /// </summary>
+    protected internal abstract void SetInitialActiveServer ();
+
+    /// <summary>
+    /// Determines the next host.
+    /// </summary>
+    /// <returns><see cref="FailoverServer"/> object that represents the next available host.</returns>
+    protected internal abstract FailoverServer GetNextHost ();
 }

@@ -28,24 +28,19 @@
 
 using System;
 
-namespace EVESharp.Database.MySql.Memcached
-{
-  /// <summary>
-  /// The base exception class for all Memcached exceptions.
-  /// 
-  /// -------- This class has been deprecated and will be removed in a future version ------
-  ///
-  /// </summary>
-  public class MemcachedException : Exception
-  {
-    public MemcachedException(string msg)
-      : base(msg)
-    {
-    }
+namespace EVESharp.Database.MySql.Memcached;
 
-    public MemcachedException(string msg, Exception e)
-      : base(msg, e)
-    {
-    }
-  }
+/// <summary>
+/// The base exception class for all Memcached exceptions.
+/// 
+/// -------- This class has been deprecated and will be removed in a future version ------
+///
+/// </summary>
+public class MemcachedException : Exception
+{
+    public MemcachedException (string msg)
+        : base (msg) { }
+
+    public MemcachedException (string msg, Exception e)
+        : base (msg, e) { }
 }

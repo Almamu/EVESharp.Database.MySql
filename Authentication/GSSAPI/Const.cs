@@ -30,71 +30,74 @@ using System;
 using System.Runtime.InteropServices;
 using EVESharp.Database.MySql.Authentication.GSSAPI.Native;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI
+namespace EVESharp.Database.MySql.Authentication.GSSAPI;
+
+/// <summary>
+/// GSS API constants
+/// </summary>
+internal static class Const
 {
-  /// <summary>
-  /// GSS API constants
-  /// </summary>
-  internal static class Const
-  {
-    #region GSS Constants
-    internal const uint GSS_S_COMPLETE = 0U;
+#region GSS Constants
+
+    internal const uint GSS_S_COMPLETE        = 0U;
     internal const uint GSS_S_CONTINUE_NEEDED = 1U;
 
-    internal const uint GSS_C_INDEFINITE = 0xFFFFFFFFU;
-    internal static IntPtr GSS_C_NO_BUFFER = IntPtr.Zero;
+    internal const  uint   GSS_C_INDEFINITE    = 0xFFFFFFFFU;
+    internal static IntPtr GSS_C_NO_BUFFER     = IntPtr.Zero;
     internal static IntPtr GSS_C_NO_CREDENTIAL = IntPtr.Zero;
-    internal static IntPtr GSS_C_NO_NAME = IntPtr.Zero;
+    internal static IntPtr GSS_C_NO_NAME       = IntPtr.Zero;
 
-    internal static GssOidDescStruct GSS_C_NO_OID = default(GssOidDescStruct);
-    internal static GssOidSetStruct GSS_C_NO_OID_SET = default(GssOidSetStruct);
+    internal static GssOidDescStruct GSS_C_NO_OID     = default (GssOidDescStruct);
+    internal static GssOidSetStruct  GSS_C_NO_OID_SET = default (GssOidSetStruct);
 
     internal static uint GSS_C_QOP_DEFAULT = 0U;
-    #endregion
 
-    #region GSS OIDs
+#endregion
+
+#region GSS OIDs
+
     /// <summary>
     /// GSS_C_NT_HOSTBASED_SERVICE (1.2.840.113554.1.2.1.4)
     /// </summary>
-    private static readonly byte[] GssNtHostBasedServiceOid = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x01, 0x04 };
+    private static readonly byte [] GssNtHostBasedServiceOid = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x01, 0x04};
 
     internal static GssOidDescStruct GssNtHostBasedService = new GssOidDescStruct
     {
-      length = (uint)GssNtHostBasedServiceOid.Length,
-      elements = GCHandle.Alloc(GssNtHostBasedServiceOid, GCHandleType.Pinned).AddrOfPinnedObject()
+        length   = (uint) GssNtHostBasedServiceOid.Length,
+        elements = GCHandle.Alloc (GssNtHostBasedServiceOid, GCHandleType.Pinned).AddrOfPinnedObject ()
     };
 
     /// <summary>
     /// GSS_KRB5_NT_PRINCIPAL_NAME (1.2.840.113554.1.2.2.1)
     /// </summary>
-    private static readonly byte[] GssNtPrincipalNameOid = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02, 0x01 };
+    private static readonly byte [] GssNtPrincipalNameOid = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02, 0x01};
 
     internal static GssOidDescStruct GssNtPrincipalName = new GssOidDescStruct
     {
-      length = (uint)GssNtPrincipalNameOid.Length,
-      elements = GCHandle.Alloc(GssNtPrincipalNameOid, GCHandleType.Pinned).AddrOfPinnedObject()
+        length   = (uint) GssNtPrincipalNameOid.Length,
+        elements = GCHandle.Alloc (GssNtPrincipalNameOid, GCHandleType.Pinned).AddrOfPinnedObject ()
     };
 
     /// <summary>
     /// GSS_C_NT_USER_NAME (1.2.840.113554.1.2.1.1)
     /// </summary>
-    private static readonly byte[] GssNtUserNameOid = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x01, 0x01 };
+    private static readonly byte [] GssNtUserNameOid = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x01, 0x01};
 
     internal static GssOidDescStruct GssNtUserName = new GssOidDescStruct
     {
-      length = (uint)GssNtUserNameOid.Length,
-      elements = GCHandle.Alloc(GssNtUserNameOid, GCHandleType.Pinned).AddrOfPinnedObject()
+        length   = (uint) GssNtUserNameOid.Length,
+        elements = GCHandle.Alloc (GssNtUserNameOid, GCHandleType.Pinned).AddrOfPinnedObject ()
     };
 
     /// <summary>
     /// GSS_KRB5_MECH_OID_DESC (1.2.840.113554.1.2.2)
     /// </summary>
-    private static readonly byte[] GssKrb5MechOid = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02 };
+    private static readonly byte [] GssKrb5MechOid = {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x01, 0x02, 0x02};
 
     internal static GssOidDescStruct GssKrb5MechOidDesc = new GssOidDescStruct
     {
-      length = (uint)GssKrb5MechOid.Length,
-      elements = GCHandle.Alloc(GssKrb5MechOid, GCHandleType.Pinned).AddrOfPinnedObject()
+        length   = (uint) GssKrb5MechOid.Length,
+        elements = GCHandle.Alloc (GssKrb5MechOid, GCHandleType.Pinned).AddrOfPinnedObject ()
     };
 
     /// <summary>
@@ -102,9 +105,9 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI
     /// </summary>
     internal static GssOidSetStruct GssKrb5MechOidSet = new GssOidSetStruct
     {
-      count = 1,
-      elements = GCHandle.Alloc(GssKrb5MechOidDesc, GCHandleType.Pinned).AddrOfPinnedObject()
+        count    = 1,
+        elements = GCHandle.Alloc (GssKrb5MechOidDesc, GCHandleType.Pinned).AddrOfPinnedObject ()
     };
-    #endregion
-  }
+
+#endregion
 }

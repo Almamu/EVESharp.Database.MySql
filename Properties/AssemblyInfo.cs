@@ -35,25 +35,24 @@ using System.Security;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("EVESharp.Database.MySql")]
-[assembly: AssemblyDescription("ADO.Net driver for MySQL for .Net Framework and .Net Core")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Oracle")]
-[assembly: AssemblyProduct("MySql.Data.Core")]
-[assembly: AssemblyCopyright("Copyright (c) 2016, 2022, Oracle and/or its affiliates.")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
-[assembly: SecurityRules(SecurityRuleSet.Level1)]
-[assembly: CLSCompliant(false)]
+[assembly: AssemblyTitle ("EVESharp.Database.MySql")]
+[assembly: AssemblyDescription ("ADO.Net driver for MySQL for .Net Framework and .Net Core")]
+[assembly: AssemblyConfiguration ("")]
+[assembly: AssemblyCompany ("Oracle")]
+[assembly: AssemblyProduct ("MySql.Data.Core")]
+[assembly: AssemblyCopyright ("Copyright (c) 2016, 2022, Oracle and/or its affiliates.")]
+[assembly: AssemblyTrademark ("")]
+[assembly: AssemblyCulture ("")]
+[assembly: SecurityRules (SecurityRuleSet.Level1)]
+[assembly: CLSCompliant (false)]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
 // COM, set the ComVisible attribute to true on that type.
-[assembly: ComVisible(false)]
+[assembly: ComVisible (false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("8f0f6915-49b2-42f8-a592-bef9a09f3811")]
-
+[assembly: Guid ("8f0f6915-49b2-42f8-a592-bef9a09f3811")]
 
 //
 // In order to sign your assembly you must specify a key to use. Refer to the 

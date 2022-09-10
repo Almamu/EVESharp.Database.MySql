@@ -30,113 +30,118 @@ using System;
 using System.Globalization;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Types
+namespace EVESharp.Database.MySql.Types;
+
+internal struct MySqlDouble : IMySqlValue
 {
-
-  internal struct MySqlDouble : IMySqlValue
-  {
-    public MySqlDouble(bool isNull)
+    public MySqlDouble (bool isNull)
     {
-      IsNull = isNull;
-      Value = 0.0;
+        this.IsNull = isNull;
+        this.Value  = 0.0;
     }
 
-    public MySqlDouble(double val)
+    public MySqlDouble (double val)
     {
-      IsNull = false;
-      Value = val;
+        this.IsNull = false;
+        this.Value  = val;
     }
 
-    #region IMySqlValue Members
+#region IMySqlValue Members
 
     public bool IsNull { get; }
 
     MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.Double;
 
-    object IMySqlValue.Value => Value;
+    object IMySqlValue.Value => this.Value;
 
     public double Value { get; }
 
-    Type IMySqlValue.SystemType => typeof(double);
+    Type IMySqlValue.SystemType => typeof (double);
 
     string IMySqlValue.MySqlTypeName => "DOUBLE";
 
-    void IMySqlValue.WriteValue(MySqlPacket packet, bool binary, object val, int length)
+    void IMySqlValue.WriteValue (MySqlPacket packet, bool binary, object val, int length)
     {
-      double v = val as double? ?? Convert.ToDouble(val);
-      if (binary)
-        packet.Write(BitConverter.GetBytes(v));
-      else
-        packet.WriteStringNoNull(v.ToString("R", CultureInfo.InvariantCulture));
-    }
+        double v = val as double? ?? Convert.ToDouble (val);
 
-    IMySqlValue IMySqlValue.ReadValue(MySqlPacket packet, long length,
-    bool nullVal)
-    {
-      if (nullVal)
-        return new MySqlDouble(true);
-
-      if (length == -1)
-      {
-        byte[] b = new byte[8];
-        packet.Read(b, 0, 8);
-        return new MySqlDouble(BitConverter.ToDouble(b, 0));
-      }
-      string s = packet.ReadString(length);
-      double d;
-      try
-      {
-        d = Double.Parse(s, CultureInfo.InvariantCulture);
-      }
-      catch (OverflowException)
-      {
-        // MySQL server < 5.5 can return values not compatible with
-        // Double.Parse(), i.e out of range for double.
-
-        if (s.StartsWith("-", StringComparison.Ordinal))
-          d = double.MinValue;
+        if (binary)
+            packet.Write (BitConverter.GetBytes (v));
         else
-          d = double.MaxValue;
-      }
-      return new MySqlDouble(d);
+            packet.WriteStringNoNull (v.ToString ("R", CultureInfo.InvariantCulture));
     }
 
-    void IMySqlValue.SkipValue(MySqlPacket packet)
+    IMySqlValue IMySqlValue.ReadValue
+    (
+        MySqlPacket packet, long length,
+        bool        nullVal
+    )
     {
-      packet.Position += 8;
+        if (nullVal)
+            return new MySqlDouble (true);
+
+        if (length == -1)
+        {
+            byte [] b = new byte[8];
+            packet.Read (b, 0, 8);
+            return new MySqlDouble (BitConverter.ToDouble (b, 0));
+        }
+
+        string s = packet.ReadString (length);
+        double d;
+
+        try
+        {
+            d = double.Parse (s, CultureInfo.InvariantCulture);
+        }
+        catch (OverflowException)
+        {
+            // MySQL server < 5.5 can return values not compatible with
+            // Double.Parse(), i.e out of range for double.
+
+            if (s.StartsWith ("-", StringComparison.Ordinal))
+                d = double.MinValue;
+            else
+                d = double.MaxValue;
+        }
+
+        return new MySqlDouble (d);
     }
 
-    #endregion
-
-    internal static void SetDSInfo(MySqlSchemaCollection sc)
+    void IMySqlValue.SkipValue (MySqlPacket packet)
     {
-      // we use name indexing because this method will only be called
-      // when GetSchema is called for the DataSourceInformation 
-      // collection and then it wil be cached.
-      MySqlSchemaRow row = sc.AddRow();
-      row["TypeName"] = "DOUBLE";
-      row["ProviderDbType"] = MySqlDbType.Double;
-      row["ColumnSize"] = 0;
-      row["CreateFormat"] = "DOUBLE";
-      row["CreateParameters"] = null;
-      row["DataType"] = "System.Double";
-      row["IsAutoincrementable"] = false;
-      row["IsBestMatch"] = true;
-      row["IsCaseSensitive"] = false;
-      row["IsFixedLength"] = true;
-      row["IsFixedPrecisionScale"] = true;
-      row["IsLong"] = false;
-      row["IsNullable"] = true;
-      row["IsSearchable"] = true;
-      row["IsSearchableWithLike"] = false;
-      row["IsUnsigned"] = false;
-      row["MaximumScale"] = 0;
-      row["MinimumScale"] = 0;
-      row["IsConcurrencyType"] = DBNull.Value;
-      row["IsLiteralSupported"] = false;
-      row["LiteralPrefix"] = null;
-      row["LiteralSuffix"] = null;
-      row["NativeDataType"] = null;
+        packet.Position += 8;
     }
-  }
+
+#endregion
+
+    internal static void SetDSInfo (MySqlSchemaCollection sc)
+    {
+        // we use name indexing because this method will only be called
+        // when GetSchema is called for the DataSourceInformation 
+        // collection and then it wil be cached.
+        MySqlSchemaRow row = sc.AddRow ();
+        row ["TypeName"]              = "DOUBLE";
+        row ["ProviderDbType"]        = MySqlDbType.Double;
+        row ["ColumnSize"]            = 0;
+        row ["CreateFormat"]          = "DOUBLE";
+        row ["CreateParameters"]      = null;
+        row ["DataType"]              = "System.Double";
+        row ["IsAutoincrementable"]   = false;
+        row ["IsBestMatch"]           = true;
+        row ["IsCaseSensitive"]       = false;
+        row ["IsFixedLength"]         = true;
+        row ["IsFixedPrecisionScale"] = true;
+        row ["IsLong"]                = false;
+        row ["IsNullable"]            = true;
+        row ["IsSearchable"]          = true;
+        row ["IsSearchableWithLike"]  = false;
+        row ["IsUnsigned"]            = false;
+        row ["MaximumScale"]          = 0;
+        row ["MinimumScale"]          = 0;
+        row ["IsConcurrencyType"]     = DBNull.Value;
+        row ["IsLiteralSupported"]    = false;
+        row ["LiteralPrefix"]         = null;
+        row ["LiteralSuffix"]         = null;
+        row ["NativeDataType"]        = null;
+    }
 }

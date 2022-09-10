@@ -26,20 +26,19 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-namespace EVESharp.Database.MySql.Authentication.FIDO.Native
-{
-  /// <summary>
-  /// FIDO assertion handle
-  /// </summary>
-  internal struct fido_assert_t { }
+namespace EVESharp.Database.MySql.Authentication.FIDO.Native;
 
-  /// <summary>
-  /// FIDO device handle
-  /// </summary>
-  internal struct fido_dev_t { }
+/// <summary>
+/// FIDO assertion handle
+/// </summary>
+internal struct fido_assert_t { }
 
-  /// <summary>
-  /// FIDO device info handle
-  /// </summary>
-  internal struct fido_dev_info_t { }
-}
+/// <summary>
+/// FIDO device handle
+/// </summary>
+internal struct fido_dev_t { }
+
+/// <summary>
+/// FIDO device info handle
+/// </summary>
+internal struct fido_dev_info_t { }

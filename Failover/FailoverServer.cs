@@ -29,14 +29,14 @@
 using EVESharp.Database.MySql.Common;
 using System;
 
-namespace EVESharp.Database.MySql.Failover
+namespace EVESharp.Database.MySql.Failover;
+
+/// <summary>
+/// Depicts a host which can be failed over to.
+/// </summary>
+internal class FailoverServer : IEquatable <FailoverServer>
 {
-  /// <summary>
-  /// Depicts a host which can be failed over to.
-  /// </summary>
-  internal class FailoverServer : IEquatable<FailoverServer>
-  {
-    #region Properties
+#region Properties
 
     /// <summary>
     /// Gets and sets the name or address of the host.
@@ -63,7 +63,7 @@ namespace EVESharp.Database.MySql.Failover
     /// </summary>
     internal DateTime DemotedTime { get; set; }
 
-    #endregion
+#endregion
 
     /// <summary>
     /// Initializes a <see cref="FailoverServer"/> object.
@@ -71,11 +71,11 @@ namespace EVESharp.Database.MySql.Failover
     /// <param name="host">The host.</param>
     /// <param name="port">The port.</param>
     /// <param name="priority">The priority.</param>
-    internal FailoverServer(string host, int port, int? priority)
+    internal FailoverServer (string host, int port, int? priority)
     {
-      this.Host = host;
-      this.Port = port;
-      this.Priority = priority ?? -1;
+        this.Host     = host;
+        this.Port     = port;
+        this.Priority = priority ?? -1;
     }
 
     /// <summary>
@@ -83,10 +83,11 @@ namespace EVESharp.Database.MySql.Failover
     /// </summary>
     /// <param name="other">FailoverServer object to compare.</param>
     /// <returns><c>True</c> if host properties are the same. Otherwise, <c>false</c>.</returns>
-    public bool Equals(FailoverServer other)
+    public bool Equals (FailoverServer other)
     {
-      if (other == null) return false;
-      return (this.Host == other.Host && this.Port == other.Port);
+        if (other == null)
+            return false;
+
+        return this.Host == other.Host && this.Port == other.Port;
     }
-  }
 }

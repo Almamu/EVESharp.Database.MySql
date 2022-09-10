@@ -33,36 +33,33 @@ using System.Security;
 using System.Security.Permissions;
 using System.Net;
 
+namespace EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+/// <summary>
+/// Defines security permissions assigned to a MySQL object.
+/// </summary>
+public sealed class MySqlSecurityPermission : MarshalByRefObject
 {
-  /// <summary>
-  /// Defines security permissions assigned to a MySQL object.
-  /// </summary>
-  public sealed class MySqlSecurityPermission : MarshalByRefObject
-  {
-    private MySqlSecurityPermission()
-    {
-    }
+    private MySqlSecurityPermission () { }
 
     /// <summary>
     /// Creates a set of permissions.
     /// </summary>
     /// <param name="includeReflectionPermission">A flag indicating if the reflection permission should be included.</param>
     /// <returns>A <see cref="PermissionSet"/> object representing a collection of permissions.</returns>
-    public static PermissionSet CreatePermissionSet(bool includeReflectionPermission)
+    public static PermissionSet CreatePermissionSet (bool includeReflectionPermission)
     {
-      PermissionSet permissionsSet = new PermissionSet(null);
-      permissionsSet.AddPermission(new SecurityPermission(SecurityPermissionFlag.Execution));
-      permissionsSet.AddPermission(new SocketPermission(PermissionState.Unrestricted));
-      permissionsSet.AddPermission(new SecurityPermission(SecurityPermissionFlag.UnmanagedCode));
-      permissionsSet.AddPermission(new DnsPermission(PermissionState.Unrestricted));
-      permissionsSet.AddPermission(new FileIOPermission(PermissionState.Unrestricted));
-      permissionsSet.AddPermission(new EnvironmentPermission(PermissionState.Unrestricted));
+        PermissionSet permissionsSet = new PermissionSet (null);
+        permissionsSet.AddPermission (new SecurityPermission (SecurityPermissionFlag.Execution));
+        permissionsSet.AddPermission (new SocketPermission (PermissionState.Unrestricted));
+        permissionsSet.AddPermission (new SecurityPermission (SecurityPermissionFlag.UnmanagedCode));
+        permissionsSet.AddPermission (new DnsPermission (PermissionState.Unrestricted));
+        permissionsSet.AddPermission (new FileIOPermission (PermissionState.Unrestricted));
+        permissionsSet.AddPermission (new EnvironmentPermission (PermissionState.Unrestricted));
 
-      if (includeReflectionPermission) permissionsSet.AddPermission(new ReflectionPermission(PermissionState.Unrestricted));
+        if (includeReflectionPermission)
+            permissionsSet.AddPermission (new ReflectionPermission (PermissionState.Unrestricted));
 
-      return permissionsSet;
+        return permissionsSet;
     }
-  }
 }

@@ -28,37 +28,39 @@
 
 using System;
 
-namespace EVESharp.Database.MySql
+namespace EVESharp.Database.MySql;
+
+/// <summary>
+/// Interceptor is the base class for the "manager" classes such as ExceptionInterceptor,
+/// CommandInterceptor, etc
+/// </summary>
+internal abstract class Interceptor
 {
-  /// <summary>
-  /// Interceptor is the base class for the "manager" classes such as ExceptionInterceptor,
-  /// CommandInterceptor, etc
-  /// </summary>
-  internal abstract class Interceptor
-  {
     protected MySqlConnection Connection;
 
-    protected void LoadInterceptors(string interceptorList)
+    protected void LoadInterceptors (string interceptorList)
     {
-      if (String.IsNullOrEmpty(interceptorList)) return;
+        if (string.IsNullOrEmpty (interceptorList))
+            return;
 
-      string[] interceptors = interceptorList.Split('|');
-      foreach (string interceptorType in interceptors)
-      {
-        if (String.IsNullOrEmpty(interceptorType)) continue;
+        string [] interceptors = interceptorList.Split ('|');
 
-        string type = ResolveType(interceptorType);
-        Type t = Type.GetType(type);
-        object interceptorObject = Activator.CreateInstance(t);
-        AddInterceptor(interceptorObject);
-      }
+        foreach (string interceptorType in interceptors)
+        {
+            if (string.IsNullOrEmpty (interceptorType))
+                continue;
+
+            string type              = this.ResolveType (interceptorType);
+            Type   t                 = Type.GetType (type);
+            object interceptorObject = Activator.CreateInstance (t);
+            this.AddInterceptor (interceptorObject);
+        }
     }
 
-    protected abstract void AddInterceptor(object o);
+    protected abstract void AddInterceptor (object o);
 
-    protected virtual string ResolveType(string nameOrType)
+    protected virtual string ResolveType (string nameOrType)
     {
-      return nameOrType;
+        return nameOrType;
     }
-  }
 }

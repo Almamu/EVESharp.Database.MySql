@@ -33,228 +33,230 @@ using System.Text;
 using EVESharp.Database.MySql;
 using EVESharp.Database.MySql.Common;
 
+namespace EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql
+internal class MySqlPacket
 {
-  class MySqlPacket
-  {
-    private byte[] _tempBuffer = new byte[256];
-    private Encoding _encoding;
-    private readonly MemoryStream _buffer = new MemoryStream(5);
+    private          byte []      _tempBuffer = new byte[256];
+    private          Encoding     _encoding;
+    private readonly MemoryStream _buffer = new MemoryStream (5);
 
-    private MySqlPacket()
+    private MySqlPacket ()
     {
-      Clear();
+        this.Clear ();
     }
 
-    public MySqlPacket(Encoding enc)
-      : this()
+    public MySqlPacket (Encoding enc)
+        : this ()
     {
-      Encoding = enc;
+        this.Encoding = enc;
     }
 
-    public MySqlPacket(MemoryStream stream)
-      : this()
+    public MySqlPacket (MemoryStream stream)
+        : this ()
     {
-      _buffer = stream;
+        this._buffer = stream;
     }
 
-    #region Properties
+#region Properties
 
     public Encoding Encoding
     {
-      get { return _encoding; }
-      set
-      {
-        Debug.Assert(value != null);
-        _encoding = value;
-      }
+        get => this._encoding;
+        set
+        {
+            Debug.Assert (value != null);
+            this._encoding = value;
+        }
     }
 
-    public bool HasMoreData
-    {
-      get { return _buffer.Position < _buffer.Length; }
-    }
+    public bool HasMoreData => this._buffer.Position < this._buffer.Length;
 
     public int Position
     {
-      get { return (int)_buffer.Position; }
-      set { _buffer.Position = (long)value; }
+        get => (int) this._buffer.Position;
+        set => this._buffer.Position = (long) value;
     }
 
     public int Length
     {
-      get { return (int)_buffer.Length; }
-      set { _buffer.SetLength(value); }
+        get => (int) this._buffer.Length;
+        set => this._buffer.SetLength (value);
     }
 
     public bool IsLastPacket
     {
-      get
-      {
-        byte[] bits = _buffer.GetBuffer();
+        get
+        {
+            byte [] bits = this._buffer.GetBuffer ();
 
-        return bits[0] == 0xfe && Length <= 5;
-      }
+            return bits [0] == 0xfe && this.Length <= 5;
+        }
     }
 
-    public byte[] Buffer
+    public byte [] Buffer
     {
-      get
-      {
-        byte[] bits = _buffer.GetBuffer();
+        get
+        {
+            byte [] bits = this._buffer.GetBuffer ();
 
-        return bits;
-      }
+            return bits;
+        }
     }
 
     public DBVersion Version { get; set; }
 
-    #endregion
+#endregion
 
-    public void Clear()
+    public void Clear ()
     {
-      Position = 4;
+        this.Position = 4;
     }
 
+#region Byte methods
 
-    #region Byte methods
-
-    public byte ReadByte()
+    public byte ReadByte ()
     {
-      return (byte)_buffer.ReadByte();
+        return (byte) this._buffer.ReadByte ();
     }
 
-    public int Read(byte[] byteBuffer, int offset, int count)
+    public int Read (byte [] byteBuffer, int offset, int count)
     {
-      return _buffer.Read(byteBuffer, offset, count);
+        return this._buffer.Read (byteBuffer, offset, count);
     }
 
-    public void WriteByte(byte b)
+    public void WriteByte (byte b)
     {
-      _buffer.WriteByte(b);
+        this._buffer.WriteByte (b);
     }
 
-    public void Write(byte[] bytesToWrite)
+    public void Write (byte [] bytesToWrite)
     {
-      Write(bytesToWrite, 0, bytesToWrite.Length);
+        this.Write (bytesToWrite, 0, bytesToWrite.Length);
     }
 
-    public void Write(byte[] bytesToWrite, int offset, int countToWrite)
+    public void Write (byte [] bytesToWrite, int offset, int countToWrite)
     {
-      _buffer.Write(bytesToWrite, offset, countToWrite);
+        this._buffer.Write (bytesToWrite, offset, countToWrite);
     }
 
-    public int ReadNBytes()
+    public int ReadNBytes ()
     {
-      byte c = ReadByte();
-      if (c < 1 || c > 4)
-        throw new MySqlException(Resources.IncorrectTransmission);
-      return ReadInteger(c);
+        byte c = this.ReadByte ();
+
+        if (c < 1 || c > 4)
+            throw new MySqlException (Resources.IncorrectTransmission);
+
+        return this.ReadInteger (c);
     }
 
-    public void SetByte(long position, byte value)
+    public void SetByte (long position, byte value)
     {
-      long currentPosition = _buffer.Position;
-      _buffer.Position = position;
-      _buffer.WriteByte(value);
-      _buffer.Position = currentPosition;
+        long currentPosition = this._buffer.Position;
+        this._buffer.Position = position;
+        this._buffer.WriteByte (value);
+        this._buffer.Position = currentPosition;
     }
 
-    #endregion
+#endregion
 
-    #region Integer methods
+#region Integer methods
 
-    public long ReadFieldLength()
+    public long ReadFieldLength ()
     {
-      byte c = ReadByte();
+        byte c = this.ReadByte ();
 
-      switch (c)
-      {
-        case 251: return -1;
-        case 252: return ReadInteger(2);
-        case 253: return ReadInteger(3);
-        case 254: return ReadLong(8);
-        default: return c;
-      }
+        switch (c)
+        {
+            case 251: return -1;
+            case 252: return this.ReadInteger (2);
+            case 253: return this.ReadInteger (3);
+            case 254: return this.ReadLong (8);
+            default:  return c;
+        }
     }
 
-    public ulong ReadBitValue(int numbytes)
+    public ulong ReadBitValue (int numbytes)
     {
-      ulong value = 0;
+        ulong value = 0;
 
-      int pos = (int)_buffer.Position;
-      byte[] bits = _buffer.GetBuffer();
-      int shift = 0;
+        int     pos   = (int) this._buffer.Position;
+        byte [] bits  = this._buffer.GetBuffer ();
+        int     shift = 0;
 
-      for (int i = 0; i < numbytes; i++)
-      {
-        value <<= shift;
-        value |= bits[pos++];
-        shift = 8;
-      }
-      _buffer.Position += numbytes;
-      return value;
+        for (int i = 0; i < numbytes; i++)
+        {
+            value <<= shift;
+            value |=  bits [pos++];
+            shift =   8;
+        }
+
+        this._buffer.Position += numbytes;
+        return value;
     }
 
-    public long ReadLong(int numbytes)
+    public long ReadLong (int numbytes)
     {
-      Debug.Assert((_buffer.Position + numbytes) <= _buffer.Length);
+        Debug.Assert (this._buffer.Position + numbytes <= this._buffer.Length);
 
-      byte[] bits = _buffer.GetBuffer();
-      int pos = (int)_buffer.Position;
-      _buffer.Position += numbytes;
+        byte [] bits = this._buffer.GetBuffer ();
+        int     pos  = (int) this._buffer.Position;
+        this._buffer.Position += numbytes;
 
-      switch (numbytes)
-      {
-        case 2: return BitConverter.ToUInt16(bits, pos);
-        case 4: return BitConverter.ToUInt32(bits, pos);
-        case 8: return BitConverter.ToInt64(bits, pos);
-      }
-      throw new NotSupportedException("Only byte lengths of 2, 4, or 8 are supported");
+        switch (numbytes)
+        {
+            case 2: return BitConverter.ToUInt16 (bits, pos);
+            case 4: return BitConverter.ToUInt32 (bits, pos);
+            case 8: return BitConverter.ToInt64 (bits, pos);
+        }
+
+        throw new NotSupportedException ("Only byte lengths of 2, 4, or 8 are supported");
     }
 
-    public ulong ReadULong(int numbytes)
+    public ulong ReadULong (int numbytes)
     {
-      Debug.Assert((_buffer.Position + numbytes) <= _buffer.Length);
+        Debug.Assert (this._buffer.Position + numbytes <= this._buffer.Length);
 
-      byte[] bits = _buffer.GetBuffer();
+        byte [] bits = this._buffer.GetBuffer ();
 
-      int pos = (int)_buffer.Position;
-      _buffer.Position += numbytes;
+        int pos = (int) this._buffer.Position;
+        this._buffer.Position += numbytes;
 
-      switch (numbytes)
-      {
-        case 2: return BitConverter.ToUInt16(bits, pos);
-        case 4: return BitConverter.ToUInt32(bits, pos);
-        case 8: return BitConverter.ToUInt64(bits, pos);
-      }
-      throw new NotSupportedException("Only byte lengths of 2, 4, or 8 are supported");
+        switch (numbytes)
+        {
+            case 2: return BitConverter.ToUInt16 (bits, pos);
+            case 4: return BitConverter.ToUInt32 (bits, pos);
+            case 8: return BitConverter.ToUInt64 (bits, pos);
+        }
+
+        throw new NotSupportedException ("Only byte lengths of 2, 4, or 8 are supported");
     }
 
-    public int Read3ByteInt()
+    public int Read3ByteInt ()
     {
-      int value = 0;
+        int value = 0;
 
-      int pos = (int)_buffer.Position;
-      byte[] bits = _buffer.GetBuffer();
-      int shift = 0;
+        int     pos   = (int) this._buffer.Position;
+        byte [] bits  = this._buffer.GetBuffer ();
+        int     shift = 0;
 
-      for (int i = 0; i < 3; i++)
-      {
-        value |= (int)(bits[pos++] << shift);
-        shift += 8;
-      }
-      _buffer.Position += 3;
-      return value;
+        for (int i = 0; i < 3; i++)
+        {
+            value |= (int) (bits [pos++] << shift);
+            shift += 8;
+        }
+
+        this._buffer.Position += 3;
+        return value;
     }
 
-    public int ReadInteger(int numbytes)
+    public int ReadInteger (int numbytes)
     {
-      if (numbytes == 3)
-        return Read3ByteInt();
-      Debug.Assert(numbytes <= 4);
-      return (int)ReadLong(numbytes);
+        if (numbytes == 3)
+            return this.Read3ByteInt ();
+
+        Debug.Assert (numbytes <= 4);
+        return (int) this.ReadLong (numbytes);
     }
 
     /// <summary>
@@ -262,134 +264,139 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="v"></param>
     /// <param name="numbytes"></param>
-    public void WriteInteger(long v, int numbytes)
+    public void WriteInteger (long v, int numbytes)
     {
-      long val = v;
+        long val = v;
 
-      Debug.Assert(numbytes > 0 && numbytes < 9);
+        Debug.Assert (numbytes > 0 && numbytes < 9);
 
-      for (int x = 0; x < numbytes; x++)
-      {
-        _tempBuffer[x] = (byte)(val & 0xff);
-        val >>= 8;
-      }
-      Write(_tempBuffer, 0, numbytes);
+        for (int x = 0; x < numbytes; x++)
+        {
+            this._tempBuffer [x] =   (byte) (val & 0xff);
+            val                  >>= 8;
+        }
+
+        this.Write (this._tempBuffer, 0, numbytes);
     }
 
-    public int ReadPackedInteger()
+    public int ReadPackedInteger ()
     {
-      byte c = ReadByte();
+        byte c = this.ReadByte ();
 
-      switch (c)
-      {
-        case 251: return -1;
-        case 252: return ReadInteger(2);
-        case 253: return ReadInteger(3);
-        case 254: return ReadInteger(4);
-        default: return c;
-      }
+        switch (c)
+        {
+            case 251: return -1;
+            case 252: return this.ReadInteger (2);
+            case 253: return this.ReadInteger (3);
+            case 254: return this.ReadInteger (4);
+            default:  return c;
+        }
     }
 
-    public void WriteLength(long length)
+    public void WriteLength (long length)
     {
-      if (length < 251)
-        WriteByte((byte)length);
-      else if (length < 65536L)
-      {
-        WriteByte(252);
-        WriteInteger(length, 2);
-      }
-      else if (length < 16777216L)
-      {
-        WriteByte(253);
-        WriteInteger(length, 3);
-      }
-      else
-      {
-        WriteByte(254);
-        WriteInteger(length, 8);
-      }
+        if (length < 251)
+        {
+            this.WriteByte ((byte) length);
+        }
+        else if (length < 65536L)
+        {
+            this.WriteByte (252);
+            this.WriteInteger (length, 2);
+        }
+        else if (length < 16777216L)
+        {
+            this.WriteByte (253);
+            this.WriteInteger (length, 3);
+        }
+        else
+        {
+            this.WriteByte (254);
+            this.WriteInteger (length, 8);
+        }
     }
 
-    #endregion
+#endregion
 
-    #region String methods
+#region String methods
 
-    public void WriteLenString(string s)
+    public void WriteLenString (string s)
     {
-      byte[] bytes = _encoding.GetBytes(s);
-      WriteLength(bytes.Length);
-      Write(bytes, 0, bytes.Length);
+        byte [] bytes = this._encoding.GetBytes (s);
+        this.WriteLength (bytes.Length);
+        this.Write (bytes, 0, bytes.Length);
     }
 
-    public void WriteStringNoNull(string v)
+    public void WriteStringNoNull (string v)
     {
-      byte[] bytes = _encoding.GetBytes(v);
-      Write(bytes, 0, bytes.Length);
+        byte [] bytes = this._encoding.GetBytes (v);
+        this.Write (bytes, 0, bytes.Length);
     }
 
-    public void WriteString(string v)
+    public void WriteString (string v)
     {
-      WriteStringNoNull(v);
-      WriteByte(0);
+        this.WriteStringNoNull (v);
+        this.WriteByte (0);
     }
 
-    public string ReadLenString()
+    public string ReadLenString ()
     {
-      long len = ReadPackedInteger();
-      return ReadString(len);
+        long len = this.ReadPackedInteger ();
+        return this.ReadString (len);
     }
 
-    public string ReadAsciiString(long length)
+    public string ReadAsciiString (long length)
     {
-      if (length == 0)
-        return String.Empty;
-      //            byte[] buf = new byte[length];
-      Read(_tempBuffer, 0, (int)length);
-      return Encoding.GetEncoding("us-ascii").GetString(_tempBuffer, 0, (int)length);
-      //return encoding.GetString(tempBuffer, 0, (int)length); //buf.Length);
+        if (length == 0)
+            return string.Empty;
+
+        //            byte[] buf = new byte[length];
+        this.Read (this._tempBuffer, 0, (int) length);
+        return Encoding.GetEncoding ("us-ascii").GetString (this._tempBuffer, 0, (int) length);
+        //return encoding.GetString(tempBuffer, 0, (int)length); //buf.Length);
     }
 
-    public string ReadString(long length)
+    public string ReadString (long length)
     {
-      if (length == 0)
-        return String.Empty;
-      if (_tempBuffer == null || length > _tempBuffer.Length)
-        _tempBuffer = new byte[length];
-      Read(_tempBuffer, 0, (int)length);
-      return _encoding.GetString(_tempBuffer, 0, (int)length);
+        if (length == 0)
+            return string.Empty;
+
+        if (this._tempBuffer == null || length > this._tempBuffer.Length)
+            this._tempBuffer = new byte[length];
+
+        this.Read (this._tempBuffer, 0, (int) length);
+        return this._encoding.GetString (this._tempBuffer, 0, (int) length);
     }
 
-    public string ReadString()
+    public string ReadString ()
     {
-      return ReadString(_encoding);
+        return this.ReadString (this._encoding);
     }
 
-    public string ReadString(Encoding theEncoding)
+    public string ReadString (Encoding theEncoding)
     {
-      byte[] bytes = ReadStringAsBytes();
-      string s = theEncoding.GetString(bytes, 0, bytes.Length);
-      return s;
+        byte [] bytes = this.ReadStringAsBytes ();
+        string  s     = theEncoding.GetString (bytes, 0, bytes.Length);
+        return s;
     }
 
-    public byte[] ReadStringAsBytes()
+    public byte [] ReadStringAsBytes ()
     {
-      byte[] readBytes;
-      byte[] bits = _buffer.GetBuffer();
-      int end = (int)_buffer.Position;
-      byte[] tempBuffer = bits;
+        byte [] readBytes;
+        byte [] bits       = this._buffer.GetBuffer ();
+        int     end        = (int) this._buffer.Position;
+        byte [] tempBuffer = bits;
 
-      while (end < (int)_buffer.Length &&
-          tempBuffer[end] != 0 && (int)tempBuffer[end] != -1)
-        end++;
+        while (end < (int) this._buffer.Length &&
+               tempBuffer [end] != 0 && (int) tempBuffer [end] != -1)
+            end++;
 
-      readBytes = new byte[end - _buffer.Position];
-      Array.Copy(tempBuffer, (int)_buffer.Position, readBytes, 0, (int)(end - _buffer.Position));
-      _buffer.Position = end + 1;
+        readBytes = new byte[end - this._buffer.Position];
+        Array.Copy (tempBuffer, (int) this._buffer.Position, readBytes, 0, (int) (end - this._buffer.Position));
+        this._buffer.Position = end + 1;
 
-      return readBytes;
+        return readBytes;
     }
 
-    #endregion
-  }
+#endregion
 }

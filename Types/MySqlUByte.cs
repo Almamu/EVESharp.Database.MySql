@@ -30,92 +30,92 @@ using System;
 using System.Globalization;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Types
+namespace EVESharp.Database.MySql.Types;
+
+internal struct MySqlUByte : IMySqlValue
 {
-  internal struct MySqlUByte : IMySqlValue
-  {
-    public MySqlUByte(bool isNull)
+    public MySqlUByte (bool isNull)
     {
-      IsNull = isNull;
-      Value = 0;
+        this.IsNull = isNull;
+        this.Value  = 0;
     }
 
-    public MySqlUByte(byte val)
+    public MySqlUByte (byte val)
     {
-      IsNull = false;
-      Value = val;
+        this.IsNull = false;
+        this.Value  = val;
     }
 
-    #region IMySqlValue Members
+#region IMySqlValue Members
 
     public bool IsNull { get; }
 
     MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.UByte;
 
-    object IMySqlValue.Value => Value;
+    object IMySqlValue.Value => this.Value;
 
     public byte Value { get; }
 
-    Type IMySqlValue.SystemType => typeof(byte);
+    Type IMySqlValue.SystemType => typeof (byte);
 
     string IMySqlValue.MySqlTypeName => "TINYINT";
 
-    void IMySqlValue.WriteValue(MySqlPacket packet, bool binary, object val, int length)
+    void IMySqlValue.WriteValue (MySqlPacket packet, bool binary, object val, int length)
     {
-      byte v = val as byte? ?? Convert.ToByte(val);
-      if (binary)
-        packet.WriteByte(v);
-      else
-        packet.WriteStringNoNull(v.ToString(CultureInfo.InvariantCulture));
+        byte v = val as byte? ?? Convert.ToByte (val);
+
+        if (binary)
+            packet.WriteByte (v);
+        else
+            packet.WriteStringNoNull (v.ToString (CultureInfo.InvariantCulture));
     }
 
-    IMySqlValue IMySqlValue.ReadValue(MySqlPacket packet, long length, bool nullVal)
+    IMySqlValue IMySqlValue.ReadValue (MySqlPacket packet, long length, bool nullVal)
     {
-      if (nullVal)
-        return new MySqlUByte(true);
+        if (nullVal)
+            return new MySqlUByte (true);
 
-      if (length == -1)
-        return new MySqlUByte((byte)packet.ReadByte());
-      else
-        return new MySqlUByte(Byte.Parse(packet.ReadString(length), CultureInfo.InvariantCulture));
+        if (length == -1)
+            return new MySqlUByte ((byte) packet.ReadByte ());
+        else
+            return new MySqlUByte (byte.Parse (packet.ReadString (length), CultureInfo.InvariantCulture));
     }
 
-    void IMySqlValue.SkipValue(MySqlPacket packet)
+    void IMySqlValue.SkipValue (MySqlPacket packet)
     {
-      packet.ReadByte();
+        packet.ReadByte ();
     }
 
-    #endregion
+#endregion
 
-    internal static void SetDSInfo(MySqlSchemaCollection sc)
+    internal static void SetDSInfo (MySqlSchemaCollection sc)
     {
-      // we use name indexing because this method will only be called
-      // when GetSchema is called for the DataSourceInformation 
-      // collection and then it wil be cached.
-      MySqlSchemaRow row = sc.AddRow();
-      row["TypeName"] = "TINYINT";
-      row["ProviderDbType"] = MySqlDbType.UByte;
-      row["ColumnSize"] = 0;
-      row["CreateFormat"] = "TINYINT UNSIGNED";
-      row["CreateParameters"] = null;
-      row["DataType"] = "System.Byte";
-      row["IsAutoincrementable"] = true;
-      row["IsBestMatch"] = true;
-      row["IsCaseSensitive"] = false;
-      row["IsFixedLength"] = true;
-      row["IsFixedPrecisionScale"] = true;
-      row["IsLong"] = false;
-      row["IsNullable"] = true;
-      row["IsSearchable"] = true;
-      row["IsSearchableWithLike"] = false;
-      row["IsUnsigned"] = true;
-      row["MaximumScale"] = 0;
-      row["MinimumScale"] = 0;
-      row["IsConcurrencyType"] = DBNull.Value;
-      row["IsLiteralSupported"] = false;
-      row["LiteralPrefix"] = null;
-      row["LiteralSuffix"] = null;
-      row["NativeDataType"] = null;
+        // we use name indexing because this method will only be called
+        // when GetSchema is called for the DataSourceInformation 
+        // collection and then it wil be cached.
+        MySqlSchemaRow row = sc.AddRow ();
+        row ["TypeName"]              = "TINYINT";
+        row ["ProviderDbType"]        = MySqlDbType.UByte;
+        row ["ColumnSize"]            = 0;
+        row ["CreateFormat"]          = "TINYINT UNSIGNED";
+        row ["CreateParameters"]      = null;
+        row ["DataType"]              = "System.Byte";
+        row ["IsAutoincrementable"]   = true;
+        row ["IsBestMatch"]           = true;
+        row ["IsCaseSensitive"]       = false;
+        row ["IsFixedLength"]         = true;
+        row ["IsFixedPrecisionScale"] = true;
+        row ["IsLong"]                = false;
+        row ["IsNullable"]            = true;
+        row ["IsSearchable"]          = true;
+        row ["IsSearchableWithLike"]  = false;
+        row ["IsUnsigned"]            = true;
+        row ["MaximumScale"]          = 0;
+        row ["MinimumScale"]          = 0;
+        row ["IsConcurrencyType"]     = DBNull.Value;
+        row ["IsLiteralSupported"]    = false;
+        row ["LiteralPrefix"]         = null;
+        row ["LiteralSuffix"]         = null;
+        row ["NativeDataType"]        = null;
     }
-  }
 }

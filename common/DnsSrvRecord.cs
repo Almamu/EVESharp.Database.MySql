@@ -29,14 +29,14 @@
 using System.Collections.Generic;
 using Ubiety.Dns.Core.Records;
 
-namespace EVESharp.Database.MySql.Common
+namespace EVESharp.Database.MySql.Common;
+
+/// <summary>
+/// Class that represents a DNS SRV record.
+/// RFC 2782 (https://tools.ietf.org/html/rfc2782)
+/// </summary>
+internal class DnsSrvRecord : IComparer <DnsSrvRecord>
 {
-  /// <summary>
-  /// Class that represents a DNS SRV record.
-  /// RFC 2782 (https://tools.ietf.org/html/rfc2782)
-  /// </summary>
-  internal class DnsSrvRecord : IComparer<DnsSrvRecord>
-  {
     /// <summary>
     /// Gets the port.
     /// </summary>
@@ -64,23 +64,22 @@ namespace EVESharp.Database.MySql.Common
     /// <param name="priority">The priority.</param>
     /// <param name="target">The target.</param>
     /// <param name="weight">The weight.</param>
-    internal DnsSrvRecord(int port, int priority, string target, int weight)
+    internal DnsSrvRecord (int port, int priority, string target, int weight)
     {
-      Port = port;
-      Priority = priority;
-      Target = target;
-      Weight = weight;
+        this.Port     = port;
+        this.Priority = priority;
+        this.Target   = target;
+        this.Weight   = weight;
     }
 
-    internal DnsSrvRecord() { }
+    internal DnsSrvRecord () { }
 
     /// <summary>
     /// Initializes a new instance of <see cref="DnsSrvRecord"/> class.
     /// </summary>
     /// <param name="recordSRV">The DNS SRV record.</param>
-    internal DnsSrvRecord(RecordSrv recordSRV)
-      : this(recordSRV.Port, recordSRV.Priority, recordSRV.Target, recordSRV.Weight)
-    { }
+    internal DnsSrvRecord (RecordSrv recordSRV)
+        : this (recordSRV.Port, recordSRV.Priority, recordSRV.Target, recordSRV.Weight) { }
 
     /// <summary>
     /// Compare two <see cref="DnsSrvRecord"/> objects. First, using their priority and
@@ -89,24 +88,23 @@ namespace EVESharp.Database.MySql.Common
     /// <param name="x">A <see cref="DnsSrvRecord"/> to compare.</param>
     /// <param name="y">A <see cref="DnsSrvRecord"/> to compare.</param>
     /// <returns></returns>
-    public int Compare(DnsSrvRecord x, DnsSrvRecord y)
+    public int Compare (DnsSrvRecord x, DnsSrvRecord y)
     {
-      int priorityDiff = x.Priority.CompareTo(y.Priority);
-      return priorityDiff == 0 ? y.Weight.CompareTo(x.Weight) : priorityDiff;
+        int priorityDiff = x.Priority.CompareTo (y.Priority);
+        return priorityDiff == 0 ? y.Weight.CompareTo (x.Weight) : priorityDiff;
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DnsSrvRecord"/> class from a <see cref="RecordSrv"/>.
     /// </summary>
     /// <param name="recordSRV">The DNS SRV record.</param>
-    public static implicit operator DnsSrvRecord(RecordSrv recordSRV)
+    public static implicit operator DnsSrvRecord (RecordSrv recordSRV)
     {
-      if (recordSRV == null)
-        return null;
+        if (recordSRV == null)
+            return null;
 
-      recordSRV.Target = recordSRV.Target.TrimEnd('.');
+        recordSRV.Target = recordSRV.Target.TrimEnd ('.');
 
-      return new DnsSrvRecord(recordSRV);
+        return new DnsSrvRecord (recordSRV);
     }
-  }
 }

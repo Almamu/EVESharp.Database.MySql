@@ -31,38 +31,37 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
-namespace EVESharp.Database.MySql.Common
+namespace EVESharp.Database.MySql.Common;
+
+[Serializable]
+internal class UnixEndPoint : EndPoint
 {
-  [Serializable]
-  internal class UnixEndPoint : EndPoint
-  {
     public string SocketName { get; private set; }
 
-    public UnixEndPoint(string socketName)
+    public UnixEndPoint (string socketName)
     {
-      this.SocketName = socketName;
+        this.SocketName = socketName;
     }
 
-    public override EndPoint Create(SocketAddress socketAddress)
+    public override EndPoint Create (SocketAddress socketAddress)
     {
-      int size = socketAddress.Size - 2;
-      byte[] bytes = new byte[size];
-      for (int i = 0; i < size; i++)
-      {
-        bytes[i] = socketAddress[i + 2];
-      }
-      return new UnixEndPoint(Encoding.UTF8.GetString(bytes));
+        int     size  = socketAddress.Size - 2;
+        byte [] bytes = new byte[size];
+
+        for (int i = 0; i < size; i++)
+            bytes [i] = socketAddress [i + 2];
+
+        return new UnixEndPoint (Encoding.UTF8.GetString (bytes));
     }
 
-    public override SocketAddress Serialize()
+    public override SocketAddress Serialize ()
     {
-      byte[] bytes = Encoding.UTF8.GetBytes(SocketName);
-      SocketAddress socketAddress = new SocketAddress(System.Net.Sockets.AddressFamily.Unix, bytes.Length + 3);
-      for (int i = 0; i < bytes.Length; i++)
-      {
-        socketAddress[i + 2] = bytes[i];
-      }
-      return socketAddress;
+        byte []       bytes         = Encoding.UTF8.GetBytes (this.SocketName);
+        SocketAddress socketAddress = new SocketAddress (System.Net.Sockets.AddressFamily.Unix, bytes.Length + 3);
+
+        for (int i = 0; i < bytes.Length; i++)
+            socketAddress [i + 2] = bytes [i];
+
+        return socketAddress;
     }
-  }
 }

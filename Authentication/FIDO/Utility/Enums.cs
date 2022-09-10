@@ -26,33 +26,33 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-namespace EVESharp.Database.MySql.Authentication.FIDO.Utility
-{
-  internal enum FidoStatus
-  {
-    Ok = 0,
-    TxErr = -1,
-    RxErr = -2,
-    RxNotCbor = -3,
-    RxInvalidCbor = -4,
-    InvalidParam = -5,
-    InvalidSignature = -6,
-    InvalidArgument = -7,
-    UserPresenceRequired = -8,
-    InternalError = -9
-  }
+namespace EVESharp.Database.MySql.Authentication.FIDO.Utility;
 
-  /// <summary>
-  /// <para>Status codes as defined in Client to Authenticator Protocol (CTAP) standard</para>
-  /// <para>Error response values in the range between <see cref="Ok"/> and <see cref="SpecLast"/> are reserved for spec purposes.</para>
-  /// <para>Error response values in the range between <see cref="VendorFirst"/> and <see cref="VendorLast"/>
-  /// may be used for vendor-specific implementations. All other response values are reserved for future use and may not be used.
-  /// These vendor specific error codes are not interoperable and the platform should treat these errors as any other unknown error codes.</para>
-  /// <para>Error response values in the range between <see cref="ExtensionFirst"/> and <see cref="ExtensionLast"/>
-  /// may be used for extension-specific implementations.</para>
-  /// </summary>
-  internal enum CtapStatus : int
-  {
+internal enum FidoStatus
+{
+    Ok                   = 0,
+    TxErr                = -1,
+    RxErr                = -2,
+    RxNotCbor            = -3,
+    RxInvalidCbor        = -4,
+    InvalidParam         = -5,
+    InvalidSignature     = -6,
+    InvalidArgument      = -7,
+    UserPresenceRequired = -8,
+    InternalError        = -9
+}
+
+/// <summary>
+/// <para>Status codes as defined in Client to Authenticator Protocol (CTAP) standard</para>
+/// <para>Error response values in the range between <see cref="Ok"/> and <see cref="SpecLast"/> are reserved for spec purposes.</para>
+/// <para>Error response values in the range between <see cref="VendorFirst"/> and <see cref="VendorLast"/>
+/// may be used for vendor-specific implementations. All other response values are reserved for future use and may not be used.
+/// These vendor specific error codes are not interoperable and the platform should treat these errors as any other unknown error codes.</para>
+/// <para>Error response values in the range between <see cref="ExtensionFirst"/> and <see cref="ExtensionLast"/>
+/// may be used for extension-specific implementations.</para>
+/// </summary>
+internal enum CtapStatus : int
+{
     /// <summary>
     /// Indicates successful response.
     /// </summary>
@@ -287,5 +287,4 @@ namespace EVESharp.Database.MySql.Authentication.FIDO.Utility
     /// Vendor specific error.
     /// </summary>
     VendorLast = 0xff
-  }
 }

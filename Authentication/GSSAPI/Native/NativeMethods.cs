@@ -28,10 +28,10 @@
 
 using System;
 
-namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
+namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native;
+
+internal static class NativeMethods
 {
-  internal static class NativeMethods
-  {
     /// <summary>
     /// Converts a contiguous string name to GSS_API internal format
     /// <para>The gss_import_name() function converts a contiguous string name to internal form. In general, 
@@ -50,13 +50,15 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_BAD_NAME: The input_name parameter could not be interpreted as a name of the specified type.</para>
     /// <para>GSS_S_BAD_MECH: The input_name_type was GSS_C_NT_EXPORT_NAME, but the mechanism contained within the input_name is not supported.</para>
     /// </returns>
-    internal static uint gss_import_name(
-      out uint minorStatus,
-      ref GssBufferDescStruct inputNameBuffer,
-      ref GssOidDescStruct inputNameType,
-      out IntPtr outputName)
+    internal static uint gss_import_name
+    (
+        out uint                minorStatus,
+        ref GssBufferDescStruct inputNameBuffer,
+        ref GssOidDescStruct    inputNameType,
+        out IntPtr              outputName
+    )
     {
-      return NativeMethodsLinux.gss_import_name(out minorStatus, ref inputNameBuffer, ref inputNameType, out outputName);
+        return NativeMethodsLinux.gss_import_name (out minorStatus, ref inputNameBuffer, ref inputNameType, out outputName);
     }
 
     /// <summary>
@@ -89,18 +91,22 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_CREDENTIALS_EXPIRED: The credentials could not be acquired Because they have expired.</para>
     /// <para>GSS_S_NO_CRED: No credentials were found for the specified name.</para>
     /// </returns>
-    internal static uint gss_acquire_cred(
-      out uint minorStatus,
-      IntPtr desiredName,
-      uint timeRequired,
-      ref GssOidSetStruct desiredMechanisms,
-      int credentialUsage,
-      ref IntPtr credentialHandle,
-      IntPtr actualMech,
-      out uint expiryTime)
+    internal static uint gss_acquire_cred
+    (
+        out uint            minorStatus,
+        IntPtr              desiredName,
+        uint                timeRequired,
+        ref GssOidSetStruct desiredMechanisms,
+        int                 credentialUsage,
+        ref IntPtr          credentialHandle,
+        IntPtr              actualMech,
+        out uint            expiryTime
+    )
     {
-      return NativeMethodsLinux.gss_acquire_cred(out minorStatus, desiredName, timeRequired, ref desiredMechanisms,
-              credentialUsage, ref credentialHandle, actualMech, out expiryTime);
+        return NativeMethodsLinux.gss_acquire_cred (
+            out minorStatus, desiredName, timeRequired, ref desiredMechanisms,
+            credentialUsage, ref credentialHandle, actualMech, out expiryTime
+        );
     }
 
     /// <summary>
@@ -131,19 +137,23 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_CREDENTIALS_EXPIRED: The credentials could not be acquired Because they have expired.</para>
     /// <para>GSS_S_NO_CRED: No credentials were found for the specified name.</para>
     /// </returns>
-    internal static uint gss_acquire_cred_with_password(
-      out uint minorStatus,
-      IntPtr desiredName,
-      ref GssBufferDescStruct password,
-      uint timeRequired,
-      ref GssOidSetStruct desiredMechanisms,
-      int credentialUsage,
-      ref IntPtr credentialHandle,
-      IntPtr actualMechs,
-      out uint expiryTime)
+    internal static uint gss_acquire_cred_with_password
+    (
+        out uint                minorStatus,
+        IntPtr                  desiredName,
+        ref GssBufferDescStruct password,
+        uint                    timeRequired,
+        ref GssOidSetStruct     desiredMechanisms,
+        int                     credentialUsage,
+        ref IntPtr              credentialHandle,
+        IntPtr                  actualMechs,
+        out uint                expiryTime
+    )
     {
-      return NativeMethodsLinux.gss_acquire_cred_with_password(out minorStatus, desiredName, ref password, timeRequired,
-              ref desiredMechanisms, credentialUsage, ref credentialHandle, actualMechs, out expiryTime);
+        return NativeMethodsLinux.gss_acquire_cred_with_password (
+            out minorStatus, desiredName, ref password, timeRequired,
+            ref desiredMechanisms, credentialUsage, ref credentialHandle, actualMechs, out expiryTime
+        );
     }
 
     /// <summary>
@@ -164,15 +174,17 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_CREDENTIALS_EXPIRED: The referenced credentials have expired. 
     /// If the lifetime parameter is not passed in as NULL, then its value is set to 0.</para>
     /// </returns>
-    internal static uint gss_inquire_cred(
-      out uint minorStatus,
-      IntPtr credentialHandle,
-      out IntPtr name,
-      out uint lifetime,
-      out int credentialUsage,
-      out IntPtr mechs)
+    internal static uint gss_inquire_cred
+    (
+        out uint   minorStatus,
+        IntPtr     credentialHandle,
+        out IntPtr name,
+        out uint   lifetime,
+        out int    credentialUsage,
+        out IntPtr mechs
+    )
     {
-      return NativeMethodsLinux.gss_inquire_cred(out minorStatus, credentialHandle, out name, out lifetime, out credentialUsage, out mechs);
+        return NativeMethodsLinux.gss_inquire_cred (out minorStatus, credentialHandle, out name, out lifetime, out credentialUsage, out mechs);
     }
 
     /// <summary>
@@ -224,24 +236,28 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_BAD_NAME: The supplied target_name parameter is ill-formed.</para>
     /// <para>GSS_S_BAD_MECH: The token received specifies a mechanism that is not supported by the implementation or the provided credential.</para>
     /// </returns>
-    internal static uint gss_init_sec_context(
-      out uint minorStatus,
-      IntPtr claimantCredHandle,
-      ref IntPtr contextHandle,
-      IntPtr targetName,
-      ref GssOidDescStruct mechType,
-      uint reqFlags,
-      uint timeReq,
-      IntPtr inputChanBindings,
-      ref GssBufferDescStruct inputToken,
-      IntPtr actualMechType,
-      out GssBufferDescStruct outputToken,
-      IntPtr retFlags,
-      IntPtr timeRec)
+    internal static uint gss_init_sec_context
+    (
+        out uint                minorStatus,
+        IntPtr                  claimantCredHandle,
+        ref IntPtr              contextHandle,
+        IntPtr                  targetName,
+        ref GssOidDescStruct    mechType,
+        uint                    reqFlags,
+        uint                    timeReq,
+        IntPtr                  inputChanBindings,
+        ref GssBufferDescStruct inputToken,
+        IntPtr                  actualMechType,
+        out GssBufferDescStruct outputToken,
+        IntPtr                  retFlags,
+        IntPtr                  timeRec
+    )
     {
-      return NativeMethodsLinux.gss_init_sec_context(out minorStatus, claimantCredHandle, ref contextHandle, targetName,
-              ref mechType, reqFlags, timeReq, inputChanBindings, ref inputToken, actualMechType,
-              out outputToken, retFlags, timeRec);
+        return NativeMethodsLinux.gss_init_sec_context (
+            out minorStatus, claimantCredHandle, ref contextHandle, targetName,
+            ref mechType, reqFlags, timeReq, inputChanBindings, ref inputToken, actualMechType,
+            out outputToken, retFlags, timeRec
+        );
     }
 
     /// <summary>
@@ -266,16 +282,20 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_BAD_MECH: Indicates that translation in accordance with an unsupported mechanism type was requested.</para>
     /// <para>GSS_S_BAD_STATUS: The status value was not recognized, or the status type was neither GSS_C_GSS_CODE nor GSS_C_MECH_CODE.</para>
     /// </returns>
-    internal static uint gss_display_status(
-      out uint minorStatus,
-      uint status,
-      int statusType,
-      ref GssOidDescStruct mechType,
-      ref IntPtr messageContext,
-      ref GssBufferDescStruct statusString)
+    internal static uint gss_display_status
+    (
+        out uint                minorStatus,
+        uint                    status,
+        int                     statusType,
+        ref GssOidDescStruct    mechType,
+        ref IntPtr              messageContext,
+        ref GssBufferDescStruct statusString
+    )
     {
-      return NativeMethodsLinux.gss_display_status(out minorStatus, status, statusType, ref mechType, ref messageContext,
-              ref statusString);
+        return NativeMethodsLinux.gss_display_status (
+            out minorStatus, status, statusType, ref mechType, ref messageContext,
+            ref statusString
+        );
     }
 
     /// <summary>
@@ -291,13 +311,15 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_COMPLETE: Successful completion.</para>
     /// <para>GSS_S_BAD_NAME: input_name was ill-formed.</para>
     /// </returns>
-    internal static uint gss_display_name(
-        out uint minorStatus,
-        IntPtr inputName,
+    internal static uint gss_display_name
+    (
+        out uint                minorStatus,
+        IntPtr                  inputName,
         out GssBufferDescStruct nameBuffer,
-        out GssOidDescStruct nameType)
+        out GssOidDescStruct    nameType
+    )
     {
-      return NativeMethodsLinux.gss_display_name(out minorStatus, inputName, out nameBuffer, out nameType);
+        return NativeMethodsLinux.gss_display_name (out minorStatus, inputName, out nameBuffer, out nameType);
     }
 
     /// <summary>
@@ -313,11 +335,13 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>The gss_release_buffer() function may return the following status codes:</para>
     /// <para>GSS_S_COMPLETE: Successful completion</para>
     /// </returns>
-    internal static uint gss_release_buffer(
-      out uint minorStatus,
-      ref GssBufferDescStruct buffer)
+    internal static uint gss_release_buffer
+    (
+        out uint                minorStatus,
+        ref GssBufferDescStruct buffer
+    )
     {
-      return NativeMethodsLinux.gss_release_buffer(out minorStatus, ref buffer);
+        return NativeMethodsLinux.gss_release_buffer (out minorStatus, ref buffer);
     }
 
     /// <summary>
@@ -334,11 +358,13 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_COMPLETE: Successful completion.</para>
     /// <para>GSS_S_NO_CONTEXT: No valid context was supplied.</para>
     /// </returns>
-    internal static uint gss_delete_sec_context(
-      out uint minorStatus,
-      ref IntPtr contextHandle)
+    internal static uint gss_delete_sec_context
+    (
+        out uint   minorStatus,
+        ref IntPtr contextHandle
+    )
     {
-      return NativeMethodsLinux.gss_delete_sec_context(out minorStatus, ref contextHandle, Const.GSS_C_NO_BUFFER);
+        return NativeMethodsLinux.gss_delete_sec_context (out minorStatus, ref contextHandle, Const.GSS_C_NO_BUFFER);
     }
 
     /// <summary>
@@ -351,11 +377,13 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_COMPLETE: Successful completion.</para>
     /// <para>GSS_S_BAD_NAME: The name parameter did not contain a valid name.</para>
     /// </returns>
-    internal static uint gss_release_name(
-      out uint minorStatus,
-      ref IntPtr inputName)
+    internal static uint gss_release_name
+    (
+        out uint   minorStatus,
+        ref IntPtr inputName
+    )
     {
-      return NativeMethodsLinux.gss_release_name(out minorStatus, ref inputName);
+        return NativeMethodsLinux.gss_release_name (out minorStatus, ref inputName);
     }
 
     /// <summary>
@@ -370,11 +398,13 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_COMPLETE: Successful completion.</para>
     /// <para>GSS_S_NO_CRED: Credentials could not be accessed.</para>
     /// </returns>
-    internal static uint gss_release_cred(
-      out uint minorStatus,
-      ref IntPtr credentialHandle)
+    internal static uint gss_release_cred
+    (
+        out uint   minorStatus,
+        ref IntPtr credentialHandle
+    )
     {
-      return NativeMethodsLinux.gss_release_cred(out minorStatus, ref credentialHandle);
+        return NativeMethodsLinux.gss_release_cred (out minorStatus, ref credentialHandle);
     }
 
     /// <summary>
@@ -400,15 +430,17 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_CONTEXT_EXPIRED: The context has already expired.</para>
     /// <para>GSS_S_NO_CONTEXT: The context_handle parameter did not identify a valid context.</para>
     /// </returns>
-    internal static uint gss_unwrap(
-      out uint minorStatus,
-      IntPtr contextHandle,
-      ref GssBufferDescStruct inputMessage,
-      out GssBufferDescStruct outputMessage,
-      out int confState,
-      out uint qopState)
+    internal static uint gss_unwrap
+    (
+        out uint                minorStatus,
+        IntPtr                  contextHandle,
+        ref GssBufferDescStruct inputMessage,
+        out GssBufferDescStruct outputMessage,
+        out int                 confState,
+        out uint                qopState
+    )
     {
-      return NativeMethodsLinux.gss_unwrap(out minorStatus, contextHandle, ref inputMessage, out outputMessage, out confState, out qopState);
+        return NativeMethodsLinux.gss_unwrap (out minorStatus, contextHandle, ref inputMessage, out outputMessage, out confState, out qopState);
     }
 
     /// <summary>
@@ -426,13 +458,14 @@ namespace EVESharp.Database.MySql.Authentication.GSSAPI.Native
     /// <para>GSS_S_NO_CONTEXT: The context_handle parameter did not identify a valid context.</para>
     /// <para>GSS_S_BAD_QOP: The specified QOP is not supported by the mechanism.</para>
     /// </returns>
-    internal static uint gss_wrap(
-      out uint minorStatus,
-      IntPtr contextHandle,
-      ref GssBufferDescStruct inputMessage,
-      out GssBufferDescStruct outputMessage)
+    internal static uint gss_wrap
+    (
+        out uint                minorStatus,
+        IntPtr                  contextHandle,
+        ref GssBufferDescStruct inputMessage,
+        out GssBufferDescStruct outputMessage
+    )
     {
-      return NativeMethodsLinux.gss_wrap(out minorStatus, contextHandle, 0, Const.GSS_C_QOP_DEFAULT, ref inputMessage, 0, out outputMessage);
+        return NativeMethodsLinux.gss_wrap (out minorStatus, contextHandle, 0, Const.GSS_C_QOP_DEFAULT, ref inputMessage, 0, out outputMessage);
     }
-  }
 }

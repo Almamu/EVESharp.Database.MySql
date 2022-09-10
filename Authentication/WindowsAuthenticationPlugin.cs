@@ -30,56 +30,55 @@ using EVESharp.Database.MySql.Authentication.SSPI;
 using System;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Authentication
+namespace EVESharp.Database.MySql.Authentication;
+
+/// <summary>
+/// Allows connections to a user account set with the authentication_windows authentication plugin.
+/// </summary>
+internal class MySqlWindowsAuthenticationPlugin : MySqlAuthenticationPlugin
 {
-  /// <summary>
-  /// Allows connections to a user account set with the authentication_windows authentication plugin.
-  /// </summary>
-  internal class MySqlWindowsAuthenticationPlugin : MySqlAuthenticationPlugin
-  {
-    string targetName = null;
-    SspiSecurityContext securityContext = null;
+    private string              targetName      = null;
+    private SspiSecurityContext securityContext = null;
 
-    protected override void CheckConstraints()
+    protected override void CheckConstraints ()
     {
-      string platform = String.Empty;
+        string platform = string.Empty;
 
-      int p = (int)Environment.OSVersion.Platform;
-      if ((p == 4) || (p == 128))
-        platform = "Unix";
-      else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
-        platform = "Mac OS/X";
+        int p = (int) Environment.OSVersion.Platform;
 
-      if (!String.IsNullOrEmpty(platform))
-        throw new MySqlException(String.Format(Resources.WinAuthNotSupportOnPlatform, platform));
+        if (p == 4 || p == 128)
+            platform = "Unix";
+        else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
+            platform = "Mac OS/X";
 
-      base.CheckConstraints();
+        if (!string.IsNullOrEmpty (platform))
+            throw new MySqlException (string.Format (Resources.WinAuthNotSupportOnPlatform, platform));
+
+        base.CheckConstraints ();
     }
 
-    public override string GetUsername()
+    public override string GetUsername ()
     {
-      string username = Settings.UserID;
-      if (String.IsNullOrEmpty(username))
-        return "auth_windows";
-      return username;
+        string username = this.Settings.UserID;
+
+        if (string.IsNullOrEmpty (username))
+            return "auth_windows";
+
+        return username;
     }
 
-    public override string PluginName
+    public override string PluginName => "authentication_windows_client";
+
+    protected override byte [] MoreData (byte [] moreData)
     {
-      get { return "authentication_windows_client"; }
+        if (moreData == null)
+            this.securityContext = new SspiSecurityContext (new SspiCredentials ("Negotiate"));
+
+        ContextStatus status = this.securityContext.InitializeSecurityContext (out byte [] clientBlob, moreData, this.targetName);
+
+        if (status == ContextStatus.Accepted)
+            this.securityContext.Dispose ();
+
+        return clientBlob;
     }
-
-    protected override byte[] MoreData(byte[] moreData)
-    {
-      if (moreData == null)
-        securityContext = new SspiSecurityContext(new SspiCredentials("Negotiate"));
-
-      var status = securityContext.InitializeSecurityContext(out byte[] clientBlob, moreData, targetName);
-
-      if (status == ContextStatus.Accepted)
-        securityContext.Dispose();
-
-      return clientBlob;
-    }
-  }
 }

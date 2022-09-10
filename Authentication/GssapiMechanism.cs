@@ -30,21 +30,18 @@ using EVESharp.Database.MySql.Authentication.GSSAPI;
 using EVESharp.Database.MySql.Authentication.GSSAPI.Utility;
 using System;
 
-namespace EVESharp.Database.MySql.Authentication
-{
-  /// <summary>
-  /// The GSSAPI mechanism.
-  /// </summary>
-  internal class GssapiMechanism
-  {
-    private bool finalHandshake = false;
-    private GssCredentials gssCredentials = null;
-    internal GssContext gssContext = null;
+namespace EVESharp.Database.MySql.Authentication;
 
-    internal string MechanismName
-    {
-      get { return "GSSAPI"; }
-    }
+/// <summary>
+/// The GSSAPI mechanism.
+/// </summary>
+internal class GssapiMechanism
+{
+    private  bool           finalHandshake = false;
+    private  GssCredentials gssCredentials = null;
+    internal GssContext     gssContext     = null;
+
+    internal string MechanismName => "GSSAPI";
 
     /// <summary>
     /// Obtain credentials to be used to create a security context
@@ -52,26 +49,26 @@ namespace EVESharp.Database.MySql.Authentication
     /// <param name="username">username</param>
     /// <param name="password">password</param>
     /// <param name="host">host</param>
-    public GssapiMechanism(string username, string password, string krbServicePrincipal = null)
+    public GssapiMechanism (string username, string password, string krbServicePrincipal = null)
     {
-      // Gets the Service Principal Name from the Kerberos configuration file.
-      krbServicePrincipal = krbServicePrincipal ?? KerberosConfig.GetServicePrincipalName(username);
+        // Gets the Service Principal Name from the Kerberos configuration file.
+        krbServicePrincipal = krbServicePrincipal ?? KerberosConfig.GetServicePrincipalName (username);
 
-      try
-      {
-        // Attempt to retrieve credentials from default cache file.
-        gssCredentials = new GssCredentials(username);
-      }
-      catch (Exception ex)
-      {
-        if (string.IsNullOrWhiteSpace(password))
-          throw new MySqlException("Unable to retrieve stored credentials from default cache file.", ex);
+        try
+        {
+            // Attempt to retrieve credentials from default cache file.
+            this.gssCredentials = new GssCredentials (username);
+        }
+        catch (Exception ex)
+        {
+            if (string.IsNullOrWhiteSpace (password))
+                throw new MySqlException ("Unable to retrieve stored credentials from default cache file.", ex);
 
-        // Attempt to retrieve credentials using username and password.
-        gssCredentials = new GssCredentials(username, password);
-      }
+            // Attempt to retrieve credentials using username and password.
+            this.gssCredentials = new GssCredentials (username, password);
+        }
 
-      gssContext = new GssContext(krbServicePrincipal, gssCredentials, GssContextFlags.Deleg | GssContextFlags.Mutual);
+        this.gssContext = new GssContext (krbServicePrincipal, this.gssCredentials, GssContextFlags.Deleg | GssContextFlags.Mutual);
     }
 
     /// <summary>
@@ -79,29 +76,31 @@ namespace EVESharp.Database.MySql.Authentication
     /// </summary>
     /// <param name="data">A byte array containing the challenge data from the server</param>
     /// <returns>A byte array containing the response to be sent to the server</returns>
-    internal byte[] Challenge(byte[] data)
+    internal byte [] Challenge (byte [] data)
     {
-      byte[] response = null;
+        byte [] response = null;
 
-      if (finalHandshake)
-        return DoFinalHandshake(data);
-      else
-      {
-        try
+        if (this.finalHandshake)
         {
-          // Initiate Security Context
-          response = gssContext.InitSecContext(data);
+            return this.DoFinalHandshake (data);
         }
-        catch (Exception ex)
+        else
         {
-          throw new MySqlException("Unable to initiate security context.", ex);
+            try
+            {
+                // Initiate Security Context
+                response = this.gssContext.InitSecContext (data);
+            }
+            catch (Exception ex)
+            {
+                throw new MySqlException ("Unable to initiate security context.", ex);
+            }
+
+            if (this.gssContext.IsEstablished)
+                this.finalHandshake = true;
+
+            return response;
         }
-
-        if (gssContext.IsEstablished)
-          finalHandshake = true;
-
-        return response;
-      }
     }
 
     /// <summary>
@@ -109,19 +108,18 @@ namespace EVESharp.Database.MySql.Authentication
     /// </summary>
     /// <param name="message">A byte array containing the challenge data from the server</param>
     /// <returns>A non-null byte array containing the response to be sent to the server</returns>
-    internal byte[] DoFinalHandshake(byte[] data)
+    internal byte [] DoFinalHandshake (byte [] data)
     {
-      // if the authentication is complete, then we can pass null so the OK packet could be read from server
-      if (data.Length == 0)
-        return null;
+        // if the authentication is complete, then we can pass null so the OK packet could be read from server
+        if (data.Length == 0)
+            return null;
 
-      var unwrapped = gssContext.Unwrap(data);
+        byte [] unwrapped = this.gssContext.Unwrap (data);
 
-      byte[] outPutMessage = new byte[4];
-      outPutMessage[0] = 1;
-      var response = gssContext.Wrap(outPutMessage);
+        byte [] outPutMessage = new byte[4];
+        outPutMessage [0] = 1;
+        byte [] response = this.gssContext.Wrap (outPutMessage);
 
-      return response;
+        return response;
     }
-  }
 }

@@ -29,49 +29,47 @@
 using System;
 using System.Collections.Generic;
 
-namespace EVESharp.Database.MySql.Common
+namespace EVESharp.Database.MySql.Common;
+
+internal class MySqlConnectionStringOptionCollection : Dictionary <string, MySqlConnectionStringOption>
 {
-  internal class MySqlConnectionStringOptionCollection : Dictionary<string, MySqlConnectionStringOption>
-  {
-    internal List<MySqlConnectionStringOption> Options { get; }
+    internal List <MySqlConnectionStringOption> Options { get; }
 
-    internal MySqlConnectionStringOptionCollection() : base(StringComparer.OrdinalIgnoreCase)
+    internal MySqlConnectionStringOptionCollection () : base (StringComparer.OrdinalIgnoreCase)
     {
-      Options = new List<MySqlConnectionStringOption>();
+        this.Options = new List <MySqlConnectionStringOption> ();
     }
 
-    internal void Add(MySqlConnectionStringOption option)
+    internal void Add (MySqlConnectionStringOption option)
     {
-      Options.Add(option);
-      // Register the option with all the keywords.
-      base.Add(option.Keyword, option);
-      if (option.Synonyms == null) return;
+        this.Options.Add (option);
+        // Register the option with all the keywords.
+        base.Add (option.Keyword, option);
 
-      foreach (string t in option.Synonyms)
-        base.Add(t, option);
+        if (option.Synonyms == null)
+            return;
+
+        foreach (string t in option.Synonyms)
+            base.Add (t, option);
     }
 
-    internal MySqlConnectionStringOption Get(string keyword)
+    internal MySqlConnectionStringOption Get (string keyword)
     {
-      MySqlConnectionStringOption option = null;
-      base.TryGetValue(keyword, out option);
-      return option;
+        MySqlConnectionStringOption option = null;
+        this.TryGetValue (keyword, out option);
+        return option;
     }
 
-    internal MySqlConnectionStringOptionCollection Clone()
+    internal MySqlConnectionStringOptionCollection Clone ()
     {
-      var instance = new MySqlConnectionStringOptionCollection();
-      if (Options == null)
-      {
+        MySqlConnectionStringOptionCollection instance = new MySqlConnectionStringOptionCollection ();
+
+        if (this.Options == null)
+            return instance;
+
+        foreach (MySqlConnectionStringOption option in this.Options)
+            instance.Add (option);
+
         return instance;
-      }
-
-      foreach (var option in Options)
-      {
-        instance.Add(option);
-      }
-
-      return instance;
     }
-  }
 }

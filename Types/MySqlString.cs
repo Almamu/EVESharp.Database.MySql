@@ -29,117 +29,127 @@
 using System;
 using EVESharp.Database.MySql;
 
-namespace EVESharp.Database.MySql.Types
+namespace EVESharp.Database.MySql.Types;
+
+internal struct MySqlString : IMySqlValue
 {
-  internal struct MySqlString : IMySqlValue
-  {
     private readonly MySqlDbType _type;
 
-    public MySqlString(MySqlDbType type, bool isNull)
+    public MySqlString (MySqlDbType type, bool isNull)
     {
-      _type = type;
-      IsNull = isNull;
-      Value = String.Empty;
+        this._type  = type;
+        this.IsNull = isNull;
+        this.Value  = string.Empty;
     }
 
-    public MySqlString(MySqlDbType type, string val)
+    public MySqlString (MySqlDbType type, string val)
     {
-      _type = type;
-      IsNull = false;
-      Value = val;
+        this._type  = type;
+        this.IsNull = false;
+        this.Value  = val;
     }
 
-    #region IMySqlValue Members
+#region IMySqlValue Members
 
     public bool IsNull { get; }
 
-    MySqlDbType IMySqlValue.MySqlDbType => _type;
+    MySqlDbType IMySqlValue.MySqlDbType => this._type;
 
-    object IMySqlValue.Value => Value;
+    object IMySqlValue.Value => this.Value;
 
     public string Value { get; }
 
-    Type IMySqlValue.SystemType => typeof(string);
+    Type IMySqlValue.SystemType => typeof (string);
 
-    string IMySqlValue.MySqlTypeName => _type == MySqlDbType.Set ? "SET" : _type == MySqlDbType.Enum ? "ENUM" : "VARCHAR";
+    string IMySqlValue.MySqlTypeName => this._type == MySqlDbType.Set ? "SET" : this._type == MySqlDbType.Enum ? "ENUM" : "VARCHAR";
 
-
-    void IMySqlValue.WriteValue(MySqlPacket packet, bool binary, object val, int length)
+    void IMySqlValue.WriteValue (MySqlPacket packet, bool binary, object val, int length)
     {
-      string v = val.ToString();
-      if (length > 0)
-      {
-        length = Math.Min(length, v.Length);
-        v = v.Substring(0, length);
-      }
+        string v = val.ToString ();
 
-      if (binary)
-        packet.WriteLenString(v);
-      else
-        packet.WriteStringNoNull("'" + MySqlHelper.EscapeString(v) + "'");
+        if (length > 0)
+        {
+            length = Math.Min (length, v.Length);
+            v      = v.Substring (0, length);
+        }
+
+        if (binary)
+            packet.WriteLenString (v);
+        else
+            packet.WriteStringNoNull ("'" + MySqlHelper.EscapeString (v) + "'");
     }
 
-    IMySqlValue IMySqlValue.ReadValue(MySqlPacket packet, long length, bool nullVal)
+    IMySqlValue IMySqlValue.ReadValue (MySqlPacket packet, long length, bool nullVal)
     {
-      if (nullVal)
-        return new MySqlString(_type, true);
+        if (nullVal)
+            return new MySqlString (this._type, true);
 
-      string s = String.Empty;
-      if (length == -1)
-        s = packet.ReadLenString();
-      else
-        s = packet.ReadString(length);
-      MySqlString str = new MySqlString(_type, s);
-      return str;
+        string s = string.Empty;
+
+        if (length == -1)
+            s = packet.ReadLenString ();
+        else
+            s = packet.ReadString (length);
+
+        MySqlString str = new MySqlString (this._type, s);
+        return str;
     }
 
-    void IMySqlValue.SkipValue(MySqlPacket packet)
+    void IMySqlValue.SkipValue (MySqlPacket packet)
     {
-      int len = (int)packet.ReadFieldLength();
-      packet.Position += len;
+        int len = (int) packet.ReadFieldLength ();
+        packet.Position += len;
     }
 
-    #endregion
+#endregion
 
-    internal static void SetDSInfo(MySqlSchemaCollection sc)
+    internal static void SetDSInfo (MySqlSchemaCollection sc)
     {
-      string[] types = new string[] { "CHAR", "NCHAR", "VARCHAR", "NVARCHAR", "SET", 
-                "ENUM", "TINYTEXT", "TEXT", "MEDIUMTEXT", "LONGTEXT" };
-      MySqlDbType[] dbtype = new MySqlDbType[] { MySqlDbType.String, MySqlDbType.String,
-                MySqlDbType.VarChar, MySqlDbType.VarChar, MySqlDbType.Set, MySqlDbType.Enum, 
-                MySqlDbType.TinyText, MySqlDbType.Text, MySqlDbType.MediumText, 
-                MySqlDbType.LongText };
+        string [] types = new string [] {"CHAR", "NCHAR", "VARCHAR", "NVARCHAR", "SET", "ENUM", "TINYTEXT", "TEXT", "MEDIUMTEXT", "LONGTEXT"};
 
-      // we use name indexing because this method will only be called
-      // when GetSchema is called for the DataSourceInformation 
-      // collection and then it wil be cached.
-      for (int x = 0; x < types.Length; x++)
-      {
-        MySqlSchemaRow row = sc.AddRow();
-        row["TypeName"] = types[x];
-        row["ProviderDbType"] = dbtype[x];
-        row["ColumnSize"] = 0;
-        row["CreateFormat"] = x < 4 ? types[x] + "({0})" : types[x];
-        row["CreateParameters"] = x < 4 ? "size" : null;
-        row["DataType"] = "System.String";
-        row["IsAutoincrementable"] = false;
-        row["IsBestMatch"] = true;
-        row["IsCaseSensitive"] = false;
-        row["IsFixedLength"] = false;
-        row["IsFixedPrecisionScale"] = true;
-        row["IsLong"] = false;
-        row["IsNullable"] = true;
-        row["IsSearchable"] = true;
-        row["IsSearchableWithLike"] = true;
-        row["IsUnsigned"] = false;
-        row["MaximumScale"] = 0;
-        row["MinimumScale"] = 0;
-        row["IsConcurrencyType"] = DBNull.Value;
-        row["IsLiteralSupported"] = false;
-        row["LiteralPrefix"] = null;
-        row["LiteralSuffix"] = null;
-        row["NativeDataType"] = null;
-      }
+        MySqlDbType [] dbtype = new MySqlDbType []
+        {
+            MySqlDbType.String,
+            MySqlDbType.String,
+            MySqlDbType.VarChar,
+            MySqlDbType.VarChar,
+            MySqlDbType.Set,
+            MySqlDbType.Enum,
+            MySqlDbType.TinyText,
+            MySqlDbType.Text,
+            MySqlDbType.MediumText,
+            MySqlDbType.LongText
+        };
+
+        // we use name indexing because this method will only be called
+        // when GetSchema is called for the DataSourceInformation 
+        // collection and then it wil be cached.
+        for (int x = 0; x < types.Length; x++)
+        {
+            MySqlSchemaRow row = sc.AddRow ();
+            row ["TypeName"]              = types [x];
+            row ["ProviderDbType"]        = dbtype [x];
+            row ["ColumnSize"]            = 0;
+            row ["CreateFormat"]          = x < 4 ? types [x] + "({0})" : types [x];
+            row ["CreateParameters"]      = x < 4 ? "size" : null;
+            row ["DataType"]              = "System.String";
+            row ["IsAutoincrementable"]   = false;
+            row ["IsBestMatch"]           = true;
+            row ["IsCaseSensitive"]       = false;
+            row ["IsFixedLength"]         = false;
+            row ["IsFixedPrecisionScale"] = true;
+            row ["IsLong"]                = false;
+            row ["IsNullable"]            = true;
+            row ["IsSearchable"]          = true;
+            row ["IsSearchableWithLike"]  = true;
+            row ["IsUnsigned"]            = false;
+            row ["MaximumScale"]          = 0;
+            row ["MinimumScale"]          = 0;
+            row ["IsConcurrencyType"]     = DBNull.Value;
+            row ["IsLiteralSupported"]    = false;
+            row ["LiteralPrefix"]         = null;
+            row ["LiteralSuffix"]         = null;
+            row ["NativeDataType"]        = null;
+        }
     }
-  }
 }

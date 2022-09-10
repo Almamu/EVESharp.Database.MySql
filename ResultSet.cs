@@ -33,50 +33,50 @@ using System.Diagnostics;
 using EVESharp.Database.MySql;
 using EVESharp.Database.MySql.Types;
 
-namespace EVESharp.Database.MySql
-{
-  internal class ResultSet
-  {
-    private Driver _driver;
-    private bool[] _uaFieldsUsed;
-    private Dictionary<string, int> _fieldHashCi;
-    private int _rowIndex;
-    private bool _readDone;
-    private bool _isSequential;
-    private int _seqIndex;
-    private readonly int _statementId;
-    private bool _cached;
-    private List<IMySqlValue[]> _cachedValues;
+namespace EVESharp.Database.MySql;
 
-    public ResultSet(int affectedRows, long insertedId)
+internal class ResultSet
+{
+    private          Driver                   _driver;
+    private          bool []                  _uaFieldsUsed;
+    private          Dictionary <string, int> _fieldHashCi;
+    private          int                      _rowIndex;
+    private          bool                     _readDone;
+    private          bool                     _isSequential;
+    private          int                      _seqIndex;
+    private readonly int                      _statementId;
+    private          bool                     _cached;
+    private          List <IMySqlValue []>    _cachedValues;
+
+    public ResultSet (int affectedRows, long insertedId)
     {
-      AffectedRows = affectedRows;
-      InsertedId = insertedId;
-      _readDone = true;
+        this.AffectedRows = affectedRows;
+        this.InsertedId   = insertedId;
+        this._readDone    = true;
     }
 
-    public ResultSet(Driver d, int statementId, int numCols)
+    public ResultSet (Driver d, int statementId, int numCols)
     {
-      AffectedRows = -1;
-      InsertedId = -1;
-      _driver = d;
-      _statementId = statementId;
-      _rowIndex = -1;
-      LoadColumns(numCols);
-      IsOutputParameters = IsOutputParameterResultSet();
-      HasRows = GetNextRow();
-      _readDone = !HasRows;
+        this.AffectedRows = -1;
+        this.InsertedId   = -1;
+        this._driver      = d;
+        this._statementId = statementId;
+        this._rowIndex    = -1;
+        this.LoadColumns (numCols);
+        this.IsOutputParameters = this.IsOutputParameterResultSet ();
+        this.HasRows            = this.GetNextRow ();
+        this._readDone          = !this.HasRows;
     }
 
 #region Properties
 
     public bool HasRows { get; }
 
-    public int Size => Fields?.Length ?? 0;
+    public int Size => this.Fields?.Length ?? 0;
 
-    public MySqlField[] Fields { get; private set; }
+    public MySqlField [] Fields { get; private set; }
 
-    public IMySqlValue[] Values { get; private set; }
+    public IMySqlValue [] Values { get; private set; }
 
     public bool IsOutputParameters { get; set; }
 
@@ -90,13 +90,14 @@ namespace EVESharp.Database.MySql
 
     public bool Cached
     {
-      get { return _cached; }
-      set
-      {
-        _cached = value;
-        if (_cached && _cachedValues == null)
-          _cachedValues = new List<IMySqlValue[]>();
-      }
+        get => this._cached;
+        set
+        {
+            this._cached = value;
+
+            if (this._cached && this._cachedValues == null)
+                this._cachedValues = new List <IMySqlValue []> ();
+        }
     }
 
 #endregion
@@ -106,17 +107,16 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    public int GetOrdinal(string name)
+    public int GetOrdinal (string name)
     {
-      int ordinal;
+        int ordinal;
 
-      // quick hash lookup using CI hash
-      if (_fieldHashCi.TryGetValue( name, out ordinal ))
-        return ordinal;
+        // quick hash lookup using CI hash
+        if (this._fieldHashCi.TryGetValue (name, out ordinal))
+            return ordinal;
 
-      // Throw an exception if the ordinal cannot be found.
-      throw new IndexOutOfRangeException(
-          String.Format(Resources.CouldNotFindColumnName, name));
+        // Throw an exception if the ordinal cannot be found.
+        throw new IndexOutOfRangeException (string.Format (Resources.CouldNotFindColumnName, name));
     }
 
     /// <summary>
@@ -124,201 +124,225 @@ namespace EVESharp.Database.MySql
     /// </summary>
     /// <param name="index">The column value to retrieve</param>
     /// <returns>The value as the given column</returns>
-    public IMySqlValue this[int index]
+    public IMySqlValue this [int index]
     {
-      get
-      {
-        if (_rowIndex < 0)
-          throw new MySqlException(Resources.AttemptToAccessBeforeRead);
-
-        // keep count of how many columns we have left to access
-        _uaFieldsUsed[index] = true;
-
-        if (_isSequential && index != _seqIndex)
+        get
         {
-          if (index < _seqIndex)
-            throw new MySqlException(Resources.ReadingPriorColumnUsingSeqAccess);
-          while (_seqIndex < (index - 1))
-            _driver.SkipColumnValue(Values[++_seqIndex]);
-          Values[index] = _driver.ReadColumnValue(index, Fields[index], Values[index]);
-          _seqIndex = index;
-        }
+            if (this._rowIndex < 0)
+                throw new MySqlException (Resources.AttemptToAccessBeforeRead);
 
-        return Values[index];
-      }
+            // keep count of how many columns we have left to access
+            this._uaFieldsUsed [index] = true;
+
+            if (this._isSequential && index != this._seqIndex)
+            {
+                if (index < this._seqIndex)
+                    throw new MySqlException (Resources.ReadingPriorColumnUsingSeqAccess);
+
+                while (this._seqIndex < index - 1)
+                    this._driver.SkipColumnValue (this.Values [++this._seqIndex]);
+
+                this.Values [index] = this._driver.ReadColumnValue (index, this.Fields [index], this.Values [index]);
+                this._seqIndex      = index;
+            }
+
+            return this.Values [index];
+        }
     }
 
-    private bool GetNextRow()
+    private bool GetNextRow ()
     {
-      bool fetched = _driver.FetchDataRow(_statementId, Size);
-      if (fetched)
-        TotalRows++;
-      return fetched;
+        bool fetched = this._driver.FetchDataRow (this._statementId, this.Size);
+
+        if (fetched)
+            this.TotalRows++;
+
+        return fetched;
     }
 
-
-    public bool NextRow(CommandBehavior behavior)
+    public bool NextRow (CommandBehavior behavior)
     {
-      if (_readDone)
-      {
-        if (Cached) return CachedNextRow(behavior);
-        return false;
-      }
-
-      if ((behavior & CommandBehavior.SingleRow) != 0 && _rowIndex == 0)
-        return false;
-
-      _isSequential = (behavior & CommandBehavior.SequentialAccess) != 0;
-      _seqIndex = -1;
-
-      // if we are at row index >= 0 then we need to fetch the data row and load it
-      if (_rowIndex >= 0)
-      {
-        bool fetched = false;
-        try
+        if (this._readDone)
         {
-          fetched = GetNextRow();
-        }
-        catch (MySqlException ex)
-        {
-          if (ex.IsQueryAborted)
-          {
-            // avoid hanging on Close()
-            _readDone = true;
-          }
-          throw;
+            if (this.Cached)
+                return this.CachedNextRow (behavior);
+
+            return false;
         }
 
-        if (!fetched)
-        {
-          _readDone = true;
-          return false;
-        }
-      }
+        if ((behavior & CommandBehavior.SingleRow) != 0 && this._rowIndex == 0)
+            return false;
 
-      if (!_isSequential) ReadColumnData(false);
-      _rowIndex++;
-      return true;
+        this._isSequential = (behavior & CommandBehavior.SequentialAccess) != 0;
+        this._seqIndex     = -1;
+
+        // if we are at row index >= 0 then we need to fetch the data row and load it
+        if (this._rowIndex >= 0)
+        {
+            bool fetched = false;
+
+            try
+            {
+                fetched = this.GetNextRow ();
+            }
+            catch (MySqlException ex)
+            {
+                if (ex.IsQueryAborted)
+                    // avoid hanging on Close()
+                    this._readDone = true;
+
+                throw;
+            }
+
+            if (!fetched)
+            {
+                this._readDone = true;
+                return false;
+            }
+        }
+
+        if (!this._isSequential)
+            this.ReadColumnData (false);
+
+        this._rowIndex++;
+        return true;
     }
 
-    private bool CachedNextRow(CommandBehavior behavior)
+    private bool CachedNextRow (CommandBehavior behavior)
     {
-      if ((behavior & CommandBehavior.SingleRow) != 0 && _rowIndex == 0)
-        return false;
-      if (_rowIndex == (TotalRows - 1)) return false;
-      _rowIndex++;
-      Values = _cachedValues[_rowIndex];
-      return true;
+        if ((behavior & CommandBehavior.SingleRow) != 0 && this._rowIndex == 0)
+            return false;
+
+        if (this._rowIndex == this.TotalRows - 1)
+            return false;
+
+        this._rowIndex++;
+        this.Values = this._cachedValues [this._rowIndex];
+        return true;
     }
 
     /// <summary>
     /// Closes the current resultset, dumping any data still on the wire
     /// </summary>
-    public void Close()
+    public void Close ()
     {
-      if (!_readDone)
-      {
-
-        // if we have rows but the user didn't read the first one then mark it as skipped
-        if (HasRows && _rowIndex == -1)
-          SkippedRows++;
-        try
+        if (!this._readDone)
         {
-          while (_driver.IsOpen && _driver.SkipDataRow())
-          {
-            TotalRows++;
-            SkippedRows++;
-          }
+            // if we have rows but the user didn't read the first one then mark it as skipped
+            if (this.HasRows && this._rowIndex == -1)
+                this.SkippedRows++;
+
+            try
+            {
+                while (this._driver.IsOpen && this._driver.SkipDataRow ())
+                {
+                    this.TotalRows++;
+                    this.SkippedRows++;
+                }
+            }
+            catch (System.IO.IOException)
+            {
+                // it is ok to eat IO exceptions here, we just want to 
+                // close the result set
+            }
+
+            this._readDone = true;
         }
-        catch (System.IO.IOException)
+        else if (this._driver == null)
         {
-          // it is ok to eat IO exceptions here, we just want to 
-          // close the result set
+            this.CacheClose ();
         }
-        _readDone = true;
-      }
-      else if (_driver == null)
-        CacheClose();
 
-      _driver = null;
-      if (Cached) CacheReset();
+        this._driver = null;
+
+        if (this.Cached)
+            this.CacheReset ();
     }
 
-    private void CacheClose()
+    private void CacheClose ()
     {
-      SkippedRows = TotalRows - _rowIndex - 1;
+        this.SkippedRows = this.TotalRows - this._rowIndex - 1;
     }
 
-    private void CacheReset()
+    private void CacheReset ()
     {
-      if (!Cached) return;
-      _rowIndex = -1;
-      AffectedRows = -1;
-      InsertedId = -1;
-      SkippedRows = 0;
+        if (!this.Cached)
+            return;
+
+        this._rowIndex    = -1;
+        this.AffectedRows = -1;
+        this.InsertedId   = -1;
+        this.SkippedRows  = 0;
     }
 
-    public bool FieldRead(int index)
+    public bool FieldRead (int index)
     {
-      Debug.Assert(Size > index);
-      return _uaFieldsUsed[index];
+        Debug.Assert (this.Size > index);
+        return this._uaFieldsUsed [index];
     }
 
-    public void SetValueObject(int i, IMySqlValue valueObject)
+    public void SetValueObject (int i, IMySqlValue valueObject)
     {
-      Debug.Assert(Values != null);
-      Debug.Assert(i < Values.Length);
-      Values[i] = valueObject;
+        Debug.Assert (this.Values != null);
+        Debug.Assert (i < this.Values.Length);
+        this.Values [i] = valueObject;
     }
 
-    private bool IsOutputParameterResultSet()
+    private bool IsOutputParameterResultSet ()
     {
-      if (_driver.HasStatus(ServerStatusFlags.OutputParameters)) return true;
+        if (this._driver.HasStatus (ServerStatusFlags.OutputParameters))
+            return true;
 
-      if (Fields.Length == 0) return false;
+        if (this.Fields.Length == 0)
+            return false;
 
-      for (int x = 0; x < Fields.Length; x++)
-        if (!Fields[x].ColumnName.StartsWith("@" + StoredProcedure.ParameterPrefix, StringComparison.OrdinalIgnoreCase)) return false;
-      return true;
+        for (int x = 0; x < this.Fields.Length; x++)
+            if (!this.Fields [x].ColumnName.StartsWith ("@" + StoredProcedure.ParameterPrefix, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+        return true;
     }
 
     /// <summary>
     /// Loads the column metadata for the current resultset
     /// </summary>
-    private void LoadColumns(int numCols)
+    private void LoadColumns (int numCols)
     {
-      Fields = _driver.GetColumns(numCols);
+        this.Fields = this._driver.GetColumns (numCols);
 
-      Values = new IMySqlValue[numCols];
-      _uaFieldsUsed = new bool[numCols];
-      _fieldHashCi = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        this.Values        = new IMySqlValue[numCols];
+        this._uaFieldsUsed = new bool[numCols];
+        this._fieldHashCi  = new Dictionary <string, int> (StringComparer.OrdinalIgnoreCase);
 
-      for (int i = 0; i < Fields.Length; i++)
-      {
-        string columnName = Fields[i].ColumnName;
-        if (!_fieldHashCi.ContainsKey(columnName))
-          _fieldHashCi.Add(columnName, i);
-        Values[i] = Fields[i].GetValueObject();
-      }
+        for (int i = 0; i < this.Fields.Length; i++)
+        {
+            string columnName = this.Fields [i].ColumnName;
+
+            if (!this._fieldHashCi.ContainsKey (columnName))
+                this._fieldHashCi.Add (columnName, i);
+
+            this.Values [i] = this.Fields [i].GetValueObject ();
+        }
     }
 
-    private void ReadColumnData(bool outputParms)
+    private void ReadColumnData (bool outputParms)
     {
-      for (int i = 0; i < Size; i++)
-        Values[i] = _driver.ReadColumnValue(i, Fields[i], Values[i]);
+        for (int i = 0; i < this.Size; i++)
+            this.Values [i] = this._driver.ReadColumnValue (i, this.Fields [i], this.Values [i]);
 
-      // if we are caching then we need to save a copy of this row of data values
-      if (Cached)
-        _cachedValues.Add((IMySqlValue[])Values.Clone());
+        // if we are caching then we need to save a copy of this row of data values
+        if (this.Cached)
+            this._cachedValues.Add ((IMySqlValue []) this.Values.Clone ());
 
-      // we don't need to worry about caching the following since you won't have output
-      // params with TableDirect commands
-      if (!outputParms) return;
+        // we don't need to worry about caching the following since you won't have output
+        // params with TableDirect commands
+        if (!outputParms)
+            return;
 
-      bool rowExists = _driver.FetchDataRow(_statementId, Fields.Length);
-      _rowIndex = 0;
-      if (rowExists)
-        throw new MySqlException(Resources.MoreThanOneOPRow);
+        bool rowExists = this._driver.FetchDataRow (this._statementId, this.Fields.Length);
+        this._rowIndex = 0;
+
+        if (rowExists)
+            throw new MySqlException (Resources.MoreThanOneOPRow);
     }
-  }
 }

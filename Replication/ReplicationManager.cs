@@ -26,44 +26,44 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using EVESharp.Database.MySql;
 
+namespace EVESharp.Database.MySql.Replication;
 
-namespace EVESharp.Database.MySql.Replication
+/// <summary>
+/// Manager for Replication and Load Balancing features
+/// </summary>
+internal static class ReplicationManager
 {
-  /// <summary>
-  /// Manager for Replication and Load Balancing features
-  /// </summary>
-  internal static class ReplicationManager
-  {
-    private static List<ReplicationServerGroup> groups = new List<ReplicationServerGroup>();
-    private static Object thisLock = new Object();
+    private static List <ReplicationServerGroup> groups   = new List <ReplicationServerGroup> ();
+    private static object                        thisLock = new object ();
     //private static Dictionary<string, ReplicationServerSelector> selectors = new Dictionary<string, ReplicationServerSelector>();
 
-    static ReplicationManager()
+    static ReplicationManager ()
     {
-      Groups = groups;
+        Groups = groups;
 
-      // load up our selectors
-      if (MySqlConfiguration.Settings == null) return;
+        // load up our selectors
+        if (MySqlConfiguration.Settings == null)
+            return;
 
-      foreach (var group in MySqlConfiguration.Settings.Replication.ServerGroups)
-      {
-        ReplicationServerGroup g = AddGroup(group.Name, group.GroupType, group.RetryTime);
-        foreach (var server in group.Servers)
-          g.AddServer(server.Name, server.IsSource, server.ConnectionString);
-      }
+        foreach (ReplicationServerGroupConfigurationElement group in MySqlConfiguration.Settings.Replication.ServerGroups)
+        {
+            ReplicationServerGroup g = AddGroup (group.Name, group.GroupType, group.RetryTime);
+
+            foreach (ReplicationServerConfigurationElement server in group.Servers)
+                g.AddServer (server.Name, server.IsSource, server.ConnectionString);
+        }
     }
 
     /// <summary>
     /// Returns Replication Server Group List
     /// </summary>
-    internal static IList<ReplicationServerGroup> Groups { get; private set; }
+    internal static IList <ReplicationServerGroup> Groups { get; private set; }
 
     /// <summary>
     /// Adds a Default Server Group to the list
@@ -71,9 +71,9 @@ namespace EVESharp.Database.MySql.Replication
     /// <param name="name">Group name</param>
     /// <param name="retryTime">Time between reconnections for failed servers</param>
     /// <returns>Replication Server Group added</returns>
-    internal static ReplicationServerGroup AddGroup(string name, int retryTime)
+    internal static ReplicationServerGroup AddGroup (string name, int retryTime)
     {
-      return AddGroup( name, null, retryTime);
+        return AddGroup (name, null, retryTime);
     }
 
     /// <summary>
@@ -83,14 +83,15 @@ namespace EVESharp.Database.MySql.Replication
     /// <param name="groupType">ServerGroup type reference</param>
     /// <param name="retryTime">Time between reconnections for failed servers</param>
     /// <returns>Server Group added</returns>
-    internal static ReplicationServerGroup AddGroup(string name, string groupType, int retryTime)
+    internal static ReplicationServerGroup AddGroup (string name, string groupType, int retryTime)
     {
-      if (string.IsNullOrEmpty(groupType))
-        groupType = "EVESharp.Database.MySql.Replication.ReplicationRoundRobinServerGroup";
-      Type t = Type.GetType(groupType);
-      ReplicationServerGroup g = (ReplicationServerGroup)Activator.CreateInstance(t, name, retryTime) as ReplicationServerGroup;
-      groups.Add(g);
-      return g;
+        if (string.IsNullOrEmpty (groupType))
+            groupType = "EVESharp.Database.MySql.Replication.ReplicationRoundRobinServerGroup";
+
+        Type                   t = Type.GetType (groupType);
+        ReplicationServerGroup g = (ReplicationServerGroup) Activator.CreateInstance (t, name, retryTime) as ReplicationServerGroup;
+        groups.Add (g);
+        return g;
     }
 
     /// <summary>
@@ -99,10 +100,10 @@ namespace EVESharp.Database.MySql.Replication
     /// <param name="groupName">Group name</param>
     /// <param name="isSource">True if the server to return must be a source</param>
     /// <returns>Replication Server defined by the Load Balancing plugin</returns>
-    internal static ReplicationServer GetServer(string groupName, bool isSource)
+    internal static ReplicationServer GetServer (string groupName, bool isSource)
     {
-      ReplicationServerGroup group = GetGroup(groupName);
-      return group.GetServer(isSource);
+        ReplicationServerGroup group = GetGroup (groupName);
+        return group.GetServer (isSource);
     }
 
     /// <summary>
@@ -110,18 +111,23 @@ namespace EVESharp.Database.MySql.Replication
     /// </summary>
     /// <param name="groupName">Group name</param>
     /// <returns>Server Group if found, otherwise throws an MySqlException</returns>
-    internal static ReplicationServerGroup GetGroup(string groupName)
+    internal static ReplicationServerGroup GetGroup (string groupName)
     {
-      ReplicationServerGroup group = null;
-      foreach (ReplicationServerGroup g in groups)
-      {
-        if (String.Compare(g.Name, groupName, StringComparison.OrdinalIgnoreCase) != 0) continue;
-        group = g;
-        break;
-      }
-      if (group == null)
-        throw new MySqlException(String.Format(Resources.ReplicationGroupNotFound, groupName));
-      return group;
+        ReplicationServerGroup group = null;
+
+        foreach (ReplicationServerGroup g in groups)
+        {
+            if (string.Compare (g.Name, groupName, StringComparison.OrdinalIgnoreCase) != 0)
+                continue;
+
+            group = g;
+            break;
+        }
+
+        if (group == null)
+            throw new MySqlException (string.Format (Resources.ReplicationGroupNotFound, groupName));
+
+        return group;
     }
 
     /// <summary>
@@ -129,11 +135,13 @@ namespace EVESharp.Database.MySql.Replication
     /// </summary>
     /// <param name="groupName">Group name to validate</param>
     /// <returns><c>true</c> if the replication group name is found; otherwise, <c>false</c></returns>
-    internal static bool IsReplicationGroup(string groupName)
+    internal static bool IsReplicationGroup (string groupName)
     {
-      foreach (ReplicationServerGroup g in groups)
-        if (String.Compare(g.Name, groupName, StringComparison.OrdinalIgnoreCase) == 0) return true;
-      return false;
+        foreach (ReplicationServerGroup g in groups)
+            if (string.Compare (g.Name, groupName, StringComparison.OrdinalIgnoreCase) == 0)
+                return true;
+
+        return false;
     }
 
     /// <summary>
@@ -142,57 +150,59 @@ namespace EVESharp.Database.MySql.Replication
     /// <param name="groupName">Group name</param>
     /// <param name="source">True if the server connection to assign must be a source</param>
     /// <param name="connection">MySqlConnection object where the new driver will be assigned</param>
-    internal static void GetNewConnection(string groupName, bool source, MySqlConnection connection)
+    internal static void GetNewConnection (string groupName, bool source, MySqlConnection connection)
     {
-      do
-      {
-        lock (thisLock)
+        do
         {
-          if (!IsReplicationGroup(groupName)) return;
-
-          ReplicationServerGroup group = GetGroup(groupName);
-          ReplicationServer server = group.GetServer(source, connection.Settings);
-
-          if (server == null)
-            throw new MySqlException(Resources.Replication_NoAvailableServer);
-
-          try
-          {
-            bool isNewServer = false;
-            if (connection.driver == null || !connection.driver.IsOpen)
+            lock (thisLock)
             {
-              isNewServer = true;
+                if (!IsReplicationGroup (groupName))
+                    return;
+
+                ReplicationServerGroup group  = GetGroup (groupName);
+                ReplicationServer      server = group.GetServer (source, connection.Settings);
+
+                if (server == null)
+                    throw new MySqlException (Resources.Replication_NoAvailableServer);
+
+                try
+                {
+                    bool isNewServer = false;
+
+                    if (connection.driver == null || !connection.driver.IsOpen)
+                    {
+                        isNewServer = true;
+                    }
+                    else
+                    {
+                        MySqlConnectionStringBuilder msb = new MySqlConnectionStringBuilder (server.ConnectionString);
+
+                        if (!msb.Equals (connection.driver.Settings))
+                            isNewServer = true;
+                    }
+
+                    if (isNewServer)
+                    {
+                        Driver driver = Driver.Create (new MySqlConnectionStringBuilder (server.ConnectionString));
+                        connection.driver = driver;
+                    }
+
+                    return;
+                }
+                catch (MySqlException ex)
+                {
+                    connection.driver  = null;
+                    server.IsAvailable = false;
+                    MySqlTrace.LogError (ex.Number, ex.ToString ());
+
+                    if (ex.Number == 1042)
+                        // retry to open a failed connection and update its status
+                        group.HandleFailover (server, ex);
+                    else
+                        throw;
+                }
             }
-            else
-            { 
-              MySqlConnectionStringBuilder msb = new MySqlConnectionStringBuilder(server.ConnectionString);
-              if (!msb.Equals(connection.driver.Settings))
-              {
-                isNewServer = true;
-              }
-            }
-            if (isNewServer)
-            {
-              Driver driver = Driver.Create(new MySqlConnectionStringBuilder(server.ConnectionString));
-              connection.driver = driver;
-            }
-            return;
-          }
-          catch (MySqlException ex)
-          {
-            connection.driver = null;
-            server.IsAvailable = false;
-            MySqlTrace.LogError(ex.Number, ex.ToString());
-            if (ex.Number == 1042)
-            {
-              // retry to open a failed connection and update its status
-              group.HandleFailover(server, ex);
-            }
-            else
-              throw;
-          }
         }
-      } while (true);
+        while (true);
     }
-  }
 }

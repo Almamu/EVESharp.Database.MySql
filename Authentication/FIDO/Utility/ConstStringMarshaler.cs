@@ -29,41 +29,45 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace EVESharp.Database.MySql.Authentication.FIDO.Utility
+namespace EVESharp.Database.MySql.Authentication.FIDO.Utility;
+
+internal sealed class ConstStringMarshaler : ICustomMarshaler
 {
-  internal sealed class ConstStringMarshaler : ICustomMarshaler
-  {
-    private static readonly ConstStringMarshaler Instance = new ConstStringMarshaler();
+    private static readonly ConstStringMarshaler Instance = new ConstStringMarshaler ();
 
     /// <summary>
     /// Gets the global instance of this class as required by <see cref="ICustomMarshaler"/>
     /// </summary>
     /// <param name="cookie">The cookie to use when getting the global instance (ignored)</param>
     /// <returns>The global instance</returns>
-    public static ICustomMarshaler GetInstance(string cookie) => Instance;
-
-    #region ICustomMarshaler
-    public void CleanUpManagedData(object ManagedObj)
+    public static ICustomMarshaler GetInstance (string cookie)
     {
-      throw new NotImplementedException();
+        return Instance;
     }
 
-    public void CleanUpNativeData(IntPtr pNativeData) { }
+#region ICustomMarshaler
 
-    public int GetNativeDataSize()
+    public void CleanUpManagedData (object ManagedObj)
     {
-      return IntPtr.Size;
+        throw new NotImplementedException ();
     }
 
-    public IntPtr MarshalManagedToNative(object ManagedObj)
+    public void CleanUpNativeData (IntPtr pNativeData) { }
+
+    public int GetNativeDataSize ()
     {
-      throw new NotImplementedException();
+        return IntPtr.Size;
     }
 
-    public object MarshalNativeToManaged(IntPtr pNativeData)
+    public IntPtr MarshalManagedToNative (object ManagedObj)
     {
-      return Marshal.PtrToStringAnsi(pNativeData);
+        throw new NotImplementedException ();
     }
-    #endregion
-  }
+
+    public object MarshalNativeToManaged (IntPtr pNativeData)
+    {
+        return Marshal.PtrToStringAnsi (pNativeData);
+    }
+
+#endregion
 }
