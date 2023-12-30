@@ -350,7 +350,7 @@ internal partial class Driver : IDisposable
     private void LoadCharacterSets (MySqlConnection connection)
     {
         this.serverProps.TryGetValue ("autocommit", out string serverAutocommit);
-        MySqlCommand cmd = new MySqlCommand ("SHOW COLLATION", connection);
+        MySqlCommand cmd = new MySqlCommand ("SHOW COLLATION WHERE Id IS NOT NULL", connection);
 
         // now we load all the currently active collations
         try
